@@ -1,0 +1,34 @@
+{
+  // Asociar archivos dentro de carpetas templates con 'django-html'
+  "files.associations": {
+    "**/templates/**/*.html": "django-html",
+    "*.html": "html"
+  },
+
+  // Habilitar Emmet en archivos django-html y plantillas
+  "emmet.includeLanguages": {
+    "django-html": "html",
+    "jinja": "html"
+  },
+
+  // Ajustes para mejor autocompletado y experiencia
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": true
+  },
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "editor.parameterHints.enabled": true,
+
+  // Recomendar extensiones al abrir el workspace
+  "extensions.recommendations": [
+    "batisteo.vscode-django",
+    "bibhasdn.django-html",
+    "ecmel.vscode-html-css",
+    "formulahendry.auto-close-tag",
+    "formulahendry.auto-rename-tag"
+  ],
+
+  // Opcional: Prettier o formateador no intrusivo para HTML
+  "html.format.enable": true
+}

@@ -1,0 +1,159 @@
+{% extends "plantillains.html" %}
+
+{% block contenido %} 
+
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+    <meta charset="UTF-8">
+    <title>Apoyo Guía Uno</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        /* Estilo para el botón flotante */
+        .btn-edit {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        border-radius: 50%;
+        width: 55px;
+        height: 55px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+    </style>
+    </head>
+    <body class="bg-light">
+
+    <div class="container mt-5">
+        <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-body p-4">
+            <!-- Título -->
+            <h3 class="fw-bold text-success mb-3">
+            <i class="bi bi-journal-text"></i> Evidencia Guia Logica
+            </h3>
+
+            <!-- Descripción -->
+            <p class="text-muted mb-4">
+            De acuerdo con las instrucciones dadas en el PDF y lo visto en clase, se debe aplicar la estructura condicional if , elif , else para resolver el problema planteado, analizando cada condición de manera ordenada y mostrando el resultado correspondiente según la opción que cumpla la condición establecida.
+            </p>
+
+            <!-- Archivos adjuntos -->
+            <h5 class="fw-semibold mb-3">
+            <i class="bi bi-paperclip"></i> Archivos adjuntos
+            </h5>
+            <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                <i class="bi bi-file-earmark-pdf text-danger"></i> Guía de estructuras con HTML
+                </div>
+                <a href="#" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-download"></i> Descargar
+                </a>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                <i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega
+                </div>
+                <a href="#" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-download"></i> Descargar
+                </a>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                <i class="bi bi-file-earmark-image text-warning"></i> Ejemplos prácticos
+                </div>
+                <a href="#" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-download"></i> Descargar
+                </a>
+            </li>
+            </ul>
+        </div>
+        </div>
+    </div>
+
+<!-- Botón flotante Editar -->
+<button class="btn btn-success btn-edit" data-bs-toggle="modal" data-bs-target="#modalEditarEvidencia">
+    <i class="bi bi-pencil-square"></i>
+</button>
+
+<!-- Modal Editar Evidencia -->
+<div class="modal fade" id="modalEditarEvidencia" tabindex="-1" aria-labelledby="modalEditarEvidenciaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalEditarEvidenciaLabel">✏️ Editar Evidencia</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <!-- Editar Título -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Título de la Evidencia</label>
+                        <input type="text" class="form-control" value="Evidencia Guia Logica">
+                    </div>
+
+                    <!-- Editar Instrucciones -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Instrucciones</label>
+                        <textarea class="form-control" rows="4">De acuerdo con las instrucciones dadas en el PDF y lo visto en clase, se debe aplicar la estructura condicional if , elif , else para resolver el problema planteado, analizando cada condición de manera ordenada y mostrando el resultado correspondiente según la opción que cumpla la condición establecida.</textarea>
+                    </div>
+
+                    <!-- Archivos actuales -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Archivos adjuntos actuales</label>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-file-earmark-pdf text-danger"></i> Guía de estructuras con HTML
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-file-earmark-image text-warning"></i> Ejemplos prácticos
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Subir nuevo archivo -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Agregar nuevos archivos</label>
+                        <input class="form-control" type="file" multiple>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{% endblock %}
