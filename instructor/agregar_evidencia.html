@@ -1,0 +1,96 @@
+{% extends "plantillains.html" %}
+
+{% block contenido %} 
+
+<div class="container mt-4 mb-5">
+    <!-- Título -->
+    <h4 class="fw-bold mb-4 text-start">EVIDENCIAS</h4>
+
+    <!-- Card con formulario -->
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-4">
+        <form>
+            <!-- Título -->
+            <div class="mb-3">
+                <label for="titulo" class="form-label fw-semibold">Título</label>
+                <input type="text" class="form-control input-anim" id="titulo" placeholder="Ejemplo: Guía Lógica">
+            </div>
+
+            <!-- Instrucciones -->
+            <div class="mb-3">
+                <label for="instrucciones" class="form-label fw-semibold">Instrucciones</label>
+                <textarea class="form-control input-anim" id="instrucciones" rows="3" placeholder="Escribe aquí las instrucciones..."></textarea>
+            </div>
+
+            <!-- Calificación -->
+            <div class="mb-3">
+                <label for="calificacion" class="form-label fw-semibold">Calificación Maxima</label>
+                <input type="number" id="calificacion" name="calificacion" class="form-control input-anim"
+                    min="10" max="100" step="1" placeholder="Ingrese la calificación">
+            </div>
+
+            <!-- Fecha -->
+            <div class="mb-3">
+                <label for="fecha" class="form-label fw-semibold">Fecha de entrega</label>
+                <input type="date" class="form-control input-anim" id="fecha">
+            </div>
+
+                <!-- Input file oculto -->
+                <input type="file" id="archivo" class="d-none" onchange="mostrarArchivo()">
+                <!-- Botón que activa el input -->
+                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('archivo').click()">
+                    <i class="bi bi-upload me-2"></i>Subir archivo
+                </button>
+                <!-- Nombre del archivo -->
+                <span id="nombre-archivo" class="ms-2 text-muted fst-italic"></span>
+            </div>
+
+            <!-- Botón Aceptar -->
+            <button type="submit" class="btn btn-success w-100 btn-anim">
+                <i class="bi bi-check-circle me-2"></i> Aceptar
+            </button>
+        </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Inputs animados */
+.input-anim {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+.input-anim:focus {
+    border-color: #2e7d32;
+    box-shadow: 0 0 6px rgba(46, 125, 50, 0.5);
+    transform: scale(1.01);
+}
+
+/* Botón con animación */
+.btn-anim {
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+.btn-anim:hover {
+    background-color: #1b5e20;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+</style>
+
+<script>
+function mostrarArchivo() {
+    const input = document.getElementById("archivo");
+    const nombreArchivo = document.getElementById("nombre-archivo");
+    if (input.files.length > 0) {
+        nombreArchivo.textContent = input.files[0].name;
+    } else {
+        nombreArchivo.textContent = "";
+    }
+}
+</script>
+
+
+
+
+{% endblock %}

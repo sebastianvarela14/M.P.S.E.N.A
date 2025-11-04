@@ -1,0 +1,127 @@
+{% extends "plantillacoor.html" %}
+
+{% block contenido %} 
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Apoyo Guía Uno - Revisión</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container my-5">
+
+    <!-- Título -->
+    <div class="bg-success text-white p-4 rounded shadow mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-journal-text"></i> Evidencia Guía Lógica - Laura Camila Castañeda Rojas
+        </h2>
+    </div>
+
+    <div class="row g-4">
+        <!-- Columna izquierda -->
+        <div class="col-lg-8">
+            <!-- Instrucciones -->
+            <div class="card shadow border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Instrucciones</h5>
+                    <p class="text-muted">
+                        De acuerdo con las instrucciones dadas en el PDF y lo visto en clase, se debe aplicar la estructura condicional 
+                        <b>if, elif, else</b> para resolver el problema planteado, analizando cada condición de manera ordenada y mostrando 
+                        el resultado correspondiente según la opción que cumpla la condición establecida.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Archivos Adjuntos -->
+            <div class="card shadow border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-paperclip"></i> Archivos adjuntos</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div><i class="bi bi-file-earmark-pdf text-danger"></i> Guía de estructuras con HTML</div>
+                            <a href="#" class="btn btn-sm btn-outline-success"><i class="bi bi-download"></i> Descargar</a>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div><i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega</div>
+                            <a href="#" class="btn btn-sm btn-outline-success"><i class="bi bi-download"></i> Descargar</a>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div><i class="bi bi-file-earmark-image text-warning"></i> Ejemplos prácticos</div>
+                            <a href="#" class="btn btn-sm btn-outline-success"><i class="bi bi-download"></i> Descargar</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna derecha -->
+        <div class="col-lg-4">
+            <!-- Evidencia Entregada -->
+            <div class="card shadow border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-check-circle"></i> Evidencia Entregada</h5>
+                    <p class="text-success mb-2"><i class="bi bi-file-earmark-pdf-fill"></i> Laura_Castañeda_Evidencia_Guia1.pdf</p>
+                    <a href="#" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> Ver archivo</a>
+                </div>
+            </div>
+
+
+    <!-- Comentarios ocupa todo el ancho -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-chat-dots"></i> Comentarios</h5>
+
+                    <!-- Comentario de la aprendiz -->
+                    <div class="border p-3 bg-white mb-4 rounded">
+                        <p class="mb-1"><strong>Laura Castañeda:</strong></p>
+                        <p class="mb-0 text-muted">
+                            Profesor, me pareció interesante aplicar las estructuras condicionales de esta forma. 
+                            Intenté hacer el código lo más ordenado posible. Quedo atenta a cualquier observación.
+                        </p>
+                    </div>
+
+                    <!-- Respuesta del profesor -->
+                    <form>
+                        <div class="mb-3">
+                            <label for="respuestaProfesor" class="form-label"><strong>Responder al aprendiz (coordinador):</strong></label>
+                            <textarea id="respuestaProfesor" class="form-control" rows="3" placeholder="Escribe tu comentario"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="archivoCorreccion" class="form-label"><strong></strong></label>
+                            <input type="file" id="archivoCorreccion" class="form-control">
+                        </div>
+
+                        <button type="submit" class="btn btn-outline-success w-100">
+                            <i class="bi bi-reply-fill"></i> Enviar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Volver a Calificaciones -->
+    <div class="text-center mt-5">
+        <a href="{% url 'calificaciones' %}" class="btn btn-success px-4">
+            <i class="bi bi-list-check me-2"></i> Volver a Calificaciones
+        </a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+{% endblock %}

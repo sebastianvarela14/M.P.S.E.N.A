@@ -1,0 +1,133 @@
+{% extends "plantilla.html" %}
+{% load static %}
+
+{% block contenido %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tareas pendientes</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .tabla-container {
+      background: #fff;
+      border-radius: 16px;
+      padding: 30px;
+      width: 100%;
+      max-width: 850px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      margin: 50px auto;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 25px;
+      color: #2c3e50;
+      border-left: 5px solid #4caf50;
+      padding-left: 12px;
+    }
+
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 25px 0 15px;
+      color: #1b5e20;
+    }
+
+    .task-card {
+      background: #c8e6c9;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.06);
+    }
+
+    .task-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .task-title {
+      font-weight: 500;
+      color: #2e7d32;
+      font-size: 15px;
+    }
+
+    .task-date {
+      font-size: 13px;
+      color: #444;
+    }
+
+    .btn-view {
+      border-radius: 10px;
+      font-weight: 500;
+      padding: 6px 14px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="tabla-container">
+    <h2>Tareas pendientes</h2>
+
+    <!-- Sección Técnico -->
+    <h3>Técnico</h3>
+    <div class="task-card">
+      <div class="task-info">
+        <span class="task-title">Guia Logica</span>
+        <span class="task-date">Entrega: 10/07/2025</span>
+      </div>
+      <a href="guia_logica.html" class="btn btn-success btn-view">Ver</a>
+    </div>
+
+    <div class="task-card">
+      <div class="task-info">
+        <span class="task-title">Mockups del Proyecto</span>
+        <span class="task-date">Entrega: 15/07/2025</span>
+      </div>
+      <a href="#" class="btn btn-success btn-view">Ver</a>
+    </div>
+
+    <!-- Sección Matemáticas -->
+    <h3>Matemáticas</h3>
+    <div class="task-card">
+      <div class="task-info">
+        <span class="task-title">Taller de comunicación</span>
+        <span class="task-date">Entrega: 12/07/2025</span>
+      </div>
+      <a href="#" class="btn btn-success btn-view">Ver</a>
+    </div>
+
+    <!-- Sección Comunicación -->
+    <h3>Comunicación</h3>
+    <div class="task-card">
+      <div class="task-info">
+        <span class="task-title">Ensayo sobre lectura crítica</span>
+        <span class="task-date">Entrega: 18/07/2025</span>
+      </div>
+      <a href="#" class="btn btn-success btn-view">Ver</a>
+    </div>
+
+  </div>
+
+</body>
+</html>
+
+
+{% endblock %}

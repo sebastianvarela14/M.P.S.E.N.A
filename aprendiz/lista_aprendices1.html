@@ -1,0 +1,117 @@
+{% extends "plantilla.html" %}
+
+{% block titulo %}Lista de Aprendices{% endblock titulo %}
+
+{% block contenido %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Lista de Aprendices</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+    /* Solo elementos con .list-group-item-action tienen animación */
+    .list-group-item-action {
+        transition: all 0.3s ease;
+        cursor: pointer;
+        }
+        .list-group-item-action:hover {
+        background-color: #e9f7ef;
+        transform: translateX(5px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        text-decoration: none;
+        color: inherit;
+        }
+
+        /* Estilos base para todos */
+        .list-group-item {
+        border: none;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        background-color: #f8f9fa;
+        color: #000000ff;
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        cursor: default; /* por defecto no pointer */
+        }
+
+        /* Icono */
+        .list-group-item i {
+        margin-right: 10px;
+        font-size: 1.2rem;
+        }
+
+        /* Para el enlace, cursor pointer */
+        a.list-group-item-action {
+        cursor: pointer;
+        color: inherit;
+        text-decoration: none;
+        }
+</style>
+</head>
+<body class="bg-light">
+
+<div class="container mt-4 p-4 bg-white shadow rounded">
+    <!-- Instructor -->
+    <div class="mb-4">
+        <h4 class="fw-bold text-success">INSTRUCTOR</h4>
+        <input type="text" class="form-control" value="Omar Calderon" readonly>
+    </div>
+
+    <!-- Total aprendices -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold text-success">APRENDICES</h4>
+        <span id="total-aprendices" class="text-muted">Total de Aprendices: 6</span>
+    </div>
+
+    <!-- Buscador -->
+    <div class="input-group mb-3" style="max-width: 350px;">
+        <input type="text" id="buscar" class="form-control" placeholder="Buscar aprendiz...">
+        <button class="btn btn-success" id="btnBuscar"><i class="bi bi-search"></i></button>
+    </div>
+
+    <!-- Lista de aprendices -->
+    <div id="lista" class="list-group shadow-sm">
+        <a href="{% url 'datoslaura' %}" class="list-group-item list-group-item-action">
+            <i class="bi bi-person-circle"></i> Laura Camila Castañeda Rojas
+        </a>
+        <div class="list-group-item">
+            <i class="bi bi-person-circle"></i> Sayra Catalina Ortiz Alarcón
+        </div>
+        <div class="list-group-item">
+            <i class="bi bi-person-circle"></i> Andrea Tatiana Guzman González
+        </div>
+        <div class="list-group-item">
+            <i class="bi bi-person-circle"></i> Maria Alejandra Muñoz Sánchez
+        </div>
+        <div class="list-group-item">
+            <i class="bi bi-person-circle"></i> Juan Sebastián Varela Roncancio
+        </div>
+        <div class="list-group-item">
+            <i class="bi bi-person-circle"></i> Andrés Esteban Casallas Rodríguez
+        </div>
+    </div>
+</div>
+
+<script>
+    const buscarInput = document.getElementById("buscar");
+    const btnBuscar = document.getElementById("btnBuscar");
+    const lista = document.getElementById("lista");
+
+    btnBuscar.addEventListener("click", () => {
+        const filtro = buscarInput.value.toLowerCase();
+        const items = lista.querySelectorAll(".list-group-item");
+        items.forEach(item => {
+            const texto = item.textContent.toLowerCase();
+            item.style.display = texto.includes(filtro) ? "block" : "none";
+        });
+    });
+</script>
+
+</body>
+</html>
+
+
+{% endblock contenido %}

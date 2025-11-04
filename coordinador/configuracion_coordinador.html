@@ -1,0 +1,375 @@
+{% extends "plantillacoor.html" %}
+
+{% block contenido %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración del Coordinador</title>
+    <style>
+        /* ======== PALETA ======== */
+        :root {
+            --verde: #2e8b57;
+            --verde-oscuro: #246b44;
+            --azul: #1e88e5;
+            --azul-oscuro: #1565c0;
+            --rojo: #e53935;
+            --rojo-oscuro: #b71c1c;
+            --gris-claro: #f4f9f4;
+            --gris-borde: #d0e0d0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--gris-claro);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--verde), var(--verde-oscuro));
+            color: white;
+            padding: 18px;
+            text-align: center;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 25px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+
+        h2 {
+            color: var(--verde);
+            margin-top: 0;
+            border-bottom: 2px solid #c8e6c9;
+            padding-bottom: 5px;
+        }
+
+        .explicacion {
+            background: #e8fbe8;
+            border-left: 6px solid var(--verde);
+            padding: 14px;
+            margin-bottom: 25px;
+            border-radius: 6px;
+        }
+
+        .grupo {
+            margin-bottom: 30px;
+            background: #ffffff;
+            border: 1px solid var(--gris-borde);
+            padding: 18px;
+            border-radius: 12px;
+            transition: box-shadow 0.2s ease;
+        }
+        .grupo:hover {
+            box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+        }
+
+        .buscar {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .buscar input {
+            padding: 7px;
+            border: 1px solid #bbb;
+            border-radius: 8px;
+            width: 250px;
+            transition: border 0.3s;
+        }
+        .buscar input:focus {
+            border: 1px solid var(--verde);
+            outline: none;
+        }
+
+        .opcion {
+            display: flex;
+            align-items: center;
+            margin: 6px 0;
+            padding: 10px 14px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: #fafafa;
+            transition: background 0.2s;
+        }
+        .opcion:hover { background: #f0f9f0; }
+        .opcion input { margin-right: 12px; }
+
+        .acciones {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 9px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.25s;
+            font-weight: 500;
+        }
+
+        .btn-guardar { background-color: var(--verde); color: white; }
+        .btn-guardar:hover { background-color: var(--verde-oscuro); }
+
+        .btn-anadir { background-color: var(--azul); color: white; }
+        .btn-anadir:hover { background-color: var(--azul-oscuro); }
+
+        .btn-eliminar { background: var(--rojo); color: white; }
+        .btn-eliminar:hover { background: var(--rojo-oscuro); }
+
+        .lista-guardados {
+            margin-top: 15px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fdfdfd;
+        }
+        .lista-guardados h4 {
+            margin-top: 0;
+            color: var(--verde);
+        }
+        .item-guardado {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .item-guardado:last-child { border-bottom: none; }
+
+        /* ======== MODAL ======== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+        }
+        .modal-contenido {
+            background: #fff;
+            margin: 10% auto;
+            padding: 22px;
+            border-radius: 12px;
+            width: 420px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+            animation: aparecer 0.3s ease;
+        }
+        @keyframes aparecer {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--verde);
+        }
+        .modal-footer {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .cerrar {
+            background: #999;
+            color: white;
+        }
+        .cerrar:hover { background: #777; }
+
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            margin: 6px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>⚙️ Configuración del Coordinador</h1>
+</header>
+
+<main>
+    <div class="explicacion">
+        <p><strong>Entraste a la ficha 3175020.</strong> Aquí puedes asignar instructores, aprendices y asignaturas. Usa las listas, buscadores o añade nuevos registros en caso necesario.</p>
+    </div>
+
+    <!-- Instructores -->
+    <section>
+        <h2>👨‍🏫 Asignar Instructores</h2>
+        <div class="grupo">
+            <div class="buscar">
+                <input type="text" id="buscarInstructor" onkeyup="filtrar('buscarInstructor','listaInstructores')" placeholder="Buscar instructor...">
+            </div>
+            <div id="listaInstructores">
+                <div class="opcion"><input type="checkbox"> Ana Torres</div>
+                <div class="opcion"><input type="checkbox"> Carlos Ramírez</div>
+                <div class="opcion"><input type="checkbox"> Esteban Muñoz</div>
+                <div class="opcion"><input type="checkbox"> Fernanda Díaz</div>
+                <div class="opcion"><input type="checkbox"> Jorge Martínez</div>
+                <div class="opcion"><input type="checkbox"> Juan Pérez</div>
+                <div class="opcion"><input type="checkbox"> María López</div>
+                <div class="opcion"><input type="checkbox"> Pedro Hernández</div>
+                <div class="opcion"><input type="checkbox"> Sebastián Castillo</div>
+                <div class="opcion"><input type="checkbox"> Valentina Rojas</div>
+            </div>
+            <div class="acciones">
+                <button class="btn-guardar">Guardar Instructores</button>
+                <button class="btn-anadir" onclick="abrirModal('modalInstructor')">Añadir Instructor</button>
+            </div>
+            <div class="lista-guardados">
+                <h4>Instructores en esta ficha</h4>
+                <div class="item-guardado">Ana Torres <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Carlos Ramírez <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Esteban Muñoz <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Fernanda Díaz <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Jorge Martínez <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Juan Pérez <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">María López <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Pedro Hernández <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Sebastián Castillo <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Valentina Rojas <button class="btn-eliminar">Eliminar</button></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Aprendices -->
+    <section>
+        <h2>👩‍🎓 Asignar Aprendices</h2>
+        <div class="grupo">
+            <div class="buscar">
+                <input type="text" id="buscarAprendiz" onkeyup="filtrar('buscarAprendiz','listaAprendices')" placeholder="Buscar aprendiz...">
+            </div>
+            <div id="listaAprendices">
+                <div class="opcion"><input type="checkbox"> Andrés Gómez</div>
+                <div class="opcion"><input type="checkbox"> Camila Torres</div>
+                <div class="opcion"><input type="checkbox"> Daniela Vargas</div>
+                <div class="opcion"><input type="checkbox"> Felipe Ramírez</div>
+                <div class="opcion"><input type="checkbox"> Juliana Castro</div>
+                <div class="opcion"><input type="checkbox"> Laura Castañeda</div>
+                <div class="opcion"><input type="checkbox"> Mateo Fernández</div>
+                <div class="opcion"><input type="checkbox"> Nicolás Jiménez</div>
+                <div class="opcion"><input type="checkbox"> Santiago Morales</div>
+                <div class="opcion"><input type="checkbox"> Sofía Herrera</div>
+            </div>
+            <div class="acciones">
+                <button class="btn-guardar">Guardar Aprendices</button>
+                <button class="btn-anadir" onclick="abrirModal('modalAprendiz')">Añadir Aprendiz</button>
+            </div>
+            <div class="lista-guardados">
+                <h4>Aprendices en esta ficha</h4>
+                <div class="item-guardado">Andrés Gómez <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Camila Torres <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Daniela Vargas <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Felipe Ramírez <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Juliana Castro <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Laura Castañeda <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Mateo Fernández <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Nicolás Jiménez <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Santiago Morales <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Sofía Herrera <button class="btn-eliminar">Eliminar</button></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Asignaturas -->
+    <section>
+        <h2>📚 Asignar Asignaturas</h2>
+        <div class="grupo">
+            <div class="buscar">
+                <input type="text" id="buscarAsignatura" onkeyup="filtrar('buscarAsignatura','listaAsignaturas')" placeholder="Buscar asignatura...">
+            </div>
+            <div id="listaAsignaturas">
+                <div class="opcion"><input type="checkbox"> Bases de Datos — Jorge Martínez</div>
+                <div class="opcion"><input type="checkbox"> Desarrollo Web — Fernanda Díaz</div>
+                <div class="opcion"><input type="checkbox"> Gestión Empresarial — Ana Torres</div>
+                <div class="opcion"><input type="checkbox"> Inglés Técnico — Carlos Ramírez</div>
+                <div class="opcion"><input type="checkbox"> Inteligencia Artificial — Sebastián Castillo</div>
+                <div class="opcion"><input type="checkbox"> Matemáticas Aplicadas — María López</div>
+                <div class="opcion"><input type="checkbox"> Programación Móvil — Esteban Muñoz</div>
+                <div class="opcion"><input type="checkbox"> Redes de Computadores — Pedro Hernández</div>
+                <div class="opcion"><input type="checkbox"> Seguridad Informática — Valentina Rojas</div>
+                <div class="opcion"><input type="checkbox"> Técnico en Programación — Juan Pérez</div>
+            </div>
+            <div class="acciones">
+                <button class="btn-guardar">Guardar Asignaturas</button>
+                <button class="btn-anadir" onclick="abrirModal('modalAsignatura')">Añadir Asignatura</button>
+            </div>
+            <div class="lista-guardados">
+                <h4>Asignaturas en esta ficha</h4>
+                <div class="item-guardado">Bases de Datos — Jorge Martínez <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Desarrollo Web — Fernanda Díaz <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Gestión Empresarial — Ana Torres <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Inglés Técnico — Carlos Ramírez <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Inteligencia Artificial — Sebastián Castillo <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Matemáticas Aplicadas — María López <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Programación Móvil — Esteban Muñoz <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Redes de Computadores — Pedro Hernández <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Seguridad Informática — Valentina Rojas <button class="btn-eliminar">Eliminar</button></div>
+                <div class="item-guardado">Técnico en Programación — Juan Pérez <button class="btn-eliminar">Eliminar</button></div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Modales -->
+<div id="modalInstructor" class="modal">
+  <div class="modal-contenido">
+    <div class="modal-header">Añadir Instructor</div>
+    <input type="text" id="usuarioInstructor" class="form-control" placeholder="Usuario del instructor">
+    <div class="modal-footer">
+      <button class="cerrar" onclick="cerrarModal('modalInstructor')">Cancelar</button>
+      <button class="btn-anadir">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalAprendiz" class="modal">
+  <div class="modal-contenido">
+    <div class="modal-header">Añadir Aprendiz</div>
+    <input type="text" id="usuarioAprendiz" class="form-control" placeholder="Usuario del aprendiz">
+    <div class="modal-footer">
+      <button class="cerrar" onclick="cerrarModal('modalAprendiz')">Cancelar</button>
+      <button class="btn-anadir">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalAsignatura" class="modal">
+  <div class="modal-contenido">
+    <div class="modal-header">Añadir Asignatura</div>
+    <input type="text" id="nombreAsignatura" class="form-control" placeholder="Nombre de la asignatura">
+    <input type="text" id="instructorAsignatura" class="form-control" placeholder="Usuario del instructor de la asignatura">
+    <div class="modal-footer">
+      <button class="cerrar" onclick="cerrarModal('modalAsignatura')">Cancelar</button>
+      <button class="btn-anadir">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function filtrar(inputId, listaId) {
+    let input = document.getElementById(inputId).value.toLowerCase();
+    let lista = document.getElementById(listaId).getElementsByClassName('opcion');
+    for (let i = 0; i < lista.length; i++) {
+        let texto = lista[i].textContent.toLowerCase();
+        lista[i].style.display = texto.includes(input) ? "" : "none";
+    }
+}
+function abrirModal(id) { document.getElementById(id).style.display = "block"; }
+function cerrarModal(id) { document.getElementById(id).style.display = "none"; }
+</script>
+</body>
+</html>
+{% endblock %}
+
