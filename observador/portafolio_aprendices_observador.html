@@ -1,0 +1,140 @@
+{% extends "plantillaobservador.html" %}
+
+{% block contenido %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Portafolio de Aprendices</title>
+
+    <!-- Bootstrap para coherencia visual (opcional pero recomendado) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+
+        /* Contenedor principal */
+        .paper {
+            font-family: "Poppins", sans-serif
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 750px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin: 0 auto; /* Centrar horizontalmente */
+            margin: 50px auto 0 auto;
+        }
+
+        /* Encabezado */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+            letter-spacing: 0.5px;
+        }
+
+        /* Buscador */
+        .search-box {
+            position: relative;
+            width: 200px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 34px;
+            border-radius: 20px;
+            border: 1.5px solid #ccc;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s ease;
+        }
+
+        .search-box input:focus {
+            border-color: #4caf50;
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #777;
+        }
+
+        /* Lista */
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .item {
+            background: #fff;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            transition: all 0.25s ease;
+            text-decoration: none;
+            display: block;
+        }
+
+        .item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+
+        .item.active {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            color: #2e7d32;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="paper">
+        <!-- Encabezado -->
+        <div class="header">
+            <h1>PORTAFOLIO DE APRENDICES</h1>
+            <div class="search-box">
+                <input type="text" placeholder="Buscar..." />
+            </div>
+        </div>
+
+        <!-- Lista -->
+        <div class="list">
+            <a href="{% url 'trimestre_observador' %}" class="item active">Portafolio general</a>
+            <a href="{% url 'trimestre_aprendiz_observador' %}" class="item">Laura Camila Castañeda Rojas</a>
+            <a href="{% url 'trimestre_aprendiz1' %}" class="item">Sayra Catalina Ortiz Alarcón</a>
+            <a href="{% url 'trimestre_aprendiz2' %}" class="item">Andrea Tatiana Guzman González</a>
+            <a href="{% url 'trimestre_aprendiz' %}" class="item">Maria Alejandra Muñoz Sánchez</a>
+            <a href="{% url 'trimestre_aprendiz' %}" class="item">Juan Sebastián Varela Roncancio</a>
+            <a href="{% url 'trimestre_aprendiz' %}" class="item">Andrés Esteban Casallas Rodríguez</a>
+        </div>
+    </div>
+
+</body>
+
+{% endblock %}
