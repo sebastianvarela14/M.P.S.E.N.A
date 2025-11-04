@@ -1,0 +1,138 @@
+{% extends "plantillains.html" %}
+
+{% block contenido %} 
+
+<div class="container mt-5">
+  <div class="card shadow-lg border-0 rounded-3">
+    <div class="card-body p-4">
+      <!-- Título -->
+      <h3 class="fw-bold text-success mb-3" id="tituloGuia">
+        <i class="bi bi-journal-text"></i> Apoyo Guía Uno
+      </h3>
+
+      <!-- Descripción -->
+      <p class="text-muted mb-4" id="descripcionGuia">
+        Este material corresponde a la primera guía de apoyo. 
+        Aquí encontrarás recursos, explicaciones y anexos que complementan el desarrollo del tema tratado en la formación.
+      </p>
+
+      <!-- Archivos adjuntos -->
+      <h5 class="fw-semibold mb-3">
+        <i class="bi bi-paperclip"></i> Archivos adjuntos
+      </h5>
+      <ul class="list-group" id="listaArchivos">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <i class="bi bi-file-earmark-pdf text-danger"></i> Guía de Actividades
+          </div>
+          <a href="#" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-download"></i> Descargar
+          </a>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega
+          </div>
+          <a href="#" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-download"></i> Descargar
+          </a>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <i class="bi bi-file-earmark-image text-warning"></i> Ejemplo Ilustrativo
+          </div>
+          <a href="#" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-download"></i> Descargar
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Botón flotante Editar -->
+<button class="btn btn-success btn-edit" data-bs-toggle="modal" data-bs-target="#modalEditar">
+  <i class="bi bi-pencil-square"></i>
+</button>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content shadow">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="modalEditarLabel">✏️ Editar Guía</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditar">
+          <!-- Editar Título -->
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" class="form-control" id="inputTitulo" value="Apoyo Guía Uno">
+          </div>
+
+          <!-- Editar Descripción -->
+          <div class="mb-3">
+            <label class="form-label">Instrucciones / Descripción</label>
+            <textarea class="form-control" id="inputDescripcion" rows="4">Este material corresponde a la primera guía de apoyo. Aquí encontrarás recursos, explicaciones y anexos que complementan el desarrollo del tema tratado en la formación.</textarea>
+          </div>
+
+          <!-- Editar Archivos -->
+          <div class="mb-3">
+            <label class="form-label">Archivos Adjuntos</label>
+            <ul class="list-group mb-2">
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark-pdf text-danger"></i> Guía de Actividades</span>
+                <button type="button" class="btn btn-sm btn-outline-danger">Eliminar</button>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega</span>
+                <button type="button" class="btn btn-sm btn-outline-danger">Eliminar</button>
+              </li>
+            </ul>
+            <input type="file" class="form-control">
+          </div>
+
+          <!-- Botones -->
+          <div class="text-end">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-success">Guardar Cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Botón flotante */
+  .btn-edit {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    z-index: 1000;
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Guardar cambios en título y descripción
+  document.getElementById("formEditar").addEventListener("submit", function(e) {
+    e.preventDefault();
+    document.getElementById("tituloGuia").innerHTML = '<i class="bi bi-journal-text"></i> ' + document.getElementById("inputTitulo").value;
+    document.getElementById("descripcionGuia").innerText = document.getElementById("inputDescripcion").value;
+    var modal = bootstrap.Modal.getInstance(document.getElementById("modalEditar"));
+    modal.hide();
+  });
+</script>
+
+{% endblock %}

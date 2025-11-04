@@ -1,0 +1,133 @@
+from django.urls import path
+from . import views
+urlpatterns = [
+    path("instructor", views.fichas_ins, name="fichas_ins"),
+    path('tareas/', views.tareas, name='tareas'),
+    path('tareas_2/', views.tareas_2, name='tareas_2'),
+    path('calificaciones/', views.calificaciones, name='calificaciones'),
+
+    path("agregar_evidencia/", views.agregar_evidencia, name="agregar_evidencia"),
+
+    path("material/", views.material, name="material"),
+
+    path("portafolio_aprendices/", views.portafolio_aprendices, name="portafolio_aprendices"),
+    path("trimestre1/", views.trimestre1, name="trimestre1"),
+    path("trimestre2/", views.trimestre2, name="trimestre2"),
+    path("trimestre3/", views.trimestre3, name="trimestre3"),
+
+    path("calificacion/", views.calificacion, name="calificacion"),
+    path("tarea/", views.tarea, name="tarea"),
+
+    path("datos/", views.datos, name="datos"),
+    path("datos_ins/", views.datos_ins, name="datos_ins"),
+    path("evidencias/", views.evidencias, name="evidencias"),
+
+    path("material2/", views.material2, name="material2"),
+    path("portafolio_aprendices/", views.portafolio_aprendices, name="portafolio_aprendices"),
+
+
+    path("lista_aprendices/", views.lista_aprendices, name="lista_aprendices"),
+
+    path("portafolio/", views.portafolio, name="portafolio"),
+    path("carpetas2/", views.carpetas2, name="carpetas2"),
+
+    path("taller/", views.taller, name="taller"),
+    path("tareas/", views.tareas, name="tareas"),
+
+    path("carpetasins/", views.carpetasins, name="carpetasins"),
+    path("trimestre/", views.trimestre, name="trimestre"),
+    path("carpetas_aprendiz/", views.carpetas_aprendiz, name="carpetas_aprendiz"),
+    path("trimestre_aprendiz/", views.trimestre_aprendiz, name="trimestre_aprendiz"),
+    path("trimestre_general/", views.trimestre_general, name="trimestre_general"),
+    path("carpetas/", views.carpetas, name="carpetas"),
+    path("material_principal/", views.material_principal, name="material_principal"),
+    path("lista_aprendices/", views.lista_aprendices, name="lista_aprendices"),
+    path("adentro_material/", views.adentro_material, name="adentro_material"),
+    path("lista_aprendices1/", views.lista_aprendices1, name="lista_aprendices1"),
+    path("datoslaura/", views.datoslaura, name="datoslaura"),
+    path("entrada/", views.entrada, name="entrada"),
+
+    path("adentro_material1/", views.adentro_material1, name="adentro_material1"),
+    path("evidencia_guia/", views.evidencia_guia, name="evidencia_guia"),
+    path("evidencia_guia1/", views.evidencia_guia1, name="evidencia_guia1"),
+    path("aprendiz/", views.inicio, name="inicio"),
+    path("trimestre_aprendiz1/", views.trimestre_aprendiz1, name="trimestre_aprendiz1"),
+    path("trimestre_aprendiz2/", views.trimestre_aprendiz2, name="trimestre_aprendiz2"),
+    path("carpetas_aprendiz1/", views.carpetas_aprendiz1, name="carpetas_aprendiz1"),
+    path("carpetas_aprendiz2/", views.carpetas_aprendiz2, name="carpetas_aprendiz2"),
+    path("datos1/", views.datos1, name="datos1"),
+    path("datos2/", views.datos2, name="datos2"),
+    path("coordinador/", views.coordinador, name="coordinador"),
+
+
+    path("trimestre_laura/", views.trimestre_laura, name="trimestre_laura"),
+    path("carpetas_laura/", views.carpetas_laura, name="carpetas_laura"),
+    path("evidencia_laura/", views.evidencia_laura, name="evidencia_laura"),
+    path("evidencia_guialaura/", views.evidencia_guialaura, name="evidencia_guialaura"),
+    path("material_laura/", views.material_laura, name="material_laura"),
+    path("adentro_material_aprendiz/", views.adentro_material_aprendiz, name="adentro_material_aprendiz"),
+    path("carpetas_aprendiz_observador/", views.carpetas_aprendiz_observador, name="carpetas_aprendiz_observador"),
+    path("carpetas_observador/", views.carpetas_observador, name="carpetas_observador"),
+    path("inicio_observador/", views.inicio_observador, name="inicio_observador"),
+    path("lista_aprendices_observador/", views.lista_aprendices_observador, name="lista_aprendices_observador"),
+    path("observador/", views.observador, name="observador"),
+    path("portafolio_aprendices_observador/", views.portafolio_aprendices_observador, name="portafolio_aprendices_observador"),
+    path("portafolio_observador/", views.portafolio_observador, name="portafolio_observador"),
+    path("trimestre_aprendiz_observador/", views.trimestre_aprendiz_observador, name="trimestre_aprendiz_observador"),
+    path("trimestre_observador/", views.trimestre_observador, name="trimestre_observador"),
+    path("adentro_material_observador/", views.adentro_material_observador, name="adentro_material_observador"),
+    path("material_principal_observador/", views.material_principal_observador, name="material_principal_observador"),
+    path("evidencia_guia_observador/", views.evidencia_guia_observador, name="evidencia_guia_observador"),
+    path("evidencias_observador/", views.evidencias_observador, name="evidencias_observador"),
+    path("adentro_material_coordinador/", views.adentro_material_coordinador, name="adentro_material_coordinador"),
+    path("carpetas_coordinador/", views.carpetas_coordinador, name="carpetas_coordinador"),
+    path("evidencia_guia_coordinador/", views.evidencia_guia_coordinador, name="evidencia_guia_coordinador"),
+    path("evidencias_coordinador/", views.evidencias_coordinador, name="evidencias_coordinador"),
+    path("inicio_coordinador/", views.inicio_coordinador, name="inicio_coordinador"),
+    path("lista_aprendices_coordinador/", views.lista_aprendices_coordinador, name="lista_aprendices_coordinador"),
+    path("material_principal_coordinador/", views.material_principal_coordinador, name="material_principal_coordinador"),
+    path("portafolio_aprendices_coordinador/", views.portafolio_aprendices_coordinador, name="portafolio_aprendices_coordinador"),
+    path("portafolio_coordinador/", views.portafolio_coordinador, name="portafolio_coordinador"),
+    path("trimestre_coordinador/", views.trimestre_coordinador, name="trimestre_coordinador"),
+    path("datos_coordinador/", views.datos_coordinador, name="datos_coordinador"),
+
+    path("agregar_carpeta/", views.agregar_carpeta, name="agregar_carpeta"),
+    path("plan_concertado/", views.plan_concertado, name="plan_concertado"),
+    path("evidencia_calificar/", views.evidencia_calificar, name="evidencia_calificar"),
+    path("calificaciones_observador/", views.calificaciones_observador, name="calificaciones_observador"),
+    path("evidencia_calificar_observador/", views.evidencia_calificar_observador, name="evidencia_calificar_observador"),
+    path("datos_observador/", views.datos_observador, name="datos_observador"),
+    path("carpetas_general/", views.carpetas_general, name="carpetas_general"),
+    path("trimestre_general_coordinador/", views.trimestre_general_coordinador, name="trimestre_general_coordinador"),
+
+    path("trimestre_aprendiz_coordinador/", views.trimestre_aprendiz_coordinador, name="trimestre_aprendiz_coordinador"),
+
+    path("carpetas_aprendiz_coordinador/", views.carpetas_aprendiz_coordinador, name="carpetas_aprendiz_coordinador"),
+
+    path("calificaciones_coordinador/", views.calificaciones_coordinador, name="calificaciones_coordinador"),
+
+    path("evidencia_calificar_coordinador/", views.evidencia_calificar_coordinador, name="evidencia_calificar_coordinador"),
+    path("", views.sesion, name="sesion"),
+
+    path("configuracion_instructor/", views.configuracion_instructor, name="configuracion_instructor"),
+    path("configuracion_instructor_2/", views.configuracion_instructor_2, name="configuracion_instructor_2"),
+    path("configuracion_aprendiz/", views.configuracion_aprendiz, name="configuracion_aprendiz"),
+    path("configuracion_aprendiz_2/", views.configuracion_aprendiz_2, name="configuracion_aprendiz_2"),
+    path("configuracion_observador/", views.configuracion_observador, name="configuracion_observador"),
+    path("configuracion_observador_2/", views.configuracion_observador_2, name="configuracion_observador_2"),
+    path("configuracion_coordinador/", views.configuracion_coordinador, name="configuracion_coordinador"),
+    path("evidencia_calificada/", views.evidencia_calificada, name="evidencia_calificada"),
+    path("configuracion_coordinador_base/", views.configuracion_coordinador_base, name="configuracion_coordinador_base"),
+    path("configuracion_coordinador_base_2/", views.configuracion_coordinador_base_2, name="configuracion_coordinador_base_2"),
+    path("ficha_coordinador/", views.ficha_coordinador, name="ficha_coordinador"),
+    path("ficha_aprendiz/", views.ficha_aprendiz, name="ficha_aprendiz"),
+    path("ficha_aprendiz_2/", views.ficha_aprendiz_2, name="ficha_aprendiz_2"),
+    path("ficha_instructor/", views.ficha_instructor, name="ficha_instructor"),
+    path("ficha_observador/", views.ficha_observador, name="ficha_observador"),
+    path("equipo_ejecutor/", views.equipo_ejecutor, name="equipo_ejecutor"),
+    path("opc_equipoejecutor/", views.opc_equipoejecutor, name="opc_equipoejecutor"),
+    path("fichas_equipoejecutor_coordinador/", views.fichas_equipoejecutor_coordinador, name="fichas_equipoejecutor_coordinador"),
+    path("equipo_coordinador/", views.equipo_coordinador, name="equipo_coordinador"),
+]
+
+
