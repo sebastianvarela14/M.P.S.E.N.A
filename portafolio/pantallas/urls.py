@@ -56,7 +56,6 @@ urlpatterns = [
     path("carpetas_aprendiz1/", views.carpetas_aprendiz1, name="carpetas_aprendiz1"),
     path("carpetas_aprendiz2/", views.carpetas_aprendiz2, name="carpetas_aprendiz2"),
     path("datos1/", views.datos1, name="datos1"),
-    path("datos2/", views.datos2, name="datos2"),
     path("coordinador/", views.coordinador, name="coordinador"),
 
 
