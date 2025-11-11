@@ -51,11 +51,8 @@ urlpatterns = [
     path("evidencia_guia/", views.evidencia_guia, name="evidencia_guia"),
     path("evidencia_guia1/", views.evidencia_guia1, name="evidencia_guia1"),
     path("aprendiz/", views.inicio, name="inicio"),
-    path("trimestre_aprendiz1/", views.trimestre_aprendiz1, name="trimestre_aprendiz1"),
-    path("trimestre_aprendiz2/", views.trimestre_aprendiz2, name="trimestre_aprendiz2"),
     path("carpetas_aprendiz1/", views.carpetas_aprendiz1, name="carpetas_aprendiz1"),
     path("carpetas_aprendiz2/", views.carpetas_aprendiz2, name="carpetas_aprendiz2"),
-    path("datos1/", views.datos1, name="datos1"),
     path("coordinador/", views.coordinador, name="coordinador"),
 
 
@@ -129,6 +126,14 @@ urlpatterns = [
     path("equipo_coordinador/", views.equipo_coordinador, name="equipo_coordinador"),
     path("material_editar/", views.material_editar, name="material_editar"),
     path("evidencia_guia_editar/", views.evidencia_guia_editar, name="evidencia_guia_editar"),
+    path("carpetasins_editar/", views.carpetasins_editar, name="carpetasins_editar"),
+    path("carpetasins_crear/", views.carpetasins_crear, name="carpetasins_crear"),
+    path("carpetas_aprendiz_crear/", views.carpetas_aprendiz_crear, name="carpetas_aprendiz_crear"),
+    path("carpetas_aprendiz_editar/", views.carpetas_aprendiz_editar, name="carpetas_aprendiz_editar"),
+    path("datos_ins_editar/", views.datos_ins_editar, name="datos_ins_editar"),
+    path("coordinador_editar/", views.coordinador_editar, name="coordinador_editar"),
+    path("coordinador_agregar/", views.coordinador_agregar, name="coordinador_agregar"),
+    
 ]
 
 

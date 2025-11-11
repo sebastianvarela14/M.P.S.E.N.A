@@ -302,84 +302,21 @@
 </div>
 
 <!-- Botones flotantes: "+" y Editar -->
-<div class="floating-buttons">
+<div class="floating-buttons" style="position: fixed; bottom: 25px; right: 25px; display: flex; gap: 10px;">
     <!-- Botón Agregar -->
-    <button class="btn btn-success rounded-circle me-2" title="Agregar" data-bs-toggle="modal" data-bs-target="#modalAgregar">
+    <a href="{% url 'carpetas_aprendiz_crear' %}" class="btn btn-success rounded-circle d-flex align-items-center justify-content-center" 
+        title="Agregar" style="width: 56px; height: 56px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
         <i class="bi bi-plus-lg fs-4"></i>
-    </button>
+    </a>
+
     <!-- Botón Editar -->
-    <button class="btn btn-success rounded-circle" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditar">
+    <a href="{% url 'carpetas_aprendiz_editar' %}" class="btn btn-success rounded-circle d-flex align-items-center justify-content-center" 
+        title="Editar" style="width: 56px; height: 56px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
         <i class="bi bi-pencil-square fs-5"></i>
-    </button>
+    </a>
 </div>
 
-<!-- MODAL AGREGAR -->
-<div class="modal fade" id="modalAgregar" tabindex="-1" aria-labelledby="modalAgregarLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content shadow">
-        <div class="modal-header bg-success text-white">
-            <h5 class="modal-title" id="modalAgregarLabel">➕ Crear Carpeta</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-            <form>
-            <div class="mb-3">
-                <label class="form-label">Título</label>
-                <input type="text" class="form-control" placeholder="Escribe el título de la carpeta">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Descripción</label>
-                <textarea class="form-control" rows="3" placeholder="Agrega una descripción"></textarea>
-            </div>
-            <div class="text-end">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-success">Crear</button>
-            </div>
-            </form>
-        </div>
-        </div>
-    </div>
-    </div>
 
-<!-- MODAL EDITAR -->
-<div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content shadow">
-        <div class="modal-header bg-success text-dark">
-            <h5 class="modal-title" id="modalEditarLabel">✏️ Editar Carpeta</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-            <form>
-            <div class="mb-3">
-                <label class="form-label">Selecciona Carpeta</label>
-                <select class="form-select">
-                <option selected disabled>Elige una carpeta</option>
-                <option value="plan_concertado">1. Plan concertado de trabajo</option>
-                <option value="guias">2. Guías de aprendizaje</option>
-                <option value="evidencias">3. Evidencias de aprendizaje</option>
-                <option value="planes_accion">4. Planes de acción de mejora</option>
-                <option value="formato_diligenciado">5. Formato diligenciado de planeación, seguimiento y evaluación</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Nuevo Título</label>
-                <input type="text" class="form-control" placeholder="Dejar vacío si no deseas cambiarlo">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Nueva Descripción</label>
-                <textarea class="form-control" rows="3" placeholder="Dejar vacío si no deseas cambiarla"></textarea>
-            </div>
-                <div class="text-end">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-success">Guardar Cambios</button>
-                </div>
-
-            </form>
-        </div>
-        </div>
-    </div>
-    </div>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -149,228 +149,28 @@
         <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#9292929</a>
         <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#9393939</a>
     </div>
-
-
     </div>
 
-    <!-- Botones flotantes: "+" y Editar -->
-    <div class="floating-buttons">
-        <!-- Botón "+" -->
-        <a href="#" class="btn btn-success rounded-circle me-2" title="Agregar" data-bs-toggle="modal" data-bs-target="#addModal">
-            <i class="bi bi-plus-lg fs-4"></i>
-        </a>
+<!-- Botones flotantes -->
+<div class="floating-buttons">
+    <!-- Botón "+" -->
+    <a href="{% url 'coordinador_agregar' %}" class="btn btn-success rounded-circle me-2" title="Agregar">
+        <i class="bi bi-plus-lg fs-4"></i>
+    </a>
 
-        <!-- Botón Editar -->
-        <a href="#" class="btn btn-success rounded-circle" title="Editar" data-bs-toggle="modal" data-bs-target="#editModal">
-            <i class="bi bi-pencil-square fs-5"></i>
-        </a>
-    </div>
+    <!-- Botón Editar -->
+    <a href="{% url 'coordinador_editar' %}" class="btn btn-success rounded-circle" title="Editar">
+        <i class="bi bi-pencil-square fs-5"></i>
+    </a>
+</div>
 
-    <!-- Modal Agregar -->
-    <div class="modal fade" id="addModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header bg-success text-white">
-            <h5 class="modal-title">Agregar Ficha</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-            <form>
-            <div class="mb-3">
-                <label class="form-label">Número de Ficha</label>
-                <input type="number" class="form-control" placeholder="Ej: 317502">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Jornada</label>
-                <select class="form-select">
-                <option>Diurna</option>
-                <option>Nocturna</option>
-                <option>Mixta</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Programa</label>
-                <select class="form-select">
-                <option>Programación de Software</option>
-                <option>ADSO</option>
-                <option>Hardware</option>
-                <option>Gestión Empresarial</option>
-                <option>Contabilidad</option>
-                <option>Diseño Gráfico</option>
-                <option>Electricidad</option>
-                <option>Otro</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-success">Guardar</button>
-            </form>
-        </div>
-        </div>
-    </div>
-    </div>
 
-    <!-- Modal Editar -->
-    <div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header bg-success text-white">
-            <h5 class="modal-title">Editar Ficha</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-            <form>
-            <div class="mb-3">
-                <label class="form-label">Seleccionar Ficha</label>
-                <select id="editFichaSelect" class="form-select"></select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Número de Ficha</label>
-                <input type="number" class="form-control">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Jornada</label>
-                <select class="form-select">
-                <option>Diurna</option>
-                <option>Nocturna</option>
-                <option>Mixta</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Programa</label>
-                <select class="form-select">
-                <option>Programación de Software</option>
-                <option>ADSO</option>
-                <option>Hardware</option>
-                <option>Gestión Empresarial</option>
-                <option>Contabilidad</option>
-                <option>Diseño Gráfico</option>
-                <option>Electricidad</option>
-                <option>Otro</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-success">Guardar Cambios</button>
-            </form>
-        </div>
-        </div>
-    </div>
-    </div>
+
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-    let allButtons = Array.from(document.querySelectorAll('#button-container a'));
-    const itemsPerPage = 30; // 6 columnas x 5 filas = 30 items por página
-    let currentPage = 1;
-    let filteredButtons = Array.from(allButtons);
 
-    function showPage(page) {
-        allButtons.forEach(btn => btn.style.display = 'none');
-
-        const totalItems = filteredButtons.length;
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-        const start = (page - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-
-        for (let i = start; i < end && i < totalItems; i++) {
-            filteredButtons[i].style.display = 'flex';
-        }
-
-        const paginationControls = document.getElementById('paginationControls');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const infoText = document.getElementById('infoText');
-
-        if (totalPages <= 1) {
-            paginationControls.style.display = "none";
-        } else {
-            paginationControls.style.display = "flex";
-            prevBtn.style.display = page === 1 ? "none" : "inline-block";
-            nextBtn.style.display = page === totalPages ? "none" : "inline-block";
-        }
-
-        const showingStart = totalItems === 0 ? 0 : start + 1;
-        const showingEnd = Math.min(end, totalItems);
-        infoText.textContent = totalItems === 0 ? "No hay resultados" : `Mostrando ${showingStart}-${showingEnd} de ${totalItems}`;
-    }
-
-    document.getElementById('prevBtn').addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            showPage(currentPage);
-        }
-    });
-
-    document.getElementById('nextBtn').addEventListener('click', () => {
-        const totalPages = Math.ceil(filteredButtons.length / itemsPerPage);
-        if (currentPage < totalPages) {
-            currentPage++;
-            showPage(currentPage);
-        }
-    });
-
-    document.getElementById('searchInput').addEventListener('input', function() {
-        const query = this.value.toLowerCase();
-        filteredButtons = Array.from(allButtons).filter(btn => {
-            const btnText = btn.textContent.toLowerCase().replace(/^#/, "").trim();
-            return btnText.startsWith(query);
-        });
-        currentPage = 1;
-        showPage(currentPage);
-    });
-
-    // Función para ordenar los botones
-    function sortAndDisplayButtons() {
-        // 1. Separar el botón especial #3175010
-        const specialButtonValue = '#3175010';
-        const specialButtonIndex = allButtons.findIndex(btn => btn.textContent.trim() === specialButtonValue);
-        let specialButton = null;
-        if (specialButtonIndex > -1) {
-            specialButton = allButtons.splice(specialButtonIndex, 1)[0];
-        }
-
-        // 2. Agrupar por primer dígito
-        const groups = {};
-        allButtons.forEach(btn => {
-            const text = btn.textContent.replace('#', '').trim();
-            const firstDigit = text[0];
-            if (!groups[firstDigit]) {
-                groups[firstDigit] = [];
-            }
-            groups[firstDigit].push(btn);
-        });
-
-        // Ordenar cada grupo internamente y luego concatenarlos en orden
-        const sortedGroupKeys = Object.keys(groups).sort();
-        allButtons = sortedGroupKeys.flatMap(key => groups[key].sort((a, b) => parseInt(a.textContent.replace('#', '')) - parseInt(b.textContent.replace('#', ''))));
-
-        // 3. Poner el botón especial al principio
-        if (specialButton) {
-            allButtons.unshift(specialButton);
-        }
-
-        filteredButtons = [...allButtons]; // Actualizar la lista filtrada
-        populateEditModal(); // Rellenar el modal después de ordenar
-        showPage(currentPage);
-    }
-
-    // Rellenar select de editar con todas las fichas (después de ordenar)
-    function populateEditModal() {
-        const editSelect = document.getElementById("editFichaSelect");
-        editSelect.innerHTML = ''; // Limpiar opciones existentes
-        allButtons.forEach(btn => {
-            const option = document.createElement("option");
-            option.value = btn.textContent.trim();
-            option.textContent = btn.textContent.trim();
-            editSelect.appendChild(option);
-        });
-    }
-
-    // Inicialización con ordenamiento
-    sortAndDisplayButtons();
-</script>
-</body>
-</html>
 
 
 {% endblock %}

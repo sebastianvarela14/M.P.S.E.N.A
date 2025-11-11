@@ -32,72 +32,13 @@
         </div>
     </div>
 
+
     <!-- Botón flotante Editar -->
-    <button class="btn btn-success btn-edit" data-bs-toggle="modal" data-bs-target="#modalEditarDatos">
+    <a href="{% url 'datos_ins_editar' %}" class="btn btn-success btn-edit" title="Editar Datos">
     <i class="bi bi-pencil-square"></i>
-    </button>
-
-    <!-- Modal Editar Datos -->
-    <div class="modal fade" id="modalEditarDatos" tabindex="-1" aria-labelledby="modalEditarDatosLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content shadow">
-        <div class="modal-header bg-success text-white">
-            <h5 class="modal-title" id="modalEditarDatosLabel">✏️ Editar Datos Personales</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-            <form id="formEditarDatos">
-            <!-- Nombre -->
-            <div class="mb-3">
-                <label class="form-label">Nombre Completo</label>
-                <input type="text" class="form-control" id="inputNombre" value="Jose Omar Calderon">
-            </div>
-
-            <!-- Correo -->
-            <div class="mb-3">
-                <label class="form-label">Correo electrónico</label>
-                <input type="email" class="form-control" id="inputCorreo" value="Omitar_calderon@gmail.com">
-            </div>
-
-            <!-- Teléfono -->
-            <div class="mb-3">
-                <label class="form-label">Teléfono</label>
-                <input type="text" class="form-control" id="inputTelefono" value="313 4030 657">
-            </div>
-
-            <!-- Tipo y Número de documento -->
-            <div class="row">
-            <!-- Tipo de documento -->
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Tipo de documento</label>
-                <select class="form-select" id="inputTipoDoc">
-                <option value="C.C" selected>Cédula de Ciudadanía</option>
-                <option value="T.I">Tarjeta de Identidad</option>
-                <option value="C.E">Cédula de Extranjería</option>
-                <option value="P.A">Pasaporte</option>
-                <option value="R.C">Registro Civil</option>
-                <option value="NIT">NIT</option>
-                </select>
-            </div>
-
-            <!-- Número de documento -->
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Número de documento</label>
-                <input type="text" class="form-control" id="inputNumDoc" value="1000355780">
-            </div>
-            </div>
+    </a>
 
 
-            <!-- Botones -->
-            <div class="text-end">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-success">Guardar Cambios</button>
-            </div>
-            </form>
-        </div>
-        </div>
-    </div>
-    </div>
 
     <style>
     body {
@@ -178,22 +119,6 @@
     }
     </style>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    // Guardar cambios y reflejarlos en la tarjeta
-    document.getElementById("formEditarDatos").addEventListener("submit", function(e) {
-        e.preventDefault();
-        document.getElementById("tituloDatos").innerText = "DATOS PERSONALES DE " + document.getElementById("inputNombre").value;
-        document.getElementById("nombre").innerText = document.getElementById("inputNombre").value;
-        document.getElementById("correo").innerText = document.getElementById("inputCorreo").value;
-        document.getElementById("telefono").innerText = document.getElementById("inputTelefono").value;
-        document.getElementById("tipoDoc").innerText = document.getElementById("inputTipoDoc").value;
-        document.getElementById("numDoc").innerText = document.getElementById("inputNumDoc").value;
 
-        // Cerrar modal
-        var modal = bootstrap.Modal.getInstance(document.getElementById("modalEditarDatos"));
-        modal.hide();
-    });
-</script>
 
 {% endblock %}
