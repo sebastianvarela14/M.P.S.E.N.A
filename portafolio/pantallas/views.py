@@ -331,3 +331,9 @@ def fichas_equipoejecutor_coordinador(request):
 
 def equipo_coordinador(request):
     return render(request, "paginas/coordinador/equipo_coordinador.html")
+
+def material_editar(request):
+    return render(request, "paginas/instructor/material_editar.html")
+
+def evidencia_guia_editar(request):
+    return render(request, "paginas/instructor/evidencia_guia_editar.html")

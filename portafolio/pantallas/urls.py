@@ -127,6 +127,8 @@ urlpatterns = [
     path("opc_equipoejecutor/", views.opc_equipoejecutor, name="opc_equipoejecutor"),
     path("fichas_equipoejecutor_coordinador/", views.fichas_equipoejecutor_coordinador, name="fichas_equipoejecutor_coordinador"),
     path("equipo_coordinador/", views.equipo_coordinador, name="equipo_coordinador"),
+    path("material_editar/", views.material_editar, name="material_editar"),
+    path("evidencia_guia_editar/", views.evidencia_guia_editar, name="evidencia_guia_editar"),
 ]
 
 

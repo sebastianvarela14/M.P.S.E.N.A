@@ -1,0 +1,97 @@
+{% extends "plantillains.html" %}
+
+{% block contenido %}
+
+<div class="container mt-4 mb-5">
+    <!-- Título -->
+    <h4 class="fw-bold mb-4 text-start">EDITAR EVIDENCIA</h4>
+
+    <!-- Card con estilo unificado -->
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-4">
+
+            <form>
+                <!-- Editar Título -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Título de la Evidencia</label>
+                    <input type="text" class="form-control input-anim" value="Evidencia Guía Lógica">
+                </div>
+
+                <!-- Editar Instrucciones -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Instrucciones</label>
+                    <textarea class="form-control input-anim" rows="4">De acuerdo con las instrucciones dadas en el PDF y lo visto en clase, se debe aplicar la estructura condicional if, elif, else para resolver el problema planteado, analizando cada condición de manera ordenada y mostrando el resultado correspondiente según la opción que cumpla la condición establecida.</textarea>
+                </div>
+
+                <!-- Archivos actuales -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Archivos adjuntos actuales</label>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-file-earmark-pdf text-danger"></i> Guía de estructuras con HTML
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-file-earmark-image text-warning"></i> Ejemplos prácticos
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Subir nuevo archivo -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Agregar nuevos archivos</label>
+                    <input class="form-control input-anim" type="file" multiple>
+                </div>
+
+                <!-- Botones -->
+                <div class="text-end mt-4">
+                    <button type="button" class="btn btn-secondary btn-anim me-2">Cancelar</button>
+                    <button type="submit" class="btn btn-success btn-anim">
+                        <i class="bi bi-check-circle me-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos iguales al formulario anterior -->
+<style>
+.input-anim {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+.input-anim:focus {
+    border-color: #2e7d32;
+    box-shadow: 0 0 6px rgba(46, 125, 50, 0.5);
+    transform: scale(1.01);
+}
+.btn-anim {
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+.btn-anim:hover {
+    background-color: #1b5e20 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+</style>
+
+{% endblock %}
