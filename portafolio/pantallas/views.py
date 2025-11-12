@@ -115,11 +115,6 @@ def evidencia_guia1(request):
 def inicio(request):
     return render(request, "paginas/aprendiz/inicio.html")
 
-def trimestre_aprendiz1(request):
-    return render(request, "paginas/instructor/trimestre_aprendiz1.html")
-
-def trimestre_aprendiz2(request):
-    return render(request, "paginas/instructor/trimestre_aprendiz2.html")
 
 def carpetas_aprendiz1(request):
     return render(request, "paginas/instructor/carpetas_aprendiz1.html")
@@ -127,11 +122,6 @@ def carpetas_aprendiz1(request):
 def carpetas_aprendiz2(request):
     return render(request, "paginas/instructor/carpetas_aprendiz2.html")
 
-def datos1(request):
-    return render(request, "paginas/instructor/datos1.html")
-
-def datos2(request):
-    return render(request, "paginas/instructor/datos2.html")
 
 def coordinador(request):
     return render(request, "paginas/coordinador/coordinador.html")
@@ -331,3 +321,30 @@ def fichas_equipoejecutor_coordinador(request):
 
 def equipo_coordinador(request):
     return render(request, "paginas/coordinador/equipo_coordinador.html")
+
+def material_editar(request):
+    return render(request, "paginas/instructor/material_editar.html")
+
+def evidencia_guia_editar(request):
+    return render(request, "paginas/instructor/evidencia_guia_editar.html")
+
+def carpetasins_editar(request):
+    return render(request, "paginas/instructor/carpetasins_editar.html")
+
+def carpetasins_crear(request):
+    return render(request, "paginas/instructor/carpetasins_crear.html")
+
+def carpetas_aprendiz_crear(request):
+    return render(request, "paginas/instructor/carpetas_aprendiz_crear.html")
+
+def carpetas_aprendiz_editar(request):
+    return render(request, "paginas/instructor/carpetas_aprendiz_editar.html")
+
+def datos_ins_editar(request):
+    return render(request, "paginas/instructor/datos_ins_editar.html")
+
+def coordinador_editar(request):
+    return render(request, "paginas/coordinador/coordinador_editar.html")
+
+def coordinador_agregar(request):
+    return render(request, "paginas/coordinador/coordinador_agregar.html")

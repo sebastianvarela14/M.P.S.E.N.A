@@ -1,0 +1,30 @@
+
+{% extends "plantillains.html" %}
+{% block contenido %}
+
+<div class="container mt-4 mb-5">
+    <h4 class="fw-bold text-dark">GESTIÓN DE CARPETAS</h4>
+    <!-- Crear Carpeta -->
+    <div class="card card-custom mt-3">
+        <div class="card-header bg-success text-white">
+            <h5>➕ Crear Carpeta</h5>
+        </div>
+        <div class="card-body">
+            <form>
+                <div class="mb-3">
+                    <label class="form-label">Título</label>
+                    <input type="text" class="form-control" placeholder="Escribe el título de la carpeta">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descripción</label>
+                    <textarea class="form-control" rows="3" placeholder="Agrega una descripción"></textarea>
+                </div>
+                <div class="text-end">
+                    <button type="reset" class="btn btn-outline-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Crear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% endblock %}

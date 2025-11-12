@@ -1,0 +1,157 @@
+{% extends "plantillains.html" %}
+
+{% block contenido %}
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Datos Personales</title>
+    <style>
+        body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background-color: #f5f7fa;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        }
+
+        .container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        padding: 30px 40px;
+        width: 100%;
+        max-width: 650px;
+        border-top: 5px solid #2e7d32;
+        animation: fadeInUp 0.7s ease;
+        }
+
+        h2 {
+        text-align: center;
+        font-size: 22px;
+        margin-bottom: 25px;
+        text-transform: uppercase;
+        color: #2e7d32;
+        }
+
+        label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+        margin-top: 15px;
+        }
+
+        input, select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 15px;
+        color: #333;
+        }
+
+        .row-double {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        }
+
+        .field {
+        flex: 1;
+        }
+
+        .btn-container {
+        text-align: right;
+        margin-top: 25px;
+        }
+
+        .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.3s ease;
+        }
+
+        .btn-cancelar {
+        background: #ccc;
+        color: #000;
+        margin-right: 10px;
+        }
+
+        .btn-cancelar:hover {
+        background: #b0b0b0;
+        }
+
+        .btn-guardar {
+        background: #2e7d32;
+        color: #fff;
+        }
+
+        .btn-guardar:hover {
+        background: #256528;
+        }
+
+        @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    </head>
+    <body>
+
+    <div class="container">
+        <h2>✏️ Editar Datos Personales</h2>
+
+        <form>
+        <!-- Nombre -->
+        <label>Nombre Completo</label>
+        <input type="text" value="Jose Omar Calderon">
+
+        <!-- Correo -->
+        <label>Correo electrónico</label>
+        <input type="email" value="Omitar_calderon@gmail.com">
+
+        <!-- Teléfono -->
+        <label>Teléfono</label>
+        <input type="text" value="313 4030 657">
+
+        <!-- Tipo y número de documento -->
+        <div class="row-double">
+            <div class="field">
+            <label>Tipo de documento</label>
+            <select>
+                <option selected>Cédula de Ciudadanía</option>
+                <option>Tarjeta de Identidad</option>
+                <option>Cédula de Extranjería</option>
+                <option>Pasaporte</option>
+                <option>Registro Civil</option>
+                <option>NIT</option>
+            </select>
+            </div>
+            <div class="field">
+            <label>Número de documento</label>
+            <input type="text" value="1000355780">
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="btn-container">
+            <a href="#" class="btn btn-cancelar">Cancelar</a>
+            <a href="#" class="btn btn-guardar">Guardar Cambios</a>
+        </div>
+        </form>
+    </div>
+
+    </body>
+    </html>
+
+
+
+{% endblock %}
