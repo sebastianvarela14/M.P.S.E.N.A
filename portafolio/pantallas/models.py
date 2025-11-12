@@ -1,3 +1,173 @@
 from django.db import models
 
-# Create your models here.
+
+class Archivos(models.Model):
+    nombre_archivo = models.CharField(max_length=100, db_comment='nombre de la evidencia para su identificacion en carpetas')
+    fecha_entrega = models.DateField(blank=True, null=True, db_comment='fecha limite de entrega de la evidencia')
+    idcarpetas = models.ForeignKey('Carpetas', models.DO_NOTHING, db_column='idcarpetas', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla archivos con carpetas')
+
+    class Meta:
+        managed = False
+        db_table = 'archivos'
+
+
+class Carpetas(models.Model):
+    nombre = models.CharField(max_length=100, db_comment='nombre de la carpeta (ej: plan concertado, evidencias de aprendizaje, guias de aprendizajes,  etc.)')
+
+    class Meta:
+        managed = False
+        db_table = 'carpetas'
+
+
+class Documento(models.Model):
+    tipo = models.CharField(max_length=20, db_comment='que tipo de documento tiene el usuario cedula, tarjeta de identidad, etc')
+    numero = models.BigIntegerField(blank=True, null=True, db_comment='es el numero de identificacion')
+
+    class Meta:
+        managed = False
+        db_table = 'documento'
+
+
+class EvidenciasAprendiz(models.Model):
+    archivo = models.CharField(max_length=50, db_comment='documentos evidencias, material de apoyo')
+    observaciones = models.CharField(max_length=300, blank=True, null=True, db_comment=' observaciones del intructor')
+    fecha_entrega = models.DateField(blank=True, null=True, db_comment='la fecha de la entrega de las evidencias')
+    idusuario = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='idusuario', blank=True, null=True, db_comment=' esta es la llave foranea que conecta la tabla evidencias_aprendiz con usuario')
+    idevidencias_instructor = models.ForeignKey('EvidenciasInstructor', models.DO_NOTHING, db_column='idevidencias_instructor', blank=True, null=True, db_comment=' esta es la llave foranea que conecta la tabla evidencias_aprendiz con evidencias_instructor')
+
+    class Meta:
+        managed = False
+        db_table = 'evidencias_aprendiz'
+
+
+class EvidenciasFicha(models.Model):
+    idficha = models.ForeignKey('Ficha', models.DO_NOTHING, db_column='idficha', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla evidenciasins_usuario con usuario')
+    idevidencias_instructor = models.ForeignKey('EvidenciasInstructor', models.DO_NOTHING, db_column='idevidencias_instructor', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla evidenciasins_usuario con evidencias_instructor')
+
+    class Meta:
+        managed = False
+        db_table = 'evidencias_ficha'
+
+
+class EvidenciasInstructor(models.Model):
+    titulo = models.CharField(max_length=70, db_comment='titulo de la evidencia que el instructor crea')
+    instrucciones = models.CharField(max_length=200, blank=True, null=True, db_comment='instrucciones detalladas de la evidencia a entregar')
+    calificacion = models.CharField(max_length=20, db_comment='nota maxima o calificacion asignada a la evidencia')
+    fecha_de_entrega = models.DateField(blank=True, null=True, db_comment='fecha limite en la que el aprendiz debe entregar la evidencia')
+    archivo = models.CharField(max_length=100, db_comment='nombre o ruta del archivo adjunto correspondiente a la evidencia')
+
+    class Meta:
+        managed = False
+        db_table = 'evidencias_instructor'
+
+
+class Ficha(models.Model):
+    numero_ficha = models.IntegerField(db_comment='aqui se define a cual ficha pertenece')
+    idjornada = models.ForeignKey('Jornada', models.DO_NOTHING, db_column='idjornada', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla ficha con jornada')
+    idprograma = models.ForeignKey('Programa', models.DO_NOTHING, db_column='idprograma', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla ficha con programa')
+
+    class Meta:
+        managed = False
+        db_table = 'ficha'
+
+
+class FichaCarpetas(models.Model):
+    idficha = models.ForeignKey(Ficha, models.DO_NOTHING, db_column='idficha', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla ficha_carpetas con ficha')
+    idcarpetas = models.ForeignKey(Carpetas, models.DO_NOTHING, db_column='idcarpetas', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla usuario_carpeta con carpeta')
+
+    class Meta:
+        managed = False
+        db_table = 'ficha_carpetas'
+
+
+class FichaUsuario(models.Model):
+    idusuario = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='idusuario', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla ficha_usuario con usuario')
+    idficha = models.ForeignKey(Ficha, models.DO_NOTHING, db_column='idficha', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla ficha_usuario con ficha')
+
+    class Meta:
+        managed = False
+        db_table = 'ficha_usuario'
+
+
+class Jornada(models.Model):
+    nombre = models.CharField(max_length=50, db_comment='aqui va si es diurna, nocturna o mixta')
+
+    class Meta:
+        managed = False
+        db_table = 'jornada'
+
+
+class Material(models.Model):
+    titulo = models.CharField(max_length=100, db_comment='titulo del material')
+    descripcion = models.CharField(max_length=500, blank=True, null=True, db_comment='instrucciones o descripcion del material de apoyo')
+    archivo = models.CharField(max_length=255, blank=True, null=True, db_comment='nombre o ruta del archivo de apoyo adjunto por el instructor')
+
+    class Meta:
+        managed = False
+        db_table = 'material'
+
+
+class MaterialUsuario(models.Model):
+    idusuario = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='idusuario', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla material_usuario con usuario')
+    idmaterial = models.ForeignKey(Material, models.DO_NOTHING, db_column='idmaterial', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla material_usuario con material')
+
+    class Meta:
+        managed = False
+        db_table = 'material_usuario'
+
+
+class NombreAsignatura(models.Model):
+    idtipo_asignatura = models.ForeignKey('TipoAsignatura', models.DO_NOTHING, db_column='idtipo_asignatura', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla nombre_asignatura con tipo_asignatura')
+    idficha = models.ForeignKey(Ficha, models.DO_NOTHING, db_column='idficha', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla nombre_asignatura con ficha')
+    nombre = models.CharField(max_length=200, db_comment='aqui va el nombre que se le asigne a la competencia')
+
+    class Meta:
+        managed = False
+        db_table = 'nombre_asignatura'
+
+
+class Programa(models.Model):
+    programa = models.CharField(max_length=150, db_comment='tecnico o tecnologo')
+
+    class Meta:
+        managed = False
+        db_table = 'programa'
+
+
+class Rol(models.Model):
+    tipo = models.CharField(max_length=50, db_comment='aqui se define el rol del usuario que son (aprendiz, instructor, coordinacion y observador)')
+
+    class Meta:
+        managed = False
+        db_table = 'rol'
+
+
+class TipoAsignatura(models.Model):
+    nombre = models.CharField(max_length=200, db_comment='Si la competencia es tecnica o transversal')
+
+    class Meta:
+        managed = False
+        db_table = 'tipo_asignatura'
+
+
+class Usuario(models.Model):
+    nombres = models.CharField(max_length=100, db_comment='aqui van los nombre del usuario')
+    apellidos = models.CharField(max_length=100, db_comment='aqui van los apellidos del usuario')
+    correo = models.CharField(max_length=100, db_comment='aqui estara el correo del usuario')
+    telefono = models.BigIntegerField(db_comment='aqui va el numero de telefono del usuario')
+    usuario = models.CharField(max_length=100, db_comment='aqui va el usuario de regristro de cada uno de los usuarios')
+    contrasena = models.CharField(max_length=20, db_comment='aca estara la contrasena para entrar al sistema de cada usuario')
+    iddocumento = models.ForeignKey(Documento, models.DO_NOTHING, db_column='iddocumento', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla usuario con documento')
+
+    class Meta:
+        managed = False
+        db_table = 'usuario'
+
+
+class UsuarioRol(models.Model):
+    idusuario = models.ForeignKey(Usuario, models.DO_NOTHING, db_column='idusuario', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla usuario_rol con usuario')
+    idrol = models.ForeignKey(Rol, models.DO_NOTHING, db_column='idrol', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla usuario_rol con rol')
+
+    class Meta:
+        managed = False
+        db_table = 'usuario_rol'
