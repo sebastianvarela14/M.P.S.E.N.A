@@ -214,14 +214,55 @@
 <body>
     <div class="login-container">
         <h2>Iniciar Sesión</h2>
-        <form action="{% url 'fichas_ins' %}" method="post">
+        <form action="{% url 'sesion' %}" method="post">
             {% csrf_token %}
-            <div class="form-group user">
-                <input type="text" name="usuario" placeholder="Usuario" required />
-            </div>
-            <div class="form-group password">
-                <input type="password" name="contraseña" placeholder="Contraseña" required />
-            </div>
+            <input type="text" name="usuario" placeholder="Usuario" required 
+                value="{{ usuario_ingresado }}"
+                style="width: 320px; height: 30px; font-size: 16px; padding: 8px; border-radius: 6px; margin-bottom: 6px;">
+            <div style="position: relative; width: 320px; margin-bottom: 6px;">
+            <input id="contrasena"
+                type="password"
+                name="contrasena"
+                placeholder="Contraseña"
+                required
+                style="width: 100%; height: 40px; font-size: 16px; padding: 8px 40px 8px 12px; border-radius: 6px; box-sizing: border-box; border: 1px solid #ccc;">
+            
+            <span id="toggle-password" 
+                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; display: flex; align-items: center;">
+                <svg id="icon-eye" xmlns="http://www.w3.org/2000/svg" width="20" height="20" 
+                    viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" 
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg id="icon-eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" 
+                    viewBox="0 0 24 24" fill="none" stroke="#f44336" stroke-width="2" 
+                    stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.73 21.73 0 0 1 5.06-7.06"></path>
+                    <path d="M1 1l22 22"></path>
+                    <path d="M9.53 9.53A3 3 0 0 0 14.47 14.47"></path>
+                </svg>
+            </span>
+        </div>
+            <button type="submit">Iniciar sesión</button>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <small><p id="mensaje-error" style="color:red; font-weight:bold;">{{ message }}</p></small>
+                {% endfor %}
+            {% endif %}
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const inputs = document.querySelectorAll('input[name="usuario"], input[name="contrasena"]');
+                    const mensajeError = document.getElementById('mensaje-error');
+                    
+                    inputs.forEach(input => {
+                        input.addEventListener('input', () => {
+                            if (mensajeError) mensajeError.style.display = 'none';
+                        });
+                    });
+                });
+            </script>
 
             <!-- Opciones extras: Mantener sesión sigue presente -->
             <div class="extra-options">
@@ -249,6 +290,24 @@
             ¿Olvidaste tu contraseña? <a href="#">Recupérala aquí</a>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('contrasena');
+        const toggle = document.getElementById('toggle-password');
+        const eye = document.getElementById('icon-eye');
+        const eyeOff = document.getElementById('icon-eye-off');
+
+        toggle.addEventListener('click', function () {
+            const visible = input.type === 'text';
+            input.type = visible ? 'password' : 'text';
+            eye.style.display = visible ? 'inline' : 'none';
+            eyeOff.style.display = visible ? 'none' : 'inline';
+        });
+        });
+    </script>
+
+
 </body>
 </html>
 {% endblock %}
