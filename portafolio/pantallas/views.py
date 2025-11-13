@@ -1,8 +1,8 @@
-from django.shortcuts import render
+import mysql.connector
+from django.shortcuts import render, redirect
+from django.contrib import messages
 
 
-def calificaciones(request):
-    return render("paginas/instructor/calificaciones.html")
 
 def agregar_evidencia(request):
     return render(request, "paginas/instructor/agregar_evidencia.html")
@@ -262,8 +262,71 @@ def evidencia_calificar_coordinador(request):
     return render(request, "paginas/coordinador/evidencia_calificar_coordinador.html")
 
 def sesion(request):
-    return render(request, "paginas/instructor/sesion.html")
+    usuario_ingresado = ""
 
+    # 🔹 Limpiar mensajes antiguos al entrar por GET
+    if request.method == "GET":
+        storage = messages.get_messages(request)
+        storage.used = True
+
+    if request.method == 'POST':
+        usuario_input = request.POST.get('usuario')
+        contrasena_input = request.POST.get('contrasena')
+        usuario_ingresado = usuario_input
+
+        conexion = mysql.connector.connect(
+            host="localhost",
+            user="administrador",
+            password="proyecto21mpsena",
+            database="proyecto"
+        )
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM usuario WHERE usuario = %s", (usuario_input,))
+        usuario = cursor.fetchone()
+
+        if not usuario:
+            messages.error(request, "El usuario no existe.")
+            return redirect('sesion')
+        else:
+            contrasena_correcta = usuario['contrasena']
+            if contrasena_input != contrasena_correcta:
+                messages.error(request, "Contraseña incorrecta.")
+                return redirect('sesion')
+            else:
+                # ✅ Buscar el rol del usuario
+                cursor.execute("""
+                    SELECT r.tipo
+                    FROM rol r
+                    INNER JOIN usuario_rol ur ON ur.idrol = r.id
+                    WHERE ur.idusuario = %s
+                """, (usuario['id'],))
+                rol = cursor.fetchone()
+
+                if rol:
+                    tipo_rol = rol['tipo'].lower()
+                    # Redirigir según el tipo de rol
+                    if tipo_rol == 'instructor':
+                        return redirect('fichas_ins')
+                    elif tipo_rol == 'aprendiz':
+                        return redirect('inicio')
+                    elif tipo_rol == 'coordinacion':
+                        return redirect('coordinador')
+                    elif tipo_rol == 'observador':
+                        return redirect('observador')
+                    else:
+                        messages.error(request, f"Rol desconocido: {tipo_rol}")
+                        return redirect('sesion')
+                else:
+                    messages.error(request, "No se encontró un rol asignado para este usuario.")
+                    return redirect('sesion')
+                
+        cursor.close()
+        conexion.close()
+
+    return render(request, "paginas/instructor/sesion.html", {
+        'usuario_ingresado': usuario_ingresado
+        }
+    )
 
 def configuracion_instructor(request):
     return render(request, "paginas/instructor/configuracion_instructor.html")
