@@ -1,0 +1,79 @@
+{% extends "plantillains.html" %}
+{% load static %}
+
+{% block contenido %}
+
+<<div class="container mt-4 mb-5">
+    <h4 class="fw-bold text-dark">CONFIGURACIÓN</h4>
+
+    <!-- Tarjeta del formulario -->
+    <div class="card card-custom mt-3">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">✏️ Editar Recuadro</h5>
+        </div>
+
+        <div class="card-body">
+            <form>
+
+                <!-- Selección del recuadro -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Selecciona un recuadro</label>
+                    <select class="form-select" required>
+                        <option selected disabled>Selecciona una opción</option>
+                        <option>Recuadro 1</option>
+                        <option>Recuadro 2</option>
+                        <option>Recuadro 3</option>
+                    </select>
+                </div>
+
+                <!-- Nuevo título -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nuevo título</label>
+                    <input type="text" class="form-control" placeholder="Escribe un nuevo título" required>
+                </div>
+
+                <!-- Nuevo emoji -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nuevo emoticón</label>
+                    <select class="form-select" required>
+                        <option value="📁">📁 Carpeta</option>
+                        <option value="📒">📒 Cuaderno</option>
+                        <option value="📚">📚 Libro</option>
+                        <option value="📝">📝 Nota</option>
+                        <option value="⭐">⭐ Estrella</option>
+                        <option value="💻">💻 Computador</option>
+                        <option value="📊">📊 Gráfico</option>
+                        <option value="📅">📅 Calendario</option>
+                        <option value="🎓">🎓 Educación</option>
+                        <option value="🔒">🔒 Privado</option>
+                        <option value="⚙️">⚙️ Configuración</option>
+                        <option value="🌍">🌍 Mundo</option>
+                    </select>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="reset" class="btn btn-outline-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-custom {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s ease;
+    }
+
+    .card-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+</style>
+
+
+{% endblock %}

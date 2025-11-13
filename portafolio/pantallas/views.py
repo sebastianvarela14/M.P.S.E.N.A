@@ -1,8 +1,13 @@
 import mysql.connector
 from django.shortcuts import render, redirect
 from django.contrib import messages
+import os
+from dotenv import load_dotenv
 
+load_dotenv() 
 
+def plantillains(request):
+    return render(request, "paginas/instructor/plantilla.html", )
 
 def agregar_evidencia(request):
     return render(request, "paginas/instructor/agregar_evidencia.html")
@@ -26,7 +31,51 @@ def trimestre3(request):
     return render(request, "paginas/carpetas.html")
 
 def fichas_ins(request):
-    return render(request, "paginas/instructor/fichas_ins.html")
+    if 'usuario' not in request.session:
+        return redirect('sesion')
+
+    usuario_nombre = request.session['usuario']
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("SELECT id FROM usuario WHERE usuario = %s", (usuario_nombre,))
+    usuario = cursor.fetchone()
+
+    if not usuario:
+        cursor.close()
+        conexion.close()
+        return redirect('sesion')
+
+    id_usuario = usuario['id']
+
+    cursor.execute("""
+        SELECT f.id, f.numero_ficha, p.programa, j.nombre AS jornada
+        FROM ficha f
+        INNER JOIN ficha_usuario fu ON fu.idficha = f.id
+        INNER JOIN usuario u ON fu.idusuario = u.id
+        INNER JOIN programa p ON f.idprograma = p.id
+        INNER JOIN jornada j ON f.idjornada = j.id
+        WHERE u.id = %s
+    """, (id_usuario,))
+
+    fichas = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/fichas_ins.html", {
+        'usuario_nombre': usuario_nombre,
+        'fichas': fichas
+    })
+
+
+
 
 def tarea(request):
     return render(request, "paginas/aprendiz/tarea.html")
@@ -306,6 +355,7 @@ def sesion(request):
                     tipo_rol = rol['tipo'].lower()
                     # Redirigir según el tipo de rol
                     if tipo_rol == 'instructor':
+                        request.session['usuario'] = usuario['usuario']
                         return redirect('fichas_ins')
                     elif tipo_rol == 'aprendiz':
                         return redirect('inicio')
@@ -332,7 +382,8 @@ def configuracion_instructor(request):
     return render(request, "paginas/instructor/configuracion_instructor.html")
 
 def configuracion_instructor_2(request):
-    return render(request, "paginas/instructor/configuracion_instructor_2.html")
+    return render(request, "paginas/instructor/configuracion_instructor_2.html",)
+
 
 def configuracion_aprendiz(request):
     return render(request, "paginas/aprendiz/configuracion_aprendiz.html")
@@ -411,3 +462,9 @@ def coordinador_editar(request):
 
 def coordinador_agregar(request):
     return render(request, "paginas/coordinador/coordinador_agregar.html")
+
+def carpeta2_editar(request):
+    return render(request, "paginas/instructor/carpeta2_editar.html")
+
+def carpeta2_crear(request):
+    return render(request, "paginas/instructor/carpeta2_crear.html")
