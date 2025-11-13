@@ -37,9 +37,6 @@
         font-size: 28px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
-    h5 {
-        font-weight: 600;
-    }
 </style>
 </head>
 <body>
@@ -49,44 +46,50 @@
 
     <!-- Tarjeta del formulario -->
     <div class="card card-custom mt-3">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">✏️ Editar Guía</h5>
+        </div>
+
         <div class="card-body">
             <form>
-                <!-- Campo Título -->
+                <!-- Campo título -->
                 <div class="mb-3">
                     <label for="titulo" class="form-label fw-semibold">Título</label>
-                    <input type="text" class="form-control" id="titulo" placeholder="Apoyo Guía Uno">
+                    <input type="text" class="form-control" id="titulo" value="Apoyo Guía Uno" placeholder="Escribe el título">
                 </div>
 
-                <!-- Campo Descripción -->
+                <!-- Campo descripción -->
                 <div class="mb-3">
                     <label for="descripcion" class="form-label fw-semibold">Instrucciones / Descripción</label>
-                    <textarea class="form-control" id="descripcion" rows="4" placeholder="Este material corresponde a la primera guía de apoyo. Aquí encontrarás recursos, explicaciones y anexos que complementan el desarrollo del tema tratado en la formación."></textarea>
+                    <textarea class="form-control" id="descripcion" rows="4" placeholder="Escribe las instrucciones o descripción">Este material corresponde a la primera guía de apoyo. Aquí encontrarás recursos, explicaciones y anexos que complementan el desarrollo del tema tratado en la formación.</textarea>
                 </div>
 
-                <!-- Archivos Adjuntos -->
+                <!-- Archivos adjuntos -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Archivos Adjuntos</label>
+
                     <ul class="list-group mb-3">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-file-earmark-pdf text-danger"></i> Guía de Actividades</span>
-                            <button type="button" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger">
+                                Eliminar
+                            </button>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega</span>
-                            <button type="button" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger">
+                                Eliminar
+                            </button>
                         </li>
                     </ul>
+
                     <input type="file" class="form-control">
                 </div>
 
                 <!-- Botones -->
-                <div class="d-flex justify-content-between">
-                    <button type="reset" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle me-2"></i>Guardar Cambios
-                    </button>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="reset" class="btn btn-outline-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
                 </div>
             </form>
         </div>
