@@ -438,6 +438,33 @@ def sesion(request):
 
                 if rol:
                     tipo_rol = rol['tipo'].lower()
+                    
+                    request.session['usuario_id'] = usuario['id']
+                    request.session['usuario_nombre'] = usuario['usuario']
+
+                    # Redirigir según el tipo de rol
+                    if tipo_rol == 'instructor':
+                        return redirect('fichas_ins')
+                    elif tipo_rol == 'aprendiz':
+                        return redirect('inicio')
+                    elif tipo_rol == 'coordinacion':
+                        return redirect('coordinador')
+                    elif tipo_rol == 'observador':
+                        return redirect('observador')
+                    else:
+                        messages.error(request, f"Rol desconocido: {tipo_rol}")
+                        return redirect('sesion')
+                else:
+                    messages.error(request, "No se encontró un rol asignado para este usuario.")
+                    return redirect('sesion')
+                
+        cursor.close()
+        conexion.close()
+
+    return render(request, "paginas/instructor/sesion.html", {
+        'usuario_ingresado': usuario_ingresado
+        }
+    )
 
 def configuracion_instructor(request):
     return render(request, "paginas/instructor/configuracion_instructor.html")
