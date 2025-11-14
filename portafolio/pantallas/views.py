@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 import os
 from dotenv import load_dotenv
+from .models import Usuario, UsuarioRol, Rol
 
 load_dotenv() 
 
