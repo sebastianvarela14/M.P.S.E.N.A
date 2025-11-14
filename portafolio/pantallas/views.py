@@ -1,6 +1,7 @@
 import mysql.connector
 from django.shortcuts import render, redirect
 from django.contrib import messages
+import os
 
 
 
@@ -38,7 +39,39 @@ def datos(request):
     return render(request, "paginas/instructor/datos.html")
 
 def datos_ins(request):
-    return render(request, "paginas/instructor/datos_ins.html")
+    usuario_id = request.session.get('usuario_id')  # 🔹 Obtener ID de la sesión
+
+    if not usuario_id:
+        messages.error(request, "Debes iniciar sesión primero.")
+        return redirect('sesion')
+
+    # Conectar a la base de datos
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+    
+    # Obtener los datos del usuario por ID
+    cursor.execute("""
+        SELECT u.nombres, u.apellidos, u.correo, u.telefono,
+               d.tipo AS tipo_documento, d.numero AS num_documento
+        FROM usuario u
+        LEFT JOIN documento d ON u.iddocumento = d.id
+        WHERE u.id = %s
+    """, (usuario_id,))
+
+    usuario = cursor.fetchone()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/datos_ins.html", {
+        'usuario': usuario
+    })
+
 
 def evidencias(request):
     return render(request, "paginas/instructor/evidencias.html")
@@ -275,10 +308,10 @@ def sesion(request):
         usuario_ingresado = usuario_input
 
         conexion = mysql.connector.connect(
-            host="localhost",
-            user="administrador",
-            password="proyecto21mpsena",
-            database="proyecto"
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
         )
         cursor = conexion.cursor(dictionary=True)
         cursor.execute("SELECT * FROM usuario WHERE usuario = %s", (usuario_input,))
@@ -304,6 +337,10 @@ def sesion(request):
 
                 if rol:
                     tipo_rol = rol['tipo'].lower()
+
+                    request.session['usuario_id'] = usuario['id']
+                    request.session['usuario_nombre'] = usuario['usuario']
+
                     # Redirigir según el tipo de rol
                     if tipo_rol == 'instructor':
                         return redirect('fichas_ins')
@@ -404,7 +441,83 @@ def carpetas_aprendiz_editar(request):
     return render(request, "paginas/instructor/carpetas_aprendiz_editar.html")
 
 def datos_ins_editar(request):
-    return render(request, "paginas/instructor/datos_ins_editar.html")
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        messages.error(request, "Debes iniciar sesión primero.")
+        return redirect('sesion')
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+
+    # Obtener datos actuales
+    cursor.execute("SELECT * FROM usuario u LEFT JOIN documento d ON u.iddocumento = d.id WHERE u.id = %s", (usuario_id,))
+    usuario = cursor.fetchone()
+
+    if request.method == "POST":
+        nombres = request.POST.get("nombres")
+        apellidos = request.POST.get("apellidos")
+        correo = request.POST.get("correo")
+        telefono = request.POST.get("telefono")
+        tipo_documento = request.POST.get("tipo_documento")
+        numero_documento_str = request.POST.get("numero_documento", "").strip()
+
+        # Validar que no esté vacío
+        if numero_documento_str == "":
+            messages.error(request, "El número de documento no puede estar vacío.")
+            return redirect('datos_ins_editar')
+        try:
+            numero_documento = int(numero_documento_str)
+        except ValueError:
+            messages.error(request, "El número de documento debe ser un número válido.")
+            return redirect('datos_ins_editar')
+
+        if usuario['iddocumento']:
+            # Actualizar documento existente
+            cursor.execute("""
+                UPDATE documento 
+                SET tipo = %s, numero = %s 
+                WHERE id = %s
+            """, (tipo_documento, numero_documento, usuario['iddocumento']))
+        else:
+            # Insertar nuevo documento
+            cursor.execute("""
+                INSERT INTO documento (tipo, numero)
+                VALUES (%s, %s)
+            """, (tipo_documento, numero_documento, usuario['iddocumento']))
+            nuevo_id = cursor.lastrowid
+            # Asociar el nuevo documento al usuario
+            cursor.execute("""
+                UPDATE usuario 
+                SET iddocumento = %s
+                WHERE id = %s
+            """, (nuevo_id, usuario_id))
+
+
+        # Actualizar tabla usuario
+        cursor.execute("""
+            UPDATE usuario 
+            SET nombres = %s, apellidos = %s, correo = %s, telefono = %s
+            WHERE id = %s
+        """, (nombres, apellidos, correo, telefono, usuario_id))
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+        messages.success(request, "Tus datos se actualizaron correctamente.")
+        return redirect('datos_ins')
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/datos_ins_editar.html", {
+        "usuario": usuario
+    })
 
 def coordinador_editar(request):
     return render(request, "paginas/coordinador/coordinador_editar.html")
