@@ -139,11 +139,12 @@ def tareas_2(request):
 
 def lista_aprendices(request):
     conexion = mysql.connector.connect(
-        host="localhost",
-        user="administrador",
-        password="proyecto21mpsena",
-        database="proyecto"
-    )
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+    
 
     cursor = conexion.cursor(dictionary=True)
 
@@ -221,11 +222,11 @@ def inicio(request):
     if id_aprendiz:
         try:
             conexion = mysql.connector.connect(
-                host="localhost",
-                user="administrador",
-                password="proyecto21mpsena",
-                database="proyecto"
-            )
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME")
+        )
             cursor = conexion.cursor(dictionary=True)
 
             # Consulta SQL para obtener las competencias de la ficha del aprendiz
