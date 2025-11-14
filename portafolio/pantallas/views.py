@@ -109,7 +109,7 @@ def datos_ins(request):
     # Obtener los datos del usuario por ID
     cursor.execute("""
         SELECT u.nombres, u.apellidos, u.correo, u.telefono,
-               d.tipo AS tipo_documento, d.numero AS num_documento
+                d.tipo AS tipo_documento, d.numero AS num_documento
         FROM usuario u
         LEFT JOIN documento d ON u.iddocumento = d.id
         WHERE u.id = %s
@@ -675,9 +675,9 @@ def coordinador_editar(request):
 def coordinador_agregar(request):
     return render(request, "paginas/coordinador/coordinador_agregar.html")
 
-def carpeta2_editar(request):
-    return render(request, "paginas/instructor/carpeta2_editar.html")
+def carpetas2_editar(request):
+    return render(request, "paginas/instructor/carpetas2_editar.html")
 
-def carpeta2_crear(request):
-    return render(request, "paginas/instructor/carpeta2_crear.html")
+def carpetas2_crear(request):
+    return render(request, "paginas/instructor/carpetas2_crear.html") 
 
