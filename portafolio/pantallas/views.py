@@ -57,7 +57,30 @@ def tareas_2(request):
     return render(request, "paginas/aprendiz/tareas_2.html")
 
 def lista_aprendices(request):
-    return render(request, "paginas/instructor/lista_aprendices.html")
+    conexion = mysql.connector.connect(
+        host="localhost",
+        user="administrador",
+        password="proyecto21mpsena",
+        database="proyecto"
+    )
+
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT u.id, u.nombres, u.apellidos
+        FROM usuario u
+        WHERE u.id IN (3, 4)
+    """)
+
+    aprendices = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/lista_aprendices.html", {
+        "aprendices": aprendices
+    })
+
 
 def carpetas2(request):
     return render(request, "paginas/instructor/carpetas2.html")
@@ -89,9 +112,6 @@ def carpetas(request):
 
 def material_principal(request):
     return render(request, "paginas/instructor/material_principal.html")
-
-def lista_aprendices(request):
-    return render(request, "paginas/instructor/lista_aprendices.html")
 
 def adentro_material(request):
     return render(request, "paginas/instructor/adentro_material.html")

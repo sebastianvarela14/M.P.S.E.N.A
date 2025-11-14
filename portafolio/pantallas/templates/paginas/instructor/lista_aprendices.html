@@ -53,11 +53,15 @@
 
         <!-- Lista de aprendices -->
         <div id="lista" class="list-group shadow-sm">
-            <a href="{% url 'datos' %}" class="list-group-item list-group-item-action">
-            <i class="bi bi-person-circle"></i> Laura Camila Castañeda Rojas
-            </a>
-        </div>
-    </div>
+    {% for a in aprendices %}
+        <a href="{% url 'datos' %}?id={{ a.id }}" class="list-group-item list-group-item-action">
+            <i class="bi bi-person-circle"></i> {{ a.nombres }} {{ a.apellidos }}
+        </a>
+    {% empty %}
+        <div class="list-group-item">No hay aprendices para mostrar.</div>
+    {% endfor %}
+</div>
+
 
 <script>
     const buscarInput = document.getElementById("buscar");
