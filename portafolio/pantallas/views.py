@@ -605,3 +605,4 @@ def carpeta2_editar(request):
 
 def carpeta2_crear(request):
     return render(request, "paginas/instructor/carpeta2_crear.html")
+
