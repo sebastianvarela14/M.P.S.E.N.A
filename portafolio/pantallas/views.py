@@ -1,6 +1,12 @@
 import mysql.connector
 from django.shortcuts import render, redirect
 from django.contrib import messages
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 
 
 
@@ -122,18 +128,59 @@ def carpetas_aprendiz1(request):
 def carpetas_aprendiz2(request):
     return render(request, "paginas/instructor/carpetas_aprendiz2.html")
 
-
-def coordinador(request):
-    return render(request, "paginas/coordinador/coordinador.html")
-
-def entrada(request):
-    return render(request, "paginas/aprendiz/entrada.html")
-
 def trimestre_laura(request):
-    return render(request, "paginas/aprendiz/trimestre_laura.html")
+    return render(request, "paginas/instructor/carpetas_aprendiz2.html")
 
 def carpetas_laura(request):
     return render(request, "paginas/aprendiz/carpetas_laura.html")
+
+
+def coordinador_fichas(request):
+    return render(request, "paginas/aprendiz/trimestre_laura.html")
+
+
+def coordinador(request):
+
+    # CORREGIDO: rol correcto
+    if request.session.get('rol') != "coordinador":
+        messages.error(request, "No tienes permiso para acceder a esta sección.")
+        return redirect('sesion')
+
+    try:
+        conexion = mysql.connector.connect(
+            host=os.getenv('DB_HOST'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            database=os.getenv('DB_NAME')
+        )
+
+        cursor = conexion.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM fichas")
+        fichas = cursor.fetchall()
+
+        cursor.execute("SELECT * FROM estudiantes")
+        estudiantes = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        return render(request, "paginas/coordinador/coordinador.html", {
+            'fichas': fichas,
+            'estudiantes': estudiantes
+        })
+
+    except Exception as e:
+        messages.error(request, f"Error al conectar con la base de datos: {e}")
+
+        return render(request, "paginas/coordinador/coordinador.html", {
+            'fichas': [],
+            'estudiantes': []
+        })
+
+
+def evidencia_laura(request):
+    return render(request, "pantallas/evidencia.html", {"datos": datos})
 
 def evidencia_laura(request):
     return render(request, "paginas/aprendiz/evidencia_laura.html")
@@ -246,6 +293,9 @@ def datos_observador(request):
 def carpetas_general(request):
     return render(request, "paginas/coordinador/carpetas_general.html")
 
+def entrada(request):
+    return render(request, "paginas/aprendiz/entrada.html")
+
 def trimestre_general_coordinador(request):
     return render(request, "paginas/coordinador/trimestre_general_coordinador.html")
 
@@ -262,71 +312,7 @@ def evidencia_calificar_coordinador(request):
     return render(request, "paginas/coordinador/evidencia_calificar_coordinador.html")
 
 def sesion(request):
-    usuario_ingresado = ""
-
-    # 🔹 Limpiar mensajes antiguos al entrar por GET
-    if request.method == "GET":
-        storage = messages.get_messages(request)
-        storage.used = True
-
-    if request.method == 'POST':
-        usuario_input = request.POST.get('usuario')
-        contrasena_input = request.POST.get('contrasena')
-        usuario_ingresado = usuario_input
-
-        conexion = mysql.connector.connect(
-            host="localhost",
-            user="administrador",
-            password="proyecto21mpsena",
-            database="proyecto"
-        )
-        cursor = conexion.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM usuario WHERE usuario = %s", (usuario_input,))
-        usuario = cursor.fetchone()
-
-        if not usuario:
-            messages.error(request, "El usuario no existe.")
-            return redirect('sesion')
-        else:
-            contrasena_correcta = usuario['contrasena']
-            if contrasena_input != contrasena_correcta:
-                messages.error(request, "Contraseña incorrecta.")
-                return redirect('sesion')
-            else:
-                # ✅ Buscar el rol del usuario
-                cursor.execute("""
-                    SELECT r.tipo
-                    FROM rol r
-                    INNER JOIN usuario_rol ur ON ur.idrol = r.id
-                    WHERE ur.idusuario = %s
-                """, (usuario['id'],))
-                rol = cursor.fetchone()
-
-                if rol:
-                    tipo_rol = rol['tipo'].lower()
-                    # Redirigir según el tipo de rol
-                    if tipo_rol == 'instructor':
-                        return redirect('fichas_ins')
-                    elif tipo_rol == 'aprendiz':
-                        return redirect('inicio')
-                    elif tipo_rol == 'coordinacion':
-                        return redirect('coordinador')
-                    elif tipo_rol == 'observador':
-                        return redirect('observador')
-                    else:
-                        messages.error(request, f"Rol desconocido: {tipo_rol}")
-                        return redirect('sesion')
-                else:
-                    messages.error(request, "No se encontró un rol asignado para este usuario.")
-                    return redirect('sesion')
-                
-        cursor.close()
-        conexion.close()
-
-    return render(request, "paginas/instructor/sesion.html", {
-        'usuario_ingresado': usuario_ingresado
-        }
-    )
+    return render(request, "paginas/instructor/sesion.html", )
 
 def configuracion_instructor(request):
     return render(request, "paginas/instructor/configuracion_instructor.html")
