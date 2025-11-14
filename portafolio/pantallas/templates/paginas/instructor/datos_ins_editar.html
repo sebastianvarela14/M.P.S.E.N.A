@@ -109,49 +109,47 @@
     <div class="container">
         <h2>✏️ Editar Datos Personales</h2>
 
-        <form>
-        <!-- Nombre -->
-        <label>Nombre Completo</label>
-        <input type="text" value="Jose Omar Calderon">
+        <form method="POST" action="{% url 'datos_ins_editar' %}">
+            {% csrf_token %}
+            <!-- Nombre -->
+            <label>Nombre Completo</label>
+            <input type="text" name="nombres" value="{{ usuario.nombres }}">
 
-        <!-- Correo -->
-        <label>Correo electrónico</label>
-        <input type="email" value="Omitar_calderon@gmail.com">
+            <!-- Apellido -->
+            <label>Apellidos</label>
+            <input type="text" name="apellidos" value="{{ usuario.apellidos }}">
 
-        <!-- Teléfono -->
-        <label>Teléfono</label>
-        <input type="text" value="313 4030 657">
+            <!-- Correo -->
+            <label>Correo electrónico</label>
+            <input type="email" name="correo" value="{{ usuario.correo }}">
 
-        <!-- Tipo y número de documento -->
-        <div class="row-double">
-            <div class="field">
-            <label>Tipo de documento</label>
-            <select>
-                <option selected>Cédula de Ciudadanía</option>
-                <option>Tarjeta de Identidad</option>
-                <option>Cédula de Extranjería</option>
-                <option>Pasaporte</option>
-                <option>Registro Civil</option>
-                <option>NIT</option>
-            </select>
+            <!-- Teléfono -->
+            <label>Teléfono</label>
+            <input type="text" name="telefono" value="{{ usuario.telefono }}">
+
+            <!-- Tipo y número de documento -->
+            <div class="row-double">
+                <div class="field">
+                    <label>Tipo de documento</label>
+                    <select name="tipo_documento">
+                        <option value="{{ usuario.tipo }}" selected>{{ usuario.tipo }}</option>
+                        <option value="Cedula de Ciudadania" {% if usuario.tipo == "C.C" %}disabled{% endif %}>Cédula de Ciudadanía</option>
+                        <option value="Tarjeta de Identidad" {% if usuario.tipo == "T.I" %}disabled{% endif %}>Tarjeta de Identidad</option>
+                    </select>
+                </div> 
+                <div class="field">
+                    <label>Número de documento</label>
+                    <input type="text" name="numero_documento" value="{{ usuario.numero }}">
+                </div>
             </div>
-            <div class="field">
-            <label>Número de documento</label>
-            <input type="text" value="1000355780">
-            </div>
-        </div>
 
-        <!-- Botones -->
-        <div class="btn-container">
-            <a href="#" class="btn btn-cancelar">Cancelar</a>
-            <a href="#" class="btn btn-guardar">Guardar Cambios</a>
-        </div>
+            <div class="btn-container">
+                <a href="{% url 'datos_ins' %}" class="btn btn-cancelar">Cancelar</a>
+                <button type="submit" class="btn btn-guardar">Guardar Cambios</button>
+            </div>
         </form>
     </div>
 
     </body>
     </html>
-
-
-
 {% endblock %}
