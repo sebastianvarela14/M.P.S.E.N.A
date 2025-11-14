@@ -134,7 +134,11 @@
     <main class="main-content">
         <!-- Topbar -->
         <div class="topbar">
-            Aprendiz (Nombre) 
+            {% if nombre_aprendiz %}
+                {{ nombre_aprendiz }}
+            {% else %}
+                Aprendiz
+            {% endif %}
             <a href="{% url 'datoslaura' %}" class="icono-usuario">
                 <i class="bi bi-person-circle"></i>
             </a>
