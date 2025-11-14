@@ -113,38 +113,7 @@ def evidencia_guia1(request):
     return render(request, "paginas/instructor/evidencia_guia1.html")
 
 def inicio(request):
-    id_aprendiz = request.session.get('id_usuario')
-    nombre_aprendiz = request.session.get('nombre_usuario', '')
-    competencias = []
-
-    if id_aprendiz:
-        try:
-            conexion = mysql.connector.connect(
-                host="localhost",
-                user="administrador",
-                password="proyecto21mpsena",
-                database="proyecto"
-            )
-            cursor = conexion.cursor(dictionary=True)
-
-            # Consulta SQL para obtener las competencias de la ficha del aprendiz
-            query = """
-                SELECT c.id, c.nombre AS nombre_competencia
-                FROM competencia c
-                JOIN ficha_competencia fc ON c.id = fc.idcompetencia
-                JOIN ficha f ON fc.idficha = f.id
-                JOIN usuario_ficha uf ON f.id = uf.idficha
-                WHERE uf.idusuario = %s
-            """
-            cursor.execute(query, (id_aprendiz,))
-            competencias = cursor.fetchall()
-
-            cursor.close()
-            conexion.close()
-        except mysql.connector.Error as err:
-            messages.error(request, f"Error de base de datos: {err}")
-
-    return render(request, "paginas/aprendiz/inicio.html", {'competencias': competencias, 'nombre_aprendiz': nombre_aprendiz})
+    return render(request, "paginas/aprendiz/inicio.html")
 
 
 def carpetas_aprendiz1(request):
@@ -324,9 +293,7 @@ def sesion(request):
                 messages.error(request, "Contraseña incorrecta.")
                 return redirect('sesion')
             else:
-                request.session['id_usuario'] = usuario['id']
-                request.session['usuario'] = usuario['usuario']
-                request.session['nombre_usuario'] = f"{usuario['nombres']} {usuario['apellidos']}".upper()
+                # ✅ Buscar el rol del usuario
                 cursor.execute("""
                     SELECT r.tipo
                     FROM rol r
@@ -337,7 +304,6 @@ def sesion(request):
 
                 if rol:
                     tipo_rol = rol['tipo'].lower()
-                    request.session['rol'] = tipo_rol
                     # Redirigir según el tipo de rol
                     if tipo_rol == 'instructor':
                         return redirect('fichas_ins')
