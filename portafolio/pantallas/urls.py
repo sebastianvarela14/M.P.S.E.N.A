@@ -134,8 +134,8 @@ urlpatterns = [
     path("datos_ins_editar/", views.datos_ins_editar, name="datos_ins_editar"),
     path("coordinador_editar/", views.coordinador_editar, name="coordinador_editar"),
     path("coordinador_agregar/", views.coordinador_agregar, name="coordinador_agregar"),
-    path("carpeta2_editar/", views.carpeta2_editar, name="carpeta2_editar"),
-    path("carpeta2_crear/", views.carpeta2_crear, name="carpeta2_crear"),
+    path("carpetas2_editar/", views.carpetas2_editar, name="carpetas2_editar"),
+    path("carpetas2_crear/", views.carpetas2_crear, name="carpetas2_crear"),
     
 ]
 
