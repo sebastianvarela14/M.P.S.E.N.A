@@ -8,7 +8,10 @@ load_dotenv()
 
 
 
+load_dotenv() 
 
+def plantillains(request):
+    return render(request, "paginas/instructor/plantilla.html", )
 
 def agregar_evidencia(request):
     return render(request, "paginas/instructor/agregar_evidencia.html")
@@ -32,7 +35,51 @@ def trimestre3(request):
     return render(request, "paginas/carpetas.html")
 
 def fichas_ins(request):
-    return render(request, "paginas/instructor/fichas_ins.html")
+    if 'usuario' not in request.session:
+        return redirect('sesion')
+
+    usuario_nombre = request.session['usuario']
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("SELECT id FROM usuario WHERE usuario = %s", (usuario_nombre,))
+    usuario = cursor.fetchone()
+
+    if not usuario:
+        cursor.close()
+        conexion.close()
+        return redirect('sesion')
+
+    id_usuario = usuario['id']
+
+    cursor.execute("""
+        SELECT f.id, f.numero_ficha, p.programa, j.nombre AS jornada
+        FROM ficha f
+        INNER JOIN ficha_usuario fu ON fu.idficha = f.id
+        INNER JOIN usuario u ON fu.idusuario = u.id
+        INNER JOIN programa p ON f.idprograma = p.id
+        INNER JOIN jornada j ON f.idjornada = j.id
+        WHERE u.id = %s
+    """, (id_usuario,))
+
+    fichas = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/fichas_ins.html", {
+        'usuario_nombre': usuario_nombre,
+        'fichas': fichas
+    })
+
+
+
 
 def tarea(request):
     return render(request, "paginas/aprendiz/tarea.html")
@@ -44,7 +91,39 @@ def datos(request):
     return render(request, "paginas/instructor/datos.html")
 
 def datos_ins(request):
-    return render(request, "paginas/instructor/datos_ins.html")
+    usuario_id = request.session.get('usuario_id')  # 🔹 Obtener ID de la sesión
+
+    if not usuario_id:
+        messages.error(request, "Debes iniciar sesión primero.")
+        return redirect('sesion')
+
+    # Conectar a la base de datos
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+    
+    # Obtener los datos del usuario por ID
+    cursor.execute("""
+        SELECT u.nombres, u.apellidos, u.correo, u.telefono,
+               d.tipo AS tipo_documento, d.numero AS num_documento
+        FROM usuario u
+        LEFT JOIN documento d ON u.iddocumento = d.id
+        WHERE u.id = %s
+    """, (usuario_id,))
+
+    usuario = cursor.fetchone()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/datos_ins.html", {
+        'usuario': usuario
+    })
+
 
 def evidencias(request):
     return render(request, "paginas/instructor/evidencias.html")
@@ -63,7 +142,30 @@ def tareas_2(request):
     return render(request, "paginas/aprendiz/tareas_2.html")
 
 def lista_aprendices(request):
-    return render(request, "paginas/instructor/lista_aprendices.html")
+    conexion = mysql.connector.connect(
+        host="localhost",
+        user="administrador",
+        password="proyecto21mpsena",
+        database="proyecto"
+    )
+
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT u.id, u.nombres, u.apellidos
+        FROM usuario u
+        WHERE u.id IN (3, 4)
+    """)
+
+    aprendices = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/lista_aprendices.html", {
+        "aprendices": aprendices
+    })
+
 
 def carpetas2(request):
     return render(request, "paginas/instructor/carpetas2.html")
@@ -96,9 +198,6 @@ def carpetas(request):
 def material_principal(request):
     return render(request, "paginas/instructor/material_principal.html")
 
-def lista_aprendices(request):
-    return render(request, "paginas/instructor/lista_aprendices.html")
-
 def adentro_material(request):
     return render(request, "paginas/instructor/adentro_material.html")
 
@@ -119,7 +218,38 @@ def evidencia_guia1(request):
     return render(request, "paginas/instructor/evidencia_guia1.html")
 
 def inicio(request):
-    return render(request, "paginas/aprendiz/inicio.html")
+    id_aprendiz = request.session.get('id_usuario')
+    nombre_aprendiz = request.session.get('nombre_usuario', '')
+    competencias = []
+
+    if id_aprendiz:
+        try:
+            conexion = mysql.connector.connect(
+                host="localhost",
+                user="administrador",
+                password="proyecto21mpsena",
+                database="proyecto"
+            )
+            cursor = conexion.cursor(dictionary=True)
+
+            # Consulta SQL para obtener las competencias de la ficha del aprendiz
+            query = """
+                SELECT c.id, c.nombre AS nombre_competencia
+                FROM competencia c
+                JOIN ficha_competencia fc ON c.id = fc.idcompetencia
+                JOIN ficha f ON fc.idficha = f.id
+                JOIN usuario_ficha uf ON f.id = uf.idficha
+                WHERE uf.idusuario = %s
+            """
+            cursor.execute(query, (id_aprendiz,))
+            competencias = cursor.fetchall()
+
+            cursor.close()
+            conexion.close()
+        except mysql.connector.Error as err:
+            messages.error(request, f"Error de base de datos: {err}")
+
+    return render(request, "paginas/aprendiz/inicio.html", {'competencias': competencias, 'nombre_aprendiz': nombre_aprendiz})
 
 
 def carpetas_aprendiz1(request):
@@ -312,13 +442,57 @@ def evidencia_calificar_coordinador(request):
     return render(request, "paginas/coordinador/evidencia_calificar_coordinador.html")
 
 def sesion(request):
-    return render(request, "paginas/instructor/sesion.html", )
+    usuario_ingresado = ""
+
+    # 🔹 Limpiar mensajes antiguos al entrar por GET
+    if request.method == "GET":
+        storage = messages.get_messages(request)
+        storage.used = True
+
+    if request.method == 'POST':
+        usuario_input = request.POST.get('usuario')
+        contrasena_input = request.POST.get('contrasena')
+        usuario_ingresado = usuario_input
+
+        conexion = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM usuario WHERE usuario = %s", (usuario_input,))
+        usuario = cursor.fetchone()
+
+        if not usuario:
+            messages.error(request, "El usuario no existe.")
+            return redirect('sesion')
+        else:
+            contrasena_correcta = usuario['contrasena']
+            if contrasena_input != contrasena_correcta:
+                messages.error(request, "Contraseña incorrecta.")
+                return redirect('sesion')
+            else:
+                request.session['id_usuario'] = usuario['id']
+                request.session['usuario'] = usuario['usuario']
+                request.session['nombre_usuario'] = f"{usuario['nombres']} {usuario['apellidos']}".upper()
+                cursor.execute("""
+                    SELECT r.tipo
+                    FROM rol r
+                    INNER JOIN usuario_rol ur ON ur.idrol = r.id
+                    WHERE ur.idusuario = %s
+                """, (usuario['id'],))
+                rol = cursor.fetchone()
+
+                if rol:
+                    tipo_rol = rol['tipo'].lower()
 
 def configuracion_instructor(request):
     return render(request, "paginas/instructor/configuracion_instructor.html")
 
 def configuracion_instructor_2(request):
-    return render(request, "paginas/instructor/configuracion_instructor_2.html")
+    return render(request, "paginas/instructor/configuracion_instructor_2.html",)
+
 
 def configuracion_aprendiz(request):
     return render(request, "paginas/aprendiz/configuracion_aprendiz.html")
@@ -390,10 +564,92 @@ def carpetas_aprendiz_editar(request):
     return render(request, "paginas/instructor/carpetas_aprendiz_editar.html")
 
 def datos_ins_editar(request):
-    return render(request, "paginas/instructor/datos_ins_editar.html")
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        messages.error(request, "Debes iniciar sesión primero.")
+        return redirect('sesion')
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+
+    # Obtener datos actuales
+    cursor.execute("SELECT * FROM usuario u LEFT JOIN documento d ON u.iddocumento = d.id WHERE u.id = %s", (usuario_id,))
+    usuario = cursor.fetchone()
+
+    if request.method == "POST":
+        nombres = request.POST.get("nombres")
+        apellidos = request.POST.get("apellidos")
+        correo = request.POST.get("correo")
+        telefono = request.POST.get("telefono")
+        tipo_documento = request.POST.get("tipo_documento")
+        numero_documento_str = request.POST.get("numero_documento", "").strip()
+
+        # Validar que no esté vacío
+        if numero_documento_str == "":
+            messages.error(request, "El número de documento no puede estar vacío.")
+            return redirect('datos_ins_editar')
+        try:
+            numero_documento = int(numero_documento_str)
+        except ValueError:
+            messages.error(request, "El número de documento debe ser un número válido.")
+            return redirect('datos_ins_editar')
+
+        if usuario['iddocumento']:
+            # Actualizar documento existente
+            cursor.execute("""
+                UPDATE documento 
+                SET tipo = %s, numero = %s 
+                WHERE id = %s
+            """, (tipo_documento, numero_documento, usuario['iddocumento']))
+        else:
+            # Insertar nuevo documento
+            cursor.execute("""
+                INSERT INTO documento (tipo, numero)
+                VALUES (%s, %s)
+            """, (tipo_documento, numero_documento, usuario['iddocumento']))
+            nuevo_id = cursor.lastrowid
+            # Asociar el nuevo documento al usuario
+            cursor.execute("""
+                UPDATE usuario 
+                SET iddocumento = %s
+                WHERE id = %s
+            """, (nuevo_id, usuario_id))
+
+
+        # Actualizar tabla usuario
+        cursor.execute("""
+            UPDATE usuario 
+            SET nombres = %s, apellidos = %s, correo = %s, telefono = %s
+            WHERE id = %s
+        """, (nombres, apellidos, correo, telefono, usuario_id))
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+        messages.success(request, "Tus datos se actualizaron correctamente.")
+        return redirect('datos_ins')
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/datos_ins_editar.html", {
+        "usuario": usuario
+    })
 
 def coordinador_editar(request):
     return render(request, "paginas/coordinador/coordinador_editar.html")
 
 def coordinador_agregar(request):
     return render(request, "paginas/coordinador/coordinador_agregar.html")
+
+def carpeta2_editar(request):
+    return render(request, "paginas/instructor/carpeta2_editar.html")
+
+def carpeta2_crear(request):
+    return render(request, "paginas/instructor/carpeta2_crear.html")

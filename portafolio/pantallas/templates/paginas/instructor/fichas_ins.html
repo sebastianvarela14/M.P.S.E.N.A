@@ -149,7 +149,14 @@
             <img src="{% static 'img/logo_sena.png' %}" alt="Logo del SENA" width="100" class="mb-4">
 
             <!-- Números con íconos -->
-            <a href="{% url 'carpetas2' %}"><i class="bi bi-hash"></i> 3175010</a>
+            {% if fichas %}
+                {% for ficha in fichas %}
+                    <a href="{% url 'carpetas2' %}?ficha={{ ficha.id }}"><i class="bi bi-hash"></i> {{ ficha.numero_ficha }}</a>
+                {% endfor %}
+            {% else %}
+                <p class="text-white small">Sin fichas asignadas</p>
+            {% endif %}
+
 
             <div class="mt-auto">
                 <a href="{% url 'configuracion_instructor_2' %}" class="config">
@@ -162,7 +169,7 @@
     <main class="main-content">
         <!-- Topbar -->
         <div class="topbar">
-            Instructor (Nombre) 
+            Instructor {{ usuario_nombre }}
             <a href="{% url 'datos_ins' %}" class="icono-usuario">
                 <i class="bi bi-person-circle"></i>
             </a>
