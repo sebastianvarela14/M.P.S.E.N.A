@@ -1,0 +1,164 @@
+{% extends "plantillacoor_inicio.html" %}
+{% load static %}
+
+{% block contenido %}
+
+<style>
+    /* Hace la tabla más compacta */
+    table td, table th {
+        padding: 6px 8px !important;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .pw-mask {
+        letter-spacing: 2px;
+    }
+
+    .btn-icon {
+        padding: 2px 6px;
+    }
+
+    .container {
+        max-width: 95%;
+    }
+
+    h3 i {
+        margin-right: 5px;
+    }
+</style>
+
+<div class="container mt-3">
+
+    <!-- Título + botón crear -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3><i class="bi bi-people-fill"></i> Lista de Usuarios</h3>
+
+        <a href="{% url 'administrar_usuario_crear' %}" class="btn btn-success">
+            <i class="bi bi-person-plus-fill"></i> Añadir Usuario
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="mb-3 d-flex gap-3">
+        <select class="form-select w-auto" id="filtroRol">
+            <option value="">Todos los roles</option>
+            <option value="instructor">Instructor</option>
+            <option value="aprendiz">Aprendiz</option>
+            <option value="coordinador">Coordinador</option>
+        </select>
+
+        <input type="text" id="buscarUsuario" class="form-control w-25" placeholder="Buscar por nombre o correo...">
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-striped table-hover">
+            <thead class="table-success">
+                <tr>
+                    <th>#</th>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Correo</th>
+                    <th>Teléfono</th>
+                    <th>Tipo Doc</th>
+                    <th>Documento</th>
+                    <th>Usuario</th>
+                    <th>Contraseña</th>
+                    <th>Rol</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+
+                    <td>{{ u.nombres }}</td>
+                    <td>{{ u.apellidos }}</td>
+
+                    <td>{{ u.correo }}</td>
+                    <td>{{ u.telefono }}</td>
+
+                    <td>{{ u.iddocumento.tipo }}</td>
+                    <td>{{ u.iddocumento.numero }}</td>
+
+                    <td>{{ u.usuario }}</td>
+
+                    <!-- CONTRASEÑA OCULTA -->
+                    <td>
+                        <span class="pw-mask" id="pw{{ u.id }}">********</span>
+                        <button class="btn btn-link btn-sm btn-icon"
+                            onclick="togglePw('pw{{ u.id }}', this, '{{ u.contrasena }}')">
+                            <i class="bi bi-eye-fill"></i>
+                        </button>
+                    </td>
+
+                    <td>
+                        {% for ur in u.usuariorol_set.all %}
+                            {{ ur.idrol.tipo }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            Sin rol
+                        {% endfor %}
+                    </td>
+
+
+                    <td class="text-center">
+                        <a href="{% url 'administrar_usuario_editar' u.id %}"
+                            class="btn btn-warning btn-sm me-1 btn-icon">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+
+                        <a href="{% url 'eliminar_usuario' u.id %}"
+                        class="btn btn-danger btn-sm btn-icon">
+                            <i class="bi bi-trash-fill"></i>
+                        </a>
+
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+<!-- SCRIPT PARA MOSTRAR/OCULTAR CONTRASEÑA -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const filtroRol = document.getElementById("filtroRol");
+    const buscarUsuario = document.getElementById("buscarUsuario");
+    const filas = document.querySelectorAll("table tbody tr");
+
+    function filtrarTabla() {
+        const rol = filtroRol.value.toLowerCase();
+        const busqueda = buscarUsuario.value.toLowerCase();
+
+        filas.forEach(fila => {
+            const columnas = fila.getElementsByTagName("td");
+
+            const nombre = columnas[1].innerText.toLowerCase();
+            const correo = columnas[3].innerText.toLowerCase();
+            const rolTexto = columnas[9].innerText.toLowerCase();
+
+            const coincideRol = rol === "" || rolTexto.includes(rol);
+            const coincideBusqueda = nombre.includes(busqueda) || correo.includes(busqueda);
+
+            if (coincideRol && coincideBusqueda) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+            }
+        });
+    }
+
+    filtroRol.addEventListener("change", filtrarTabla);
+    buscarUsuario.addEventListener("keyup", filtrarTabla);
+});
+</script>
+
+
+{% endblock %}

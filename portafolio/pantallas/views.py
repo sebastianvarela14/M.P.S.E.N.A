@@ -3,6 +3,11 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 import os
 from dotenv import load_dotenv
+from .models import Usuario, UsuarioRol, Rol, Documento
+from .forms import UsuarioForm
+from django.db.models import Prefetch
+from django.shortcuts import get_object_or_404
+
 
 load_dotenv() 
 
@@ -633,4 +638,57 @@ def carpetas2_editar(request):
 
 def carpetas2_crear(request):
     return render(request, "paginas/instructor/carpetas2_crear.html") 
+
+# LISTAR USUARIOS
+def administrar_usuario(request):
+
+    usuarios = (
+        Usuario.objects
+        .select_related("iddocumento")  # traer tipo y número de documento
+        .prefetch_related(
+            "usuariorol_set__idrol"     # traer roles relacionados
+        )
+    )
+
+    return render(request, "paginas/coordinador/administrar_usuario.html", {
+        "usuarios": usuarios
+    })
+
+
+
+# CREAR USUARIO
+def administrar_usuario_crear(request):
+    if request.method == "POST":
+        formulario = UsuarioForm(request.POST)
+        if formulario.is_valid():
+            formulario.save()
+            return redirect("administrar_usuario")
+    else:
+        formulario = UsuarioForm()
+
+    return render(request, "paginas/coordinador/administrar_usuario_crear.html", {
+        "formulario": formulario
+    })
+
+
+# EDITAR USUARIO
+def administrar_usuario_editar(request, id):
+    usuario = get_object_or_404(Usuario, id=id)
+
+    if request.method == "POST":
+        formulario = UsuarioForm(request.POST, instance=usuario)
+        if formulario.is_valid():
+            formulario.save()
+            return redirect("administrar_usuario")
+    else:
+        formulario = UsuarioForm(instance=usuario)
+
+    return render(request, "paginas/coordinador/administrar_usuario_editar.html", {
+        "formulario": formulario
+    })
+
+def eliminar_usuario(request, usuario_id):
+    Usuario.objects.filter(id=usuario_id).delete()
+    return redirect("administrar_usuario")
+
 
