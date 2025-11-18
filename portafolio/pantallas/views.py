@@ -631,5 +631,5 @@ def carpetas2_editar(request):
     return render(request, "paginas/instructor/carpetas2_editar.html")
 
 def carpetas2_crear(request):
-    return render(request, "paginas/instructor/carpetas2_crear.html")
+    return render(request, "paginas/instructor/carpetas2_crear.html") 
 
