@@ -142,6 +142,9 @@ urlpatterns = [
     path("usuario/eliminar/<int:usuario_id>/", views.eliminar_usuario, name="eliminar_usuario"),
 
 
+
+
+
 ]
 
 
