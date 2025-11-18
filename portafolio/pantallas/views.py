@@ -123,7 +123,23 @@ def datos_ins(request):
 
 
 def evidencias(request):
-    return render(request, "paginas/instructor/evidencias.html")
+    # Conectar a la base de datos
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+    
+    # Obtener todas las evidencias del instructor
+    cursor.execute("SELECT * FROM evidencias_instructor")
+    evidencias = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/evidencias.html", {"evidencias": evidencias})
 
 
 def material2(request):
@@ -245,7 +261,7 @@ def inicio(request):
             cursor.close()
             conexion.close()
         except mysql.connector.Error as err:
-            messages.error(request, f"Error de base de datos: {err}")
+            messages.error(request, f"")
 
     return render(request, "paginas/aprendiz/inicio.html", {'competencias': competencias, 'nombre_aprendiz': nombre_aprendiz})
 
