@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 import os
 from dotenv import load_dotenv
+from .models import Usuario, UsuarioRol, Rol
 
 load_dotenv() 
 
@@ -139,11 +140,12 @@ def tareas_2(request):
 
 def lista_aprendices(request):
     conexion = mysql.connector.connect(
-        host="localhost",
-        user="administrador",
-        password="proyecto21mpsena",
-        database="proyecto"
-    )
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+    
 
     cursor = conexion.cursor(dictionary=True)
 
@@ -221,11 +223,11 @@ def inicio(request):
     if id_aprendiz:
         try:
             conexion = mysql.connector.connect(
-                host="localhost",
-                user="administrador",
-                password="proyecto21mpsena",
-                database="proyecto"
-            )
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME")
+        )
             cursor = conexion.cursor(dictionary=True)
 
             # Consulta SQL para obtener las competencias de la ficha del aprendiz
@@ -632,4 +634,57 @@ def carpetas2_editar(request):
 
 def carpetas2_crear(request):
     return render(request, "paginas/instructor/carpetas2_crear.html") 
+
+# LISTAR USUARIOS
+def administrar_usuario(request):
+
+    usuarios = (
+        Usuario.objects
+        .select_related("iddocumento")  # traer tipo y número de documento
+        .prefetch_related(
+            "usuariorol_set__idrol"     # traer roles relacionados
+        )
+    )
+
+    return render(request, "paginas/coordinador/administrar_usuario.html", {
+        "usuarios": usuarios
+    })
+
+
+
+# CREAR USUARIO
+def administrar_usuario_crear(request):
+    if request.method == "POST":
+        formulario = UsuarioForm(request.POST)
+        if formulario.is_valid():
+            formulario.save()
+            return redirect("administrar_usuario")
+    else:
+        formulario = UsuarioForm()
+
+    return render(request, "paginas/coordinador/administrar_usuario_crear.html", {
+        "formulario": formulario
+    })
+
+
+# EDITAR USUARIO
+def administrar_usuario_editar(request, id):
+    usuario = get_object_or_404(Usuario, id=id)
+
+    if request.method == "POST":
+        formulario = UsuarioForm(request.POST, instance=usuario)
+        if formulario.is_valid():
+            formulario.save()
+            return redirect("administrar_usuario")
+    else:
+        formulario = UsuarioForm(instance=usuario)
+
+    return render(request, "paginas/coordinador/administrar_usuario_editar.html", {
+        "formulario": formulario
+    })
+
+def eliminar_usuario(request, usuario_id):
+    Usuario.objects.filter(id=usuario_id).delete()
+    return redirect("administrar_usuario")
+
 
