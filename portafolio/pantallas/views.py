@@ -1,9 +1,10 @@
 import mysql.connector
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 import os
 from dotenv import load_dotenv
 from .models import Usuario, UsuarioRol, Rol
+from .forms import UsuarioForm
 
 load_dotenv() 
 
@@ -667,7 +668,6 @@ def administrar_usuario_crear(request):
     })
 
 
-# EDITAR USUARIO
 def administrar_usuario_editar(request, id):
     usuario = get_object_or_404(Usuario, id=id)
 
@@ -677,7 +677,13 @@ def administrar_usuario_editar(request, id):
             formulario.save()
             return redirect("administrar_usuario")
     else:
-        formulario = UsuarioForm(instance=usuario)
+        initial = {
+            "tipo_documento": usuario.iddocumento.id if usuario.iddocumento else None,
+            "numero_documento": usuario.iddocumento.numero if usuario.iddocumento else "",
+            "rol": usuario.usuariorol_set.first().idrol.id if usuario.usuariorol_set.exists() else None,
+        }
+
+        formulario = UsuarioForm(instance=usuario, initial=initial)
 
     return render(request, "paginas/coordinador/administrar_usuario_editar.html", {
         "formulario": formulario
