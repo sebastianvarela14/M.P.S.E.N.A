@@ -106,7 +106,7 @@ def datos_ins(request):
     # Obtener los datos del usuario por ID
     cursor.execute("""
         SELECT u.nombres, u.apellidos, u.correo, u.telefono,
-               d.tipo AS tipo_documento, d.numero AS num_documento
+                d.tipo AS tipo_documento, d.numero AS num_documento
         FROM usuario u
         LEFT JOIN documento d ON u.iddocumento = d.id
         WHERE u.id = %s
@@ -140,11 +140,12 @@ def tareas_2(request):
 
 def lista_aprendices(request):
     conexion = mysql.connector.connect(
-        host="localhost",
-        user="administrador",
-        password="proyecto21mpsena",
-        database="proyecto"
-    )
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+    
 
     cursor = conexion.cursor(dictionary=True)
 
@@ -215,7 +216,38 @@ def evidencia_guia1(request):
     return render(request, "paginas/instructor/evidencia_guia1.html")
 
 def inicio(request):
-    return render(request, "paginas/aprendiz/inicio.html")
+    id_aprendiz = request.session.get('id_usuario')
+    nombre_aprendiz = request.session.get('nombre_usuario', '')
+    competencias = []
+
+    if id_aprendiz:
+        try:
+            conexion = mysql.connector.connect(
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME")
+        )
+            cursor = conexion.cursor(dictionary=True)
+
+            # Consulta SQL para obtener las competencias de la ficha del aprendiz
+            query = """
+                SELECT c.id, c.nombre AS nombre_competencia
+                FROM competencia c
+                JOIN ficha_competencia fc ON c.id = fc.idcompetencia
+                JOIN ficha f ON fc.idficha = f.id
+                JOIN usuario_ficha uf ON f.id = uf.idficha
+                WHERE uf.idusuario = %s
+            """
+            cursor.execute(query, (id_aprendiz,))
+            competencias = cursor.fetchall()
+
+            cursor.close()
+            conexion.close()
+        except mysql.connector.Error as err:
+            messages.error(request, f"Error de base de datos: {err}")
+
+    return render(request, "paginas/aprendiz/inicio.html", {'competencias': competencias, 'nombre_aprendiz': nombre_aprendiz})
 
 
 def carpetas_aprendiz1(request):
@@ -395,7 +427,9 @@ def sesion(request):
                 messages.error(request, "Contraseña incorrecta.")
                 return redirect('sesion')
             else:
-                # ✅ Buscar el rol del usuario
+                request.session['id_usuario'] = usuario['id']
+                request.session['usuario'] = usuario['usuario']
+                request.session['nombre_usuario'] = f"{usuario['nombres']} {usuario['apellidos']}".upper()
                 cursor.execute("""
                     SELECT r.tipo
                     FROM rol r
@@ -406,13 +440,12 @@ def sesion(request):
 
                 if rol:
                     tipo_rol = rol['tipo'].lower()
-
+                    
                     request.session['usuario_id'] = usuario['id']
                     request.session['usuario_nombre'] = usuario['usuario']
 
                     # Redirigir según el tipo de rol
                     if tipo_rol == 'instructor':
-                        request.session['usuario'] = usuario['usuario']
                         return redirect('fichas_ins')
                     elif tipo_rol == 'aprendiz':
                         return redirect('inicio')
@@ -596,8 +629,62 @@ def coordinador_editar(request):
 def coordinador_agregar(request):
     return render(request, "paginas/coordinador/coordinador_agregar.html")
 
-def carpeta2_editar(request):
-    return render(request, "paginas/instructor/carpeta2_editar.html")
+def carpetas2_editar(request):
+    return render(request, "paginas/instructor/carpetas2_editar.html")
 
-def carpeta2_crear(request):
-    return render(request, "paginas/instructor/carpeta2_crear.html")
+def carpetas2_crear(request):
+    return render(request, "paginas/instructor/carpetas2_crear.html") 
+
+# LISTAR USUARIOS
+def administrar_usuario(request):
+
+    usuarios = (
+        Usuario.objects
+        .select_related("iddocumento")  # traer tipo y número de documento
+        .prefetch_related(
+            "usuariorol_set__idrol"     # traer roles relacionados
+        )
+    )
+
+    return render(request, "paginas/coordinador/administrar_usuario.html", {
+        "usuarios": usuarios
+    })
+
+
+
+# CREAR USUARIO
+def administrar_usuario_crear(request):
+    if request.method == "POST":
+        formulario = UsuarioForm(request.POST)
+        if formulario.is_valid():
+            formulario.save()
+            return redirect("administrar_usuario")
+    else:
+        formulario = UsuarioForm()
+
+    return render(request, "paginas/coordinador/administrar_usuario_crear.html", {
+        "formulario": formulario
+    })
+
+
+# EDITAR USUARIO
+def administrar_usuario_editar(request, id):
+    usuario = get_object_or_404(Usuario, id=id)
+
+    if request.method == "POST":
+        formulario = UsuarioForm(request.POST, instance=usuario)
+        if formulario.is_valid():
+            formulario.save()
+            return redirect("administrar_usuario")
+    else:
+        formulario = UsuarioForm(instance=usuario)
+
+    return render(request, "paginas/coordinador/administrar_usuario_editar.html", {
+        "formulario": formulario
+    })
+
+def eliminar_usuario(request, usuario_id):
+    Usuario.objects.filter(id=usuario_id).delete()
+    return redirect("administrar_usuario")
+
+
