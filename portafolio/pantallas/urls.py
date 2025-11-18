@@ -49,7 +49,7 @@ urlpatterns = [
     path("entrada/", views.entrada, name="entrada"),
 
     path("adentro_material1/", views.adentro_material1, name="adentro_material1"),
-    path("evidencia_guia/", views.evidencia_guia, name="evidencia_guia"),
+    path("evidencia_guia/<int:evidencia_id>/", views.evidencia_guia, name="evidencia_guia"),
     path("evidencia_guia1/", views.evidencia_guia1, name="evidencia_guia1"),
     path("aprendiz/", views.inicio, name="inicio"),
     path("carpetas_aprendiz1/", views.carpetas_aprendiz1, name="carpetas_aprendiz1"),

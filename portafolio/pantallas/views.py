@@ -225,8 +225,25 @@ def datoslaura(request):
 def adentro_material1(request):
     return render(request, "paginas/instructor/adentro_material1.html")
 
-def evidencia_guia(request):
-    return render(request, "paginas/instructor/evidencia_guia.html")
+def evidencia_guia(request, evidencia_id):
+    # Conectar a la base de datos
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+    
+    # Obtener la evidencia específica por su ID
+    cursor.execute("SELECT * FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
+    evidencia = cursor.fetchone()
+
+    cursor.close()
+    conexion.close()
+
+    # Pasar la evidencia encontrada a la plantilla
+    return render(request, "paginas/instructor/evidencia_guia.html", {"evidencia": evidencia})
 
 def evidencia_guia1(request):
     return render(request, "paginas/instructor/evidencia_guia1.html")
