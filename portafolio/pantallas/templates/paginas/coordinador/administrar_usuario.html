@@ -127,23 +127,6 @@
 
 <!-- SCRIPT PARA MOSTRAR/OCULTAR CONTRASEÑA -->
 <script>
-function togglePw(spanId, btn, realPassword) {
-    const span = document.getElementById(spanId);
-    const icon = btn.querySelector("i");
-
-    if (span.innerText === "********") {
-        // Mostrar contraseña
-        span.innerText = realPassword;
-        icon.classList.remove("bi-eye-fill");
-        icon.classList.add("bi-eye-slash-fill");
-    } else {
-        // Ocultar contraseña
-        span.innerText = "********";
-        icon.classList.remove("bi-eye-slash-fill");
-        icon.classList.add("bi-eye-fill");
-    }
-}
-
 document.addEventListener("DOMContentLoaded", function () {
 
     const filtroRol = document.getElementById("filtroRol");
@@ -164,7 +147,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const coincideRol = rol === "" || rolTexto.includes(rol);
             const coincideBusqueda = nombre.includes(busqueda) || correo.includes(busqueda);
 
-            fila.style.display = coincideRol && coincideBusqueda ? "" : "none";
+            if (coincideRol && coincideBusqueda) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+            }
         });
     }
 
@@ -172,7 +159,6 @@ document.addEventListener("DOMContentLoaded", function () {
     buscarUsuario.addEventListener("keyup", filtrarTabla);
 });
 </script>
-
 
 
 {% endblock %}
