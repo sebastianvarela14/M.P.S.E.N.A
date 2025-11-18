@@ -1,0 +1,18 @@
+{% extends "plantillacoor_inicio.html" %}
+{% load static %}
+
+{% block contenido %}
+
+<section class="mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-person-plus-fill"></i> Crear Usuario</h5>
+        </div>
+
+        <div class="card-body">
+            {% include "paginas/coordinador/formulario_coordinador.html" %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}

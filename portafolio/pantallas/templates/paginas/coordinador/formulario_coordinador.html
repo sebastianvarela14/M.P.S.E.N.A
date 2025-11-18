@@ -1,0 +1,173 @@
+<style>
+    .form-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        padding: 30px 40px;
+        width: 100%;
+        border-top: 5px solid #2e7d32;
+        animation: fadeInUp 0.7s ease;
+    }
+
+    label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+        margin-top: 15px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 15px;
+        color: #333;
+    }
+
+    .row-double {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .field {
+        flex: 1;
+    }
+
+    .btn-container {
+        text-align: right;
+        margin-top: 25px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        text-decoration: none;
+        border: none;
+    }
+
+    .btn-cancelar {
+        background: #ccc;
+        color: #000;
+        margin-right: 10px;
+    }
+
+    .btn-cancelar:hover {
+        background: #b0b0b0;
+    }
+
+    .btn-guardar {
+        background: #2e7d32;
+        color: #fff;
+    }
+
+    .btn-guardar:hover {
+        background: #256528;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="form-container">
+
+        <!-- NOMBRES -->
+        <label>Nombres</label>
+        <input type="text" name="nombres" value="{{ formulario.nombres.value|default:'' }}" placeholder="Ingrese nombres">
+
+        <!-- APELLIDOS -->
+        <label>Apellidos</label>
+        <input type="text" name="apellidos" value="{{ formulario.apellidos.value|default:'' }}" placeholder="Ingrese apellidos">
+
+        <!-- CORREO -->
+        <label>Correo</label>
+        <input type="email" name="correo" value="{{ formulario.correo.value|default:'' }}" placeholder="correo@sena.edu.co">
+
+        <!-- TELÉFONO -->
+        <label>Teléfono</label>
+        <input type="text" name="telefono" value="{{ formulario.telefono.value|default:'' }}" placeholder="3001234567">
+
+        <!-- TIPO Y NUMERO DOCUMENTO -->
+        <div class="row-double">
+            <div class="field">
+                <label>Tipo Documento</label>
+                <select name="tipo_documento">
+                    {% for td in tipos_documento %}
+                        <option value="{{ td.id }}"
+                            {% if formulario.tipo_documento.value == td.id|stringformat:"s" %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ td.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Número Documento</label>
+                <input type="text" name="numero_documento" value="{{ formulario.numero_documento.value|default:'' }}" placeholder="10203040">
+            </div>
+        </div>
+
+        <!-- USUARIO -->
+        <label>Usuario</label>
+        <input type="text" name="usuario" value="{{ formulario.usuario.value|default:'' }}" placeholder="usuario123">
+
+        <!-- CONTRASEÑA -->
+        <label>Contraseña</label>
+        <div class="row-double" style="align-items: center;">
+            <div class="field">
+                <input type="password" name="contrasena" id="pw" value="{{ formulario.contrasena.value|default:'' }}">
+            </div>
+            <button type="button" onclick="togglePw()" class="btn btn-cancelar" style="height: 42px; margin-top: 15px;">
+                <i class="bi bi-eye-fill" id="eyeIcon"></i>
+            </button>
+        </div>
+
+        <!-- ROL -->
+        <label>Rol</label>
+        <select name="rol">
+            {% for r in roles %}
+                <option value="{{ r.id }}"
+                    {% if formulario.rol.value == r.id|stringformat:"s" %}
+                        selected
+                    {% endif %}
+                >
+                    {{ r.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <!-- BOTONES -->
+        <div class="btn-container">
+            <a href="{% url 'administrar_usuario' %}" class="btn btn-cancelar">Cancelar</a>
+            <button type="submit" class="btn btn-guardar">Guardar</button>
+        </div>
+
+    </div>
+</form>
+
+<script>
+function togglePw() {
+    const pw = document.getElementById("pw");
+    const eye = document.getElementById("eyeIcon");
+
+    if (pw.type === "password") {
+        pw.type = "text";
+        eye.classList.replace("bi-eye-fill", "bi-eye-slash-fill");
+    } else {
+        pw.type = "password";
+        eye.classList.replace("bi-eye-slash-fill", "bi-eye-fill");
+    }
+}
+</script>
