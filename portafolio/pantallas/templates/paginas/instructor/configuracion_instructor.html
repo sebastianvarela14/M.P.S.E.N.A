@@ -3,9 +3,7 @@
 
 {% block titulo %}Portafolio General{% endblock %}
 
-
 {% block contenido %}
-
 
 <div class="container mt-5">
     <h2 class="mb-4 text-success">⚙️ Configuración del Instructor</h2>
@@ -14,18 +12,18 @@
     <div class="card mb-3">
         <div class="card-header">🔔 Notificaciones</div>
         <div class="card-body">
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="notiTareas" checked>
-            <label class="form-check-label" for="notiTareas">
-            Recibir notificaciones de tareas entregadas por aprendices
-            </label>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="notiRecordatorios">
-            <label class="form-check-label" for="notiRecordatorios">
-            Recordatorios de evaluaciones pendientes
-            </label>
-        </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="notiTareas" checked>
+                <label class="form-check-label" for="notiTareas">
+                    Recibir notificaciones de tareas entregadas por aprendices
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="notiRecordatorios">
+                <label class="form-check-label" for="notiRecordatorios">
+                    Recordatorios de evaluaciones pendientes
+                </label>
+            </div>
         </div>
     </div>
 
@@ -33,89 +31,130 @@
     <div class="card mb-3">
         <div class="card-header">🔊 Sonido</div>
         <div class="card-body">
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="sonidoActivado" checked>
-            <label class="form-check-label" for="sonidoActivado">
-            Activar sonido de notificaciones
-            </label>
-        </div>
-        <label for="volumen" class="form-label mt-3">Volumen</label>
-        <input type="range" class="form-range" min="0" max="100" id="volumen">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="sonidoActivado" checked>
+                <label class="form-check-label" for="sonidoActivado">
+                    Activar sonido de notificaciones
+                </label>
+            </div>
+            <label for="volumen" class="form-label mt-3">Volumen</label>
+            <input type="range" class="form-range" min="0" max="100" id="volumen">
         </div>
     </div>
 
     <!-- Seguridad -->
-    <div class="card mb-3">
-        <div class="card-header">🔑 Seguridad</div>
-        <div class="card-body">
-        <div class="mb-3">
-            <label for="password" class="form-label">Cambiar contraseña</label>
-            <input type="password" class="form-control" id="password" placeholder="Nueva contraseña">
-        </div>
-        <button class="btn btn-success">Actualizar contraseña</button>
-        </div>
+    <div class="card p-3 mt-3">
+        <h5 class="fw-bold">
+            <i class="bi bi-key-fill" style="color: #f1c40f;"></i> Seguridad
+        </h5>
+
+        <form method="POST" action="{% url 'actualizar_contrasena' %}">
+            {% csrf_token %}
+
+            <div class="mb-3 position-relative">
+                <label for="actual" class="form-label">Contraseña actual</label>
+                <input type="password" name="actual" id="actual" class="form-control" required>
+                <i class="bi bi-eye-fill togglePass" data-input="actual"
+                   style="position:absolute; right:12px; top:40px; cursor:pointer;"></i>
+            </div>
+
+            <div class="mb-3 position-relative">
+                <label for="nueva" class="form-label">Nueva contraseña</label>
+                <input type="password" name="nueva" id="nueva" class="form-control" required>
+                <i class="bi bi-eye-fill togglePass" data-input="nueva"
+                   style="position:absolute; right:12px; top:40px; cursor:pointer;"></i>
+            </div>
+
+            <div class="mb-3 position-relative">
+                <label for="confirmar" class="form-label">Confirmar nueva contraseña</label>
+                <input type="password" name="confirmar" id="confirmar" class="form-control" required>
+                <i class="bi bi-eye-fill togglePass" data-input="confirmar"
+                   style="position:absolute; right:12px; top:40px; cursor:pointer;"></i>
+            </div>
+
+            <button class="btn btn-success w-100" type="submit">
+                Actualizar contraseña
+            </button>
+        </form>
     </div>
 
     <!-- General -->
-    <div class="card mb-3">
+    <div class="card mb-3 mt-3">
         <div class="card-header">🌐 General</div>
         <div class="card-body">
-        <div class="form-group mb-3">
-            <label for="rol">Elige tu rol</label>
-            <select class="form-select" id="rol">
-                <option selected>Instructor</option>
-                <option>Aprendiz</option>
-            </select>
-        </div>
-        <div class="form-group mb-3">
-            <label for="idioma">Idioma</label>
-            <select class="form-select" id="idioma">
-            <option>Español</option>
-            <option>Inglés</option>
-            </select>
-        </div>
-        <div class="form-group mb-3">
-            <label for="zona">Zona horaria</label>
-            <select class="form-select" id="zona">
-            <option>GMT-5 (Colombia)</option>
-            <option>GMT-6 (México)</option>
-            <option>GMT-3 (Argentina)</option>
-            </select>
-        </div>
+            <div class="form-group mb-3">
+                <label for="rol">Elige tu rol</label>
+                <select class="form-select" id="rol">
+                    <option selected>Instructor</option>
+                    <option>Aprendiz</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="idioma">Idioma</label>
+                <select class="form-select" id="idioma">
+                    <option>Español</option>
+                    <option>Inglés</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="zona">Zona horaria</label>
+                <select class="form-select" id="zona">
+                    <option>GMT-5 (Colombia)</option>
+                    <option>GMT-6 (México)</option>
+                    <option>GMT-3 (Argentina)</option>
+                </select>
+            </div>
         </div>
 
-            <!-- Cerrar sesión -->
-    <div class="card mb-3 border-danger">
-        <div class="card-body d-flex justify-content-start">
-            <!-- Botón que abre el modal -->
-            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalCerrarSesion">
-                Cerrar sesión
-            </button>
+        <!-- Cerrar sesión -->
+        <div class="card mb-3 border-danger">
+            <div class="card-body d-flex justify-content-start">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalCerrarSesion">
+                    Cerrar sesión
+                </button>
+            </div>
         </div>
-    </div>
 
-    <!-- Modal de confirmación -->
-    <div class="modal fade" id="modalCerrarSesion" tabindex="-1" aria-labelledby="modalCerrarSesionLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-danger">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="modalCerrarSesionLabel">Confirmar cierre de sesión</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    ¿Estás seguro de que quieres cerrar sesión?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                    <a href="{% url 'sesion' %}" class="btn btn-danger btn-sm">Sí, cerrar sesión</a>
+        <!-- Modal -->
+        <div class="modal fade" id="modalCerrarSesion" tabindex="-1" aria-labelledby="modalCerrarSesionLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-danger">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="modalCerrarSesionLabel">Confirmar cierre de sesión</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        ¿Estás seguro de que quieres cerrar sesión?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                        <a href="{% url 'sesion' %}" class="btn btn-danger btn-sm">Sí, cerrar sesión</a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
     </div>
-    </div>
+</div>
 
-
+<!-- Script del ojito -->
+<script>
+document.querySelectorAll(".togglePass").forEach(icon => {
+    icon.addEventListener("click", () => {
+        const input = document.getElementById(icon.dataset.input);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("bi-eye-fill");
+            icon.classList.add("bi-eye-slash-fill");
+        } else {
+            input.type = "password";
+            icon.classList.remove("bi-eye-slash-fill");
+            icon.classList.add("bi-eye-fill");
+        }
+    });
+});
+</script>
 
 {% endblock %}
