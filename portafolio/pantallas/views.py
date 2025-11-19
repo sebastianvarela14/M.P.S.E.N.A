@@ -3,6 +3,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 import os
 from dotenv import load_dotenv
+from .models import Usuario, UsuarioRol, Rol
+from .forms import UsuarioForm
+
 from django.http import HttpResponse
 from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario
 
@@ -178,6 +181,36 @@ def lista_aprendices(request):
     return render(request, "paginas/instructor/lista_aprendices.html", {
         "aprendices": aprendices
     })
+
+def datos_aprendiz(request, id):
+
+    # Conexion a base de datos
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+
+    # Obtener datos del aprendiz
+    cursor.execute("""
+        SELECT u.nombres, u.apellidos, u.correo, u.telefono,
+        d.tipo AS tipo_documento, d.numero AS num_documento
+        FROM usuario u
+        LEFT JOIN documento d ON u.iddocumento = d.id
+        WHERE u.id = %s
+    """, (id,))
+
+    aprendiz = cursor.fetchone()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/datos.html", {
+        "aprendiz": aprendiz
+    })
+
 
 
 def carpetas2(request):
@@ -499,6 +532,7 @@ def sesion(request):
 def configuracion_instructor(request):
     return render(request, "paginas/instructor/configuracion_instructor.html")
 
+
 def configuracion_instructor_2(request):
     return render(request, "paginas/instructor/configuracion_instructor_2.html",)
 
@@ -762,6 +796,73 @@ def administrar_usuario_editar(request, id):
 def eliminar_usuario(request, usuario_id):
     Usuario.objects.filter(id=usuario_id).delete()
     return redirect("administrar_usuario")
+
+def actualizar_contrasena(request):
+
+    if request.method == "POST":
+
+        contrasena_actual = request.POST.get("actual")
+        nueva = request.POST.get("nueva")
+        confirmar = request.POST.get("confirmar")
+
+        # Obtener ID del usuario en sesión
+        id_usuario = request.session.get("id_usuario")
+
+        if not id_usuario:
+            messages.error(request, "No se encontró el usuario en la sesión.")
+            return redirect("configuracion_instructor")
+
+        try:
+            # Conexión a la BD
+            conexion = mysql.connector.connect(
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME")
+            )
+            cursor = conexion.cursor(dictionary=True)
+
+            # Obtener la contraseña actual
+            cursor.execute("SELECT contrasena FROM usuario WHERE id = %s", (id_usuario,))
+            usuario = cursor.fetchone()
+
+            if not usuario:
+                messages.error(request, "Usuario no encontrado.")
+                return redirect("configuracion_instructor")
+
+            # Validar contraseña actual
+            if usuario["contrasena"] != contrasena_actual:
+                messages.error(request, "La contraseña actual es incorrecta.")
+                return redirect("configuracion_instructor")
+
+            # Validar coincidencia
+            if nueva != confirmar:
+                messages.error(request, "Las contraseñas nuevas no coinciden.")
+                return redirect("configuracion_instructor")
+
+            # Actualizar contraseña
+            cursor.execute(
+                "UPDATE usuario SET contrasena = %s WHERE id = %s",
+                (nueva, id_usuario)
+            )
+            conexion.commit()
+
+            messages.success(request, "Contraseña actualizada correctamente.")
+            return redirect("configuracion_instructor")
+
+        except mysql.connector.Error as error:
+            messages.error(request, f"Error de base de datos: {error}")
+            return redirect("configuracion_instructor")
+
+        finally:
+            try:
+                cursor.close()
+                conexion.close()
+            except:
+                pass
+
+    return redirect("configuracion_instructor")
+
 
 def seleccionar_ficha(request, id_ficha):
     # Guardamos la ficha seleccionada en la sesión
