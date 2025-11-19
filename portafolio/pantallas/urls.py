@@ -140,11 +140,7 @@ urlpatterns = [
     path("administrar_usuario/crear/", views.administrar_usuario_crear, name="administrar_usuario_crear"),
     path("administrar_usuario/editar/<int:id>/", views.administrar_usuario_editar, name="administrar_usuario_editar"),
     path("usuario/eliminar/<int:usuario_id>/", views.eliminar_usuario, name="eliminar_usuario"),
-
-
-
-
+    path("seleccionar_ficha/<int:id_ficha>/", views.seleccionar_ficha, name="seleccionar_ficha"),
+    path("configuracion_coordinador/eliminar_instructor/<int:usuario_id>/<int:ficha_id>/", views.eliminar_instructor, name="eliminar_instructor")
 
 ]
-
-

@@ -120,9 +120,15 @@
             <a href="{% url 'lista_aprendices_coordinador' %}">
                 <i class="bi bi-people"></i> Aprendices
             </a>
-            <a href="{% url 'configuracion_coordinador' %}">
-                <i class="bi bi-journal"></i> Administrar ficha
-            </a>
+            {% if ficha_id %}
+                <a href="{% url 'configuracion_coordinador' %}?ficha={{ ficha_id }}" class="btn-custom">
+                    Administrar ficha
+                </a>
+                {% else %}
+                <span class="text-muted">Primero selecciona una ficha</span>
+            {% endif %}
+
+
 
             <div class="mt-auto">
                 <a href="{% url 'ficha_coordinador' %}" class="config">
