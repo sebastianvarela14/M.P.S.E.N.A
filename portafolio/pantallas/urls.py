@@ -135,7 +135,15 @@ urlpatterns = [
     path("coordinador_agregar/", views.coordinador_agregar, name="coordinador_agregar"),
     path("carpetas2_editar/", views.carpetas2_editar, name="carpetas2_editar"),
     path("carpetas2_crear/", views.carpetas2_crear, name="carpetas2_crear"),
-    
+    path("administrar_usuario/", views.administrar_usuario, name="administrar_usuario"),
+    path("administrar_usuario/crear/", views.administrar_usuario_crear, name="administrar_usuario_crear"),
+    path("administrar_usuario/editar/<int:id>/", views.administrar_usuario_editar, name="administrar_usuario_editar"),
+    path("usuario/eliminar/<int:usuario_id>/", views.eliminar_usuario, name="eliminar_usuario"),
+
+
+
+
+
 ]
 
 
