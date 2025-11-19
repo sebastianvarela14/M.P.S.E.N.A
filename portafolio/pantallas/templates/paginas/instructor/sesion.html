@@ -246,9 +246,15 @@
         </div>
 
             {% if messages %}
-                {% for message in messages %}
-                    <small><p id="mensaje-error" style="color:red; font-weight:bold;">{{ message }}</p></small>
-                {% endfor %}
+                <div class="container mb-3">
+                    {% for message in messages %}
+                        {% if "error" in message.tags or "danger" in message.tags %}
+                            <div style="color: red; margin-bottom: 10px; font-weight: 500;">
+                                <small>{{ message }}</small>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
             {% endif %}
             <script>
                 document.addEventListener('DOMContentLoaded', function() {

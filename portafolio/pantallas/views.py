@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from .models import Usuario, UsuarioRol, Rol
 from .forms import UsuarioForm
 
+from django.http import HttpResponse
+from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario
 
 load_dotenv() 
 
@@ -37,7 +39,7 @@ def fichas_ins(request):
     if 'usuario' not in request.session:
         return redirect('sesion')
 
-    usuario_nombre = request.session['usuario']
+    usuario_login = request.session['usuario']  # nombre de usuario, NO el nombre real
 
     conexion = mysql.connector.connect(
         host=os.getenv("DB_HOST"),
@@ -47,7 +49,8 @@ def fichas_ins(request):
     )
     cursor = conexion.cursor(dictionary=True)
 
-    cursor.execute("SELECT id FROM usuario WHERE usuario = %s", (usuario_nombre,))
+    # Obtener ID del usuario
+    cursor.execute("SELECT id FROM usuario WHERE usuario = %s", (usuario_login,))
     usuario = cursor.fetchone()
 
     if not usuario:
@@ -57,6 +60,22 @@ def fichas_ins(request):
 
     id_usuario = usuario['id']
 
+    # 🔥 Obtener primer nombre y primer apellido
+    cursor.execute("""
+        SELECT nombres, apellidos 
+        FROM usuario 
+        WHERE id = %s
+    """, (id_usuario,))
+    datos_nombre = cursor.fetchone()
+
+    if datos_nombre:
+        primer_nombre = datos_nombre['nombres'].split()[0].capitalize()     # Primer nombre
+        primer_apellido = datos_nombre['apellidos'].split()[0].capitalize()   # Primer apellido
+        usuario_nombre = f"{primer_nombre} {primer_apellido}"
+    else:
+        usuario_nombre = usuario_login
+
+    # Obtener fichas asignadas
     cursor.execute("""
         SELECT f.id, f.numero_ficha, p.programa, j.nombre AS jornada
         FROM ficha f
@@ -76,9 +95,6 @@ def fichas_ins(request):
         'usuario_nombre': usuario_nombre,
         'fichas': fichas
     })
-
-
-
 
 def tarea(request):
     return render(request, "paginas/aprendiz/tarea.html")
@@ -290,7 +306,18 @@ def carpetas_aprendiz2(request):
 
 
 def coordinador(request):
-    return render(request, "paginas/coordinador/coordinador.html")
+    ficha_id = request.GET.get("ficha")
+
+    # Si viene ficha en la URL → guardarla en sesión
+    if ficha_id:
+        request.session["ficha_actual"] = ficha_id
+
+    fichas = Ficha.objects.all()
+
+    return render(request, "paginas/coordinador/coordinador.html", {
+        "fichas": fichas,
+        "ficha_id": ficha_id
+    })
 
 def entrada(request):
     return render(request, "paginas/aprendiz/entrada.html")
@@ -371,7 +398,9 @@ def evidencias_coordinador(request):
     return render(request, "paginas/coordinador/evidencias_coordinador.html")
 
 def inicio_coordinador(request):
-    return render(request, "paginas/coordinador/inicio_coordinador.html")
+    # Recuperamos la ficha seleccionada de la sesión
+    ficha_id = request.session.get('ficha_id')
+    return render(request, "paginas/coordinador/inicio_coordinador.html", {"ficha_id": ficha_id})
 
 def lista_aprendices_coordinador(request):
     return render(request, "paginas/coordinador/lista_aprendices_coordinador.html")
@@ -521,7 +550,55 @@ def configuracion_observador_2(request):
     return render(request, "paginas/observador/configuracion_observador_2.html")
 
 def configuracion_coordinador(request):
-    return render(request, "paginas/coordinador/configuracion_coordinador.html")
+    # 1. Leer ficha desde URL o sesión
+    ficha_id = request.GET.get("ficha") or request.session.get("ficha_actual")
+
+    if not ficha_id:
+        messages.error(request, "Primero debes seleccionar una ficha.")
+        return redirect("inicio_coordinador")
+
+    # Guardar ficha en sesión para futuras acciones
+    request.session["ficha_actual"] = ficha_id
+
+    # 2. Traer instructores
+    instructores = Usuario.objects.filter(
+        usuariorol__idrol__tipo="instructor"
+    ).distinct()
+
+    if request.method == "POST":
+        seleccionados = request.POST.getlist("instructores")
+
+        # 3. Eliminar instructores anteriores
+        FichaUsuario.objects.filter(
+            idficha_id=ficha_id,
+            idusuario__usuariorol__idrol__tipo="instructor"
+        ).delete()
+
+        # 4. Guardar nuevos instructores asignados
+        for ins_id in seleccionados:
+            FichaUsuario.objects.create(
+                idficha_id=ficha_id,
+                idusuario_id=ins_id
+            )
+
+        messages.success(request, "¡Instructores asignados correctamente!")
+
+    # 5. Obtener instructores ya asignados a la ficha
+    instructores_asignados = Usuario.objects.filter(
+        fichausuario__idficha_id=ficha_id,
+        usuariorol__idrol__tipo="instructor"
+    ).distinct()
+
+    # Crear lista de IDs para usar en el template
+    ids_instructores_asignados = instructores_asignados.values_list('id', flat=True)
+
+    # 6. Pasar todo al contexto
+    return render(request, "paginas/coordinador/configuracion_coordinador.html", {
+        "instructores": instructores,
+        "instructores_asignados": instructores_asignados,
+        "ids_instructores_asignados": ids_instructores_asignados,
+        "ficha_id": ficha_id
+    })
 
 def evidencia_calificada(request):
     return render(request, "paginas/instructor/evidencia_calificada.html")
@@ -787,3 +864,16 @@ def actualizar_contrasena(request):
     return redirect("configuracion_instructor")
 
 
+def seleccionar_ficha(request, id_ficha):
+    # Guardamos la ficha seleccionada en la sesión
+    request.session['ficha_id'] = id_ficha
+    # Redirigimos a la pantalla principal del coordinador
+    return redirect('inicio_coordinador')
+
+def eliminar_instructor(request, usuario_id, ficha_id):
+    FichaUsuario.objects.filter(
+        idusuario_id=usuario_id,
+        idficha_id=ficha_id
+    ).delete()
+    messages.success(request, "Instructor eliminado correctamente.")
+    return redirect(f"/configuracion_coordinador/?ficha={ficha_id}")
