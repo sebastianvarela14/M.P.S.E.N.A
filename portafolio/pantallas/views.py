@@ -340,16 +340,26 @@ def carpetas_aprendiz2(request):
 
 def coordinador(request):
     ficha_id = request.GET.get("ficha")
+    ficha_actual = None
 
-    # Si viene ficha en la URL → guardarla en sesión
+    # Guardar ficha seleccionada en sesión
     if ficha_id:
         request.session["ficha_actual"] = ficha_id
+        try:
+            ficha_actual = Ficha.objects.get(id=ficha_id)
+        except Ficha.DoesNotExist:
+            ficha_actual = None
+    else:
+        # Si entra sin seleccionar ficha, mirar la sesión
+        ficha_session = request.session.get("ficha_actual")
+        if ficha_session:
+            ficha_actual = Ficha.objects.get(id=ficha_session)
 
     fichas = Ficha.objects.all()
 
     return render(request, "paginas/coordinador/coordinador.html", {
         "fichas": fichas,
-        "ficha_id": ficha_id
+        "ficha": ficha_actual
     })
 
 def entrada(request):
@@ -451,7 +461,117 @@ def trimestre_coordinador(request):
     return render(request, "paginas/coordinador/trimestre_coordinador.html")
 
 def datos_coordinador(request):
-    return render(request, "paginas/coordinador/datos_coordinador.html")
+    usuario_id = request.session.get('usuario_id')  # 🔹 Obtener ID de la sesión
+
+    if not usuario_id:
+        messages.error(request, "Debes iniciar sesión primero.")
+        return redirect('sesion')
+
+    # Conectar a la base de datos
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+    
+    # Obtener los datos del usuario por ID
+    cursor.execute("""
+        SELECT u.nombres, u.apellidos, u.correo, u.telefono,
+                d.tipo AS tipo_documento, d.numero AS num_documento
+        FROM usuario u
+        LEFT JOIN documento d ON u.iddocumento = d.id
+        WHERE u.id = %s
+    """, (usuario_id,))
+
+    usuario = cursor.fetchone()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/coordinador/datos_coordinador.html", {
+        'usuario': usuario
+    })
+
+def datos_coordinador_editar(request):
+    usuario_id = request.session.get('usuario_id')
+
+    if not usuario_id:
+        messages.error(request, "Debes iniciar sesión primero.")
+        return redirect('sesion')
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+
+    # Obtener datos actuales
+    cursor.execute("SELECT * FROM usuario u LEFT JOIN documento d ON u.iddocumento = d.id WHERE u.id = %s", (usuario_id,))
+    usuario = cursor.fetchone()
+
+    if request.method == "POST":
+        nombres = request.POST.get("nombres")
+        apellidos = request.POST.get("apellidos")
+        correo = request.POST.get("correo")
+        telefono = request.POST.get("telefono")
+        tipo_documento = request.POST.get("tipo_documento")
+        numero_documento_str = request.POST.get("numero_documento", "").strip()
+
+        # Validar que no esté vacío
+        if numero_documento_str == "":
+            messages.error(request, "El número de documento no puede estar vacío.")
+            return redirect('datos_coordinador_editar')
+        try:
+            numero_documento = int(numero_documento_str)
+        except ValueError:
+            messages.error(request, "El número de documento debe ser un número válido.")
+            return redirect('datos_coordinador_editar')
+
+        if usuario['iddocumento']:
+            # Actualizar documento existente
+            cursor.execute("""
+                UPDATE documento 
+                SET tipo = %s, numero = %s 
+                WHERE id = %s
+            """, (tipo_documento, numero_documento, usuario['iddocumento']))
+        else:
+            # Insertar nuevo documento
+            cursor.execute("""
+                INSERT INTO documento (tipo, numero)
+                VALUES (%s, %s)
+            """, (tipo_documento, numero_documento, usuario['iddocumento']))
+            nuevo_id = cursor.lastrowid
+            # Asociar el nuevo documento al usuario
+            cursor.execute("""
+                UPDATE usuario 
+                SET iddocumento = %s
+                WHERE id = %s
+            """, (nuevo_id, usuario_id))
+
+
+        # Actualizar tabla usuario
+        cursor.execute("""
+            UPDATE usuario 
+            SET nombres = %s, apellidos = %s, correo = %s, telefono = %s
+            WHERE id = %s
+        """, (nombres, apellidos, correo, telefono, usuario_id))
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+        messages.success(request, "Tus datos se actualizaron correctamente.")
+        return redirect('datos_coordinador')
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/coordinador/datos_coordinador_editar.html", {
+        "usuario": usuario
+    })
 
 def agregar_carpeta(request):
     return render(request, "paginas/instructor/agregar_carpeta.html")
@@ -593,6 +713,13 @@ def configuracion_coordinador(request):
     # Guardar ficha en sesión para futuras acciones
     request.session["ficha_actual"] = ficha_id
 
+    # 🔥 Cargar el objeto Ficha para poder mostrar numero_ficha
+    try:
+        ficha_obj = Ficha.objects.get(id=ficha_id)
+    except Ficha.DoesNotExist:
+        messages.error(request, "La ficha seleccionada no existe.")
+        return redirect("inicio_coordinador")
+
     # 2. Traer instructores
     instructores = Usuario.objects.filter(
         usuariorol__idrol__tipo="instructor"
@@ -630,7 +757,8 @@ def configuracion_coordinador(request):
         "instructores": instructores,
         "instructores_asignados": instructores_asignados,
         "ids_instructores_asignados": ids_instructores_asignados,
-        "ficha_id": ficha_id
+        "ficha_id": ficha_id,
+        "ficha": ficha_obj   # 🔥 Esto es lo que te estaba faltando
     })
 
 def evidencia_calificada(request):
