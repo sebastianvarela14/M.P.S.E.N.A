@@ -75,78 +75,59 @@
     }
 </style>
 
-<form method="POST" enctype="multipart/form-data">
+<form method="POST">
     {% csrf_token %}
 
     <div class="form-container">
 
         <!-- NOMBRES -->
         <label>Nombres</label>
-        <input type="text" name="nombres" value="{{ formulario.nombres.value|default:'' }}" placeholder="Ingrese nombres">
+        {{ formulario.nombres }}
 
         <!-- APELLIDOS -->
         <label>Apellidos</label>
-        <input type="text" name="apellidos" value="{{ formulario.apellidos.value|default:'' }}" placeholder="Ingrese apellidos">
+        {{ formulario.apellidos }}
 
         <!-- CORREO -->
         <label>Correo</label>
-        <input type="email" name="correo" value="{{ formulario.correo.value|default:'' }}" placeholder="correo@sena.edu.co">
+        {{ formulario.correo }}
 
         <!-- TELÉFONO -->
         <label>Teléfono</label>
-        <input type="text" name="telefono" value="{{ formulario.telefono.value|default:'' }}" placeholder="3001234567">
+        {{ formulario.telefono }}
 
-        <!-- TIPO Y NUMERO DOCUMENTO -->
+        <!-- DOCUMENTO -->
         <div class="row-double">
             <div class="field">
                 <label>Tipo Documento</label>
-                <select name="tipo_documento">
-                    {% for td in tipos_documento %}
-                        <option value="{{ td.id }}"
-                            {% if formulario.tipo_documento.value == td.id|stringformat:"s" %}
-                                selected
-                            {% endif %}
-                        >
-                            {{ td.nombre }}
-                        </option>
-                    {% endfor %}
-                </select>
+                {{ formulario.tipo_documento }}
             </div>
 
             <div class="field">
                 <label>Número Documento</label>
-                <input type="text" name="numero_documento" value="{{ formulario.numero_documento.value|default:'' }}" placeholder="10203040">
+                {{ formulario.numero_documento }}
             </div>
         </div>
 
         <!-- USUARIO -->
         <label>Usuario</label>
-        <input type="text" name="usuario" value="{{ formulario.usuario.value|default:'' }}" placeholder="usuario123">
+        {{ formulario.usuario }}
 
         <!-- CONTRASEÑA -->
         <label>Contraseña</label>
         <div class="row-double" style="align-items: center;">
             <div class="field">
-                <input type="password" name="contrasena" id="pw" value="{{ formulario.contrasena.value|default:'' }}">
+                {{ formulario.contrasena }}
             </div>
-            <button type="button" onclick="togglePw()" class="btn btn-cancelar" style="height: 42px; margin-top: 15px;">
+            <button type="button" onclick="togglePw()" class="btn btn-cancelar"
+                style="height: 42px; margin-top: 15px;">
                 <i class="bi bi-eye-fill" id="eyeIcon"></i>
             </button>
         </div>
 
         <!-- ROL -->
         <label>Rol</label>
-        <select name="rol">
-            {% for r in roles %}
-                <option value="{{ r.id }}"
-                    {% if formulario.rol.value == r.id|stringformat:"s" %}
-                        selected
-                    {% endif %}
-                >
-                    {{ r.nombre }}
-                </option>
-            {% endfor %}
-        </select>
+        {{ formulario.rol }}
 
         <!-- BOTONES -->
         <div class="btn-container">
@@ -156,6 +137,7 @@
 
     </div>
 </form>
+
 
 <script>
 function togglePw() {
