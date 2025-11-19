@@ -14,6 +14,38 @@ def plantillains(request):
     return render(request, "paginas/instructor/plantilla.html", )
 
 def agregar_evidencia(request):
+    if request.method == 'POST':
+        titulo = request.POST.get('titulo')
+        instrucciones = request.POST.get('instrucciones')
+        calificacion = request.POST.get('calificacion')
+        fecha_entrega = request.POST.get('fecha_de_entrega')
+        archivo = request.FILES.get('archivo')
+
+        # Por ahora, guardaremos solo el nombre del archivo.
+        # En un futuro, podrías implementar la subida de archivos a una carpeta.
+        nombre_archivo = archivo.name if archivo else "No subido"
+
+        try:
+            conexion = mysql.connector.connect(
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME")
+            )
+            cursor = conexion.cursor()
+            cursor.execute("""
+                INSERT INTO evidencias_instructor (titulo, instrucciones, calificacion, fecha_de_entrega, archivo)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (titulo, instrucciones, calificacion, fecha_entrega, nombre_archivo))
+            conexion.commit()
+            messages.success(request, "Evidencia agregada correctamente.")
+        except mysql.connector.Error as err:
+            messages.error(request, f"Error al agregar la evidencia: {err}")
+        finally:
+            if 'conexion' in locals() and conexion.is_connected():
+                cursor.close()
+                conexion.close()
+        return redirect('evidencias')
     return render(request, "paginas/instructor/agregar_evidencia.html")
 
 def calificaciones(request):
