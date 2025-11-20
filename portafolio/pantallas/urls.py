@@ -146,4 +146,7 @@ urlpatterns = [
     path("seleccionar_ficha/<int:id_ficha>/", views.seleccionar_ficha, name="seleccionar_ficha"),
     path("configuracion_coordinador/eliminar_instructor/<int:usuario_id>/<int:ficha_id>/", views.eliminar_instructor, name="eliminar_instructor")
 
+
+
+
 ]
