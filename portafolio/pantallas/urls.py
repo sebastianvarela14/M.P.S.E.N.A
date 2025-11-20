@@ -147,4 +147,7 @@ urlpatterns = [
     path("configuracion_coordinador/eliminar_instructor/<int:usuario_id>/<int:ficha_id>/", views.eliminar_instructor, name="eliminar_instructor"),
     path("datos_coordinador_editar/", views.datos_coordinador_editar, name="datos_coordinador_editar")
 
+
+
+
 ]
