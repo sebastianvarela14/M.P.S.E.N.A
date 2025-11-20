@@ -1,11 +1,9 @@
 import mysql.connector
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib import messages
 import os
 from dotenv import load_dotenv
-from .models import Usuario, UsuarioRol, Rol
 from .forms import UsuarioForm
-
 from django.http import HttpResponse
 from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario
 
