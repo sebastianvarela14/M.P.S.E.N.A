@@ -23,9 +23,13 @@ class Documento(models.Model):
     tipo = models.CharField(max_length=20, db_comment='que tipo de documento tiene el usuario cedula, tarjeta de identidad, etc')
     numero = models.BigIntegerField(blank=True, null=True, db_comment='es el numero de identificacion')
 
+    def __str__(self):
+        return f"{self.tipo}"
+
     class Meta:
         managed = False
         db_table = 'documento'
+
 
 
 class EvidenciasAprendiz(models.Model):
@@ -136,6 +140,9 @@ class Programa(models.Model):
 
 class Rol(models.Model):
     tipo = models.CharField(max_length=50, db_comment='aqui se define el rol del usuario que son (aprendiz, instructor, coordinacion y observador)')
+
+    def __str__(self):
+        return self.tipo
 
     class Meta:
         managed = False
