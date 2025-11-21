@@ -9,34 +9,35 @@
     <!-- Card con formulario -->
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body p-4">
-        <form>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
             <!-- Título -->
             <div class="mb-3">
                 <label for="titulo" class="form-label fw-semibold">Título</label>
-                <input type="text" class="form-control input-anim" id="titulo" placeholder="Ejemplo: Guía Lógica">
+                <input type="text" class="form-control input-anim" id="titulo" name="titulo" placeholder="Ejemplo: Guía Lógica" required>
             </div>
 
             <!-- Instrucciones -->
             <div class="mb-3">
                 <label for="instrucciones" class="form-label fw-semibold">Instrucciones</label>
-                <textarea class="form-control input-anim" id="instrucciones" rows="3" placeholder="Escribe aquí las instrucciones..."></textarea>
+                <textarea class="form-control input-anim" id="instrucciones" name="instrucciones" rows="3" placeholder="Escribe aquí las instrucciones..." required></textarea>
             </div>
 
             <!-- Calificación -->
             <div class="mb-3">
                 <label for="calificacion" class="form-label fw-semibold">Calificación Maxima</label>
                 <input type="number" id="calificacion" name="calificacion" class="form-control input-anim"
-                    min="10" max="100" step="1" placeholder="Ingrese la calificación">
+                    min="10" max="100" step="1" placeholder="Ingrese la calificación" required>
             </div>
 
             <!-- Fecha -->
             <div class="mb-3">
-                <label for="fecha" class="form-label fw-semibold">Fecha de entrega</label>
-                <input type="date" class="form-control input-anim" id="fecha">
+                <label for="fecha_de_entrega" class="form-label fw-semibold">Fecha de entrega</label>
+                <input type="date" class="form-control input-anim" id="fecha_de_entrega" name="fecha_de_entrega" required>
             </div>
-
+            <div class="mb-3">
                 <!-- Input file oculto -->
-                <input type="file" id="archivo" class="d-none" onchange="mostrarArchivo()">
+                <input type="file" id="archivo" name="archivo" class="d-none" onchange="mostrarArchivo()">
                 <!-- Botón que activa el input -->
                 <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('archivo').click()">
                     <i class="bi bi-upload me-2"></i>Subir archivo
