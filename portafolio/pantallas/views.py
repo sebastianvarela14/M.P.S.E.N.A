@@ -3,10 +3,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 import os
 from dotenv import load_dotenv
-
 from .forms import UsuarioForm
 from django.http import HttpResponse
-from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario
+from django.core.files.storage import FileSystemStorage
+from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario, NombreAsignatura, TipoAsignatura
 
 load_dotenv() 
 
@@ -14,6 +14,55 @@ def plantillains(request):
     return render(request, "paginas/instructor/plantilla.html", )
 
 def agregar_evidencia(request):
+    if request.method == 'POST':
+        titulo = request.POST.get('titulo')
+        instrucciones = request.POST.get('instrucciones')
+        calificacion = request.POST.get('calificacion')
+        fecha_entrega = request.POST.get('fecha_de_entrega')
+        archivo = request.FILES.get('archivo')
+
+        nombre_archivo = archivo.name if archivo else "No subido"
+
+        try:
+            conexion = mysql.connector.connect(
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME")
+            )
+            cursor = conexion.cursor()
+
+            # ⿡ INSERT en evidencias_instructor
+            cursor.execute("""
+                INSERT INTO evidencias_instructor 
+                (titulo, instrucciones, calificacion, fecha_de_entrega, archivo)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (titulo, instrucciones, calificacion, fecha_entrega, nombre_archivo))
+            conexion.commit()
+
+            # ⿢ Obtener el id de la evidencia recién creada
+            id_evidencia = cursor.lastrowid
+
+            # ⿣ Obtener la ficha actual desde la sesión
+            id_ficha = request.session.get("ficha_id")
+
+             # ⿤ Registrar la evidencia en evidencias_ficha
+            cursor.execute("""
+                INSERT INTO evidencias_ficha (idficha, idevidencias_instructor)
+                VALUES (%s, %s)
+            """, (id_ficha, id_evidencia))
+            conexion.commit()
+
+            messages.success(request, "Evidencia agregada y vinculada a la ficha.")
+
+        except mysql.connector.Error as err:
+            messages.error(request, f"Error al agregar la evidencia: {err}")
+
+        finally:
+            if 'conexion' in locals() and conexion.is_connected():
+                cursor.close()
+                conexion.close()
+        return redirect('evidencias')
     return render(request, "paginas/instructor/agregar_evidencia.html")
 
 def calificaciones(request):
@@ -138,9 +187,12 @@ def datos_ins(request):
         'usuario': usuario
     })
 
-
 def evidencias(request):
-    # Conectar a la base de datos
+    ficha_id = request.session.get('ficha_id')
+
+    if not ficha_id:
+        return HttpResponse("No hay ficha seleccionada")
+
     conexion = mysql.connector.connect(
         host=os.getenv("DB_HOST"),
         user=os.getenv("DB_USER"),
@@ -148,16 +200,21 @@ def evidencias(request):
         database=os.getenv("DB_NAME")
     )
     cursor = conexion.cursor(dictionary=True)
-    
-    # Obtener todas las evidencias del instructor
-    cursor.execute("SELECT * FROM evidencias_instructor")
+
+    # Traer evidencias SOLO de la ficha seleccionada
+    query = """
+        SELECT ei.*
+        FROM evidencias_instructor ei
+        INNER JOIN evidencias_ficha ef ON ei.id = ef.idevidencias_instructor
+        WHERE ef.idficha = %s
+    """
+    cursor.execute(query, (ficha_id,))
     evidencias = cursor.fetchall()
 
     cursor.close()
     conexion.close()
 
     return render(request, "paginas/instructor/evidencias.html", {"evidencias": evidencias})
-
 
 def material2(request):
     return render(request, "paginas/instructor/material2.html")
@@ -433,11 +490,20 @@ def adentro_material_coordinador(request):
 def carpetas_coordinador(request):
     return render(request, "paginas/coordinador/carpetas_coordinador.html")
 
-def evidencia_guia_coordinador(request):
-    return render(request, "paginas/coordinador/evidencia_guia_coordinador.html")
+def evidencia_guia_coordinador(request, id):
+    evidencia = EvidenciasInstructor.objects.get(id=id)
+    return render(request, "paginas/coordinador/evidencia_guia_coordinador.html", {
+        "evidencia": evidencia
+    })
 
-def evidencias_coordinador(request):
-    return render(request, "paginas/coordinador/evidencias_coordinador.html")
+def evidencias_coordinador(request, ficha_id):
+    evidencias = EvidenciasInstructor.objects.filter(
+        evidenciasficha__idficha=ficha_id
+    )
+
+    return render(request, "paginas/coordinador/evidencias_coordinador.html", {
+        "evidencias": evidencias
+    })
 
 def inicio_coordinador(request):
     # Recuperamos la ficha seleccionada de la sesión
@@ -445,7 +511,30 @@ def inicio_coordinador(request):
     return render(request, "paginas/coordinador/inicio_coordinador.html", {"ficha_id": ficha_id})
 
 def lista_aprendices_coordinador(request):
-    return render(request, "paginas/coordinador/lista_aprendices_coordinador.html")
+        conexion = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+    
+
+        cursor = conexion.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT u.id, u.nombres, u.apellidos
+            FROM usuario u
+            WHERE u.id IN (3, 4)
+        """)
+
+        aprendices = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        return render(request, "paginas/coordinador/lista_aprendices_coordinador.html", {
+            "aprendices": aprendices
+    })
 
 def material_principal_coordinador(request):
     return render(request, "paginas/coordinador/material_principal_coordinador.html")
@@ -702,62 +791,122 @@ def configuracion_observador_2(request):
     return render(request, "paginas/observador/configuracion_observador_2.html")
 
 def configuracion_coordinador(request):
-    # 1. Leer ficha desde URL o sesión
-    ficha_id = request.GET.get("ficha") or request.session.get("ficha_actual")
 
+    # 1. Recuperar ficha desde sesión
+    ficha_id = request.session.get("ficha_actual")
     if not ficha_id:
         messages.error(request, "Primero debes seleccionar una ficha.")
         return redirect("inicio_coordinador")
 
-    # Guardar ficha en sesión para futuras acciones
-    request.session["ficha_actual"] = ficha_id
+    # 2. Traer objeto ficha para mostrar datos en pantalla
+    ficha = Ficha.objects.get(id=ficha_id)
 
-    # 🔥 Cargar el objeto Ficha para poder mostrar numero_ficha
-    try:
-        ficha_obj = Ficha.objects.get(id=ficha_id)
-    except Ficha.DoesNotExist:
-        messages.error(request, "La ficha seleccionada no existe.")
-        return redirect("inicio_coordinador")
-
-    # 2. Traer instructores
+    # ========= INSTRUCTORES =========
     instructores = Usuario.objects.filter(
         usuariorol__idrol__tipo="instructor"
     ).distinct()
 
-    if request.method == "POST":
-        seleccionados = request.POST.getlist("instructores")
-
-        # 3. Eliminar instructores anteriores
-        FichaUsuario.objects.filter(
-            idficha_id=ficha_id,
-            idusuario__usuariorol__idrol__tipo="instructor"
-        ).delete()
-
-        # 4. Guardar nuevos instructores asignados
-        for ins_id in seleccionados:
-            FichaUsuario.objects.create(
-                idficha_id=ficha_id,
-                idusuario_id=ins_id
-            )
-
-        messages.success(request, "¡Instructores asignados correctamente!")
-
-    # 5. Obtener instructores ya asignados a la ficha
     instructores_asignados = Usuario.objects.filter(
         fichausuario__idficha_id=ficha_id,
         usuariorol__idrol__tipo="instructor"
     ).distinct()
 
-    # Crear lista de IDs para usar en el template
-    ids_instructores_asignados = instructores_asignados.values_list('id', flat=True)
+    ids_instructores_asignados = [i.id for i in instructores_asignados]
 
-    # 6. Pasar todo al contexto
+    # ========= APRENDICES =========
+    aprendices = Usuario.objects.filter(
+        usuariorol__idrol__tipo="aprendiz"
+    ).distinct()
+
+    aprendices_asignados = Usuario.objects.filter(
+        fichausuario__idficha_id=ficha_id,
+        usuariorol__idrol__tipo="aprendiz"
+    ).distinct()
+
+    ids_aprendices_asignados = [a.id for a in aprendices_asignados]
+
+    # ========= ASIGNATURAS =========
+    todas_asignaturas = NombreAsignatura.objects.all()
+    asignaturas_ficha = NombreAsignatura.objects.filter(idficha_id=ficha_id)
+    ids_asignaturas_ficha = [a.id for a in asignaturas_ficha]
+
+    # ========= GUARDAR =========
+    if request.method == "POST":
+
+        # ---------- Guardar Instructores ----------
+        if "instructores" in request.POST:
+            seleccionados = request.POST.getlist("instructores")
+
+            FichaUsuario.objects.filter(
+                idficha_id=ficha_id,
+                idusuario__usuariorol__idrol__tipo="instructor"
+            ).delete()
+
+            for ins_id in seleccionados:
+                FichaUsuario.objects.create(
+                    idficha_id=ficha_id,
+                    idusuario_id=ins_id
+                )
+
+            messages.success(request, "¡Instructores asignados correctamente!")
+
+        # ---------- Guardar Aprendices ----------
+        if "aprendices" in request.POST:
+            seleccionados = request.POST.getlist("aprendices")
+
+            FichaUsuario.objects.filter(
+                idficha_id=ficha_id,
+                idusuario__usuariorol__idrol__tipo="aprendiz"
+            ).delete()
+
+            for apr_id in seleccionados:
+                FichaUsuario.objects.create(
+                    idficha_id=ficha_id,
+                    idusuario_id=apr_id
+                )
+
+            messages.success(request, "¡Aprendices asignados correctamente!")
+
+        # ---------- Guardar Asignaturas ----------
+        if "asignaturas" in request.POST:
+            seleccionados = request.POST.getlist("asignaturas")
+
+            # Eliminar asignaturas previas de la ficha
+            NombreAsignatura.objects.filter(idficha_id=ficha_id).delete()
+
+            # Volver a agregarlas
+            for asig_id in seleccionados:
+                base = NombreAsignatura.objects.get(id=asig_id)
+
+                NombreAsignatura.objects.create(
+                    idficha_id=ficha_id,
+                    nombre=base.nombre,
+                    idtipo_asignatura=base.idtipo_asignatura
+                )
+
+            messages.success(request, "¡Asignaturas guardadas correctamente!")
+
+        return redirect("configuracion_coordinador")
+
+    # ========= RENDER =========
     return render(request, "paginas/coordinador/configuracion_coordinador.html", {
+        "ficha": ficha,
+        "ficha_id": ficha_id,
+
+        # Instructores
         "instructores": instructores,
         "instructores_asignados": instructores_asignados,
         "ids_instructores_asignados": ids_instructores_asignados,
-        "ficha_id": ficha_id,
-        "ficha": ficha_obj   # 🔥 Esto es lo que te estaba faltando
+
+        # Aprendices
+        "aprendices": aprendices,
+        "aprendices_asignados": aprendices_asignados,
+        "ids_aprendices_asignados": ids_aprendices_asignados,
+
+        # Asignaturas
+        "todas_asignaturas": todas_asignaturas,
+        "asignaturas_ficha": asignaturas_ficha,
+        "ids_asignaturas_ficha": ids_asignaturas_ficha,
     })
 
 def evidencia_calificada(request):
@@ -1031,7 +1180,7 @@ def actualizar_contrasena(request):
 
 def seleccionar_ficha(request, id_ficha):
     # Guardamos la ficha seleccionada en la sesión
-    request.session['ficha_id'] = id_ficha
+    request.session['ficha_actual'] = id_ficha
     # Redirigimos a la pantalla principal del coordinador
     return redirect('inicio_coordinador')
 
@@ -1042,3 +1191,120 @@ def eliminar_instructor(request, usuario_id, ficha_id):
     ).delete()
     messages.success(request, "Instructor eliminado correctamente.")
     return redirect(f"/configuracion_coordinador/?ficha={ficha_id}")
+
+def eliminar_aprendiz(request, aprendiz_id, ficha_id):
+    if request.method == "POST":
+        FichaUsuario.objects.filter(
+            idficha_id=ficha_id,
+            idusuario_id=aprendiz_id
+        ).delete()
+
+        messages.success(request, "Aprendiz eliminado correctamente.")
+
+    return redirect("configuracion_coordinador")
+
+def configuracion_asignaturas(request):
+    ficha_id = request.session.get("ficha_actual")
+
+    if not ficha_id:
+        messages.error(request, "Primero debes seleccionar una ficha.")
+        return redirect("inicio_coordinador")
+
+    ficha = Ficha.objects.get(id=ficha_id)
+
+    # 1. Todas las asignaturas existentes
+    todas_asignaturas = NombreAsignatura.objects.filter(idficha__isnull=True)
+
+    # 2. Asignaturas asignadas a la ficha
+    asignaturas_ficha = NombreAsignatura.objects.filter(idficha=ficha)
+
+    if request.method == "POST":
+        seleccionadas = request.POST.getlist("asignaturas")
+
+        # Desasignar asignaturas que ya no estén seleccionadas
+        NombreAsignatura.objects.filter(idficha=ficha).exclude(id__in=seleccionadas).update(idficha=None)
+
+        # Asignar nuevas asignaturas
+        NombreAsignatura.objects.filter(id__in=seleccionadas).update(idficha=ficha)
+
+        messages.success(request, "Asignaturas actualizadas correctamente.")
+        return redirect("configuracion_asignaturas")
+
+    return render(request, "paginas/coordinador/configuracion_asignaturas.html", {
+        "ficha": ficha,
+        "todas_asignaturas": todas_asignaturas,
+        "asignaturas_ficha": asignaturas_ficha,
+    })
+
+def eliminar_asignatura(request, id_asignatura):
+    ficha_id = request.session.get("ficha_actual")
+    if ficha_id:
+        NombreAsignatura.objects.filter(id=id_asignatura, idficha_id=ficha_id).delete()
+        messages.success(request, "Asignatura eliminada correctamente.")
+    return redirect("configuracion_coordinador")
+
+def eliminar_evidencia(request, evidencia_id):
+    if request.method == "GET":
+        try:
+            conexion = mysql.connector.connect(
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME")
+            )
+            cursor = conexion.cursor(dictionary=True)
+
+            cursor.execute("SELECT archivo FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
+            resultado = cursor.fetchone()
+
+            if resultado:
+                nombre_archivo = resultado.get('archivo')
+
+                cursor.execute("DELETE FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
+                conexion.commit()
+
+                if nombre_archivo and nombre_archivo != 'No subido':
+                    ruta_archivo = os.path.join('media', 'evidencias', nombre_archivo)
+                    if os.path.exists(ruta_archivo):
+                        os.remove(ruta_archivo)
+                
+                messages.success(request, "La evidencia ha sido eliminada correctamente.")
+            else:
+                messages.error(request, "No se encontró la evidencia para eliminar.")
+
+        except mysql.connector.Error as err:
+            messages.error(request, f"Error al eliminar la evidencia: {err}")
+        finally:
+            if 'conexion' in locals() and conexion.is_connected():
+                cursor.close()
+                conexion.close()
+    return redirect('evidencias')
+
+def datos_coor(request, id):
+    # Conexion a base de datos
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+
+    # Obtener datos del aprendiz
+    cursor.execute("""
+            SELECT u.nombres, u.apellidos, u.correo, u.telefono,
+                d.tipo AS tipo_documento, d.numero AS num_documento
+            FROM usuario u
+            LEFT JOIN documento d ON u.iddocumento = d.id
+            WHERE u.id = %s
+        """, (id,))
+
+    aprendiz = cursor.fetchone()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/coordinador/datos_coor.html", {
+        "aprendiz": aprendiz
+    })
+
