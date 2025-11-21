@@ -12,10 +12,15 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         /* Estilo para el botón flotante */
+        .fab-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1030;
+            display: flex;
+            gap: 0.75rem; /* Espacio entre los botones */
+        }
         .btn-edit {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
         border-radius: 50%;
         width: 55px;
         height: 55px;
@@ -46,41 +51,63 @@
             <h5 class="fw-semibold mb-3">
             <i class="bi bi-paperclip"></i> Archivos adjuntos
             </h5>
-            <ul class="list-group">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div title="{{ evidencia.archivo }}">
-                <i class="bi bi-file-earmark-pdf text-danger"></i> Guía de estructuras con HTML
-                </div>
-                <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-                </a>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div title="{{ evidencia.archivo }}">
-                <i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega
-                </div>
-                <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-                </a>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div title="{{ evidencia.archivo }}">
-                <i class="bi bi-file-earmark-image text-warning"></i> Ejemplos prácticos
-                </div>
-                <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-                </a>
-            </li>
-            </ul>
+            {% if evidencia.archivo and evidencia.archivo != 'No subido' %}
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            {% with evidencia.archivo|lower as nombre_archivo %}
+                                {% if nombre_archivo|slice:"-4:" == ".pdf" %}<i class="bi bi-file-earmark-pdf text-danger"></i>
+                                {% elif nombre_archivo|slice:"-5:" == ".docx" or nombre_archivo|slice:"-4:" == ".doc" %}<i class="bi bi-file-earmark-word text-primary"></i>
+                                {% elif nombre_archivo|slice:"-5:" == ".xlsx" or nombre_archivo|slice:"-4:" == ".xls" %}<i class="bi bi-file-earmark-excel text-success"></i>
+                                {% else %}<i class="bi bi-file-earmark-text"></i>{% endif %}
+                            {% endwith %}
+                            {{ evidencia.archivo }}
+                        </span>
+                        <a href="{{ MEDIA_URL }}evidencias/{{ evidencia.archivo }}" class="btn btn-sm btn-outline-success" download>
+                            <i class="bi bi-download"></i> Descargar
+                        </a>
+                    </li>
+                </ul>
+            {% else %}
+                <p class="text-muted">No hay ningún archivo adjunto para esta evidencia.</p>
+            {% endif %}
         </div>
         </div>
     </div>
 
+<!-- Botones flotantes -->
+<div class="fab-container">
+    <!-- Botón Eliminar -->
+    <button type="button" class="btn btn-danger btn-edit" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" title="Eliminar Evidencia">
+        <i class="bi bi-trash"></i>
+    </button>
+
+    <!-- Botón Editar -->
+    <a href="{% url 'evidencia_guia_editar' %}" class="btn btn-success btn-edit" title="Editar Evidencia"> {# Más adelante puedes pasar el id: {% url 'evidencia_guia_editar' evidencia.id %} #}
 <!-- Botón flotante Editar -->
     <a href="{% url 'evidencia_guia_editar' %}" class="btn btn-success btn-edit"> {# Más adelante puedes pasar el id: {% url 'evidencia_guia_editar' evidencia.id %} #}
         <i class="bi bi-pencil-square"></i>
     </a>
+</div>
 
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="confirmDeleteModalLabel"><i class="bi bi-exclamation-triangle-fill"></i> Confirmar Eliminación</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+            <div class="modal-body">
+        ¿Estás seguro de que deseas eliminar la evidencia **"{{ evidencia.titulo }}"**? Esta acción no se puede deshacer.
+            </div>
+        <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <a href="{% url 'eliminar_evidencia' evidencia.id %}" class="btn btn-danger">Sí, eliminar</a>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 
