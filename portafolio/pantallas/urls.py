@@ -78,8 +78,8 @@ urlpatterns = [
     path("evidencias_observador/", views.evidencias_observador, name="evidencias_observador"),
     path("adentro_material_coordinador/", views.adentro_material_coordinador, name="adentro_material_coordinador"),
     path("carpetas_coordinador/", views.carpetas_coordinador, name="carpetas_coordinador"),
-    path("evidencia_guia_coordinador/", views.evidencia_guia_coordinador, name="evidencia_guia_coordinador"),
-    path("evidencias_coordinador/", views.evidencias_coordinador, name="evidencias_coordinador"),
+    path("evidencia_guia_coordinador/<int:id>/", views.evidencia_guia_coordinador, name="evidencia_guia_coordinador"),
+    path("evidencias_coordinador/<int:ficha_id>/", views.evidencias_coordinador, name="evidencias_coordinador"),
     path("inicio_coordinador/", views.inicio_coordinador, name="inicio_coordinador"),
     path("lista_aprendices_coordinador/", views.lista_aprendices_coordinador, name="lista_aprendices_coordinador"),
     path("material_principal_coordinador/", views.material_principal_coordinador, name="material_principal_coordinador"),
@@ -144,8 +144,10 @@ urlpatterns = [
     path("datos/<int:id>/", views.datos_aprendiz, name="datos"),
     path("actualizar_contrasena/", views.actualizar_contrasena, name="actualizar_contrasena"),
     path("seleccionar_ficha/<int:id_ficha>/", views.seleccionar_ficha, name="seleccionar_ficha"),
-    path("configuracion_coordinador/eliminar_instructor/<int:usuario_id>/<int:ficha_id>/", views.eliminar_instructor, name="eliminar_instructor")
-
+    path("configuracion_coordinador/eliminar_instructor/<int:usuario_id>/<int:ficha_id>/", views.eliminar_instructor, name="eliminar_instructor"),
+    path("datos_coordinador_editar/", views.datos_coordinador_editar, name="datos_coordinador_editar"),
+    path("eliminar_aprendiz/<int:aprendiz_id>/<int:ficha_id>/", views.eliminar_aprendiz, name="eliminar_aprendiz"),
+    path('datos_coor/<int:id>/', views.datos_coor, name='datos_coor'),
 
 
 
