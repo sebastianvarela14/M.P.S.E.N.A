@@ -7,7 +7,7 @@ from .forms import UsuarioForm
 from django.http import HttpResponse
 from django.core.files.storage import FileSystemStorage
 from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario, NombreAsignatura, TipoAsignatura
-
+from .models import *
 load_dotenv() 
 
 def plantillains(request):
