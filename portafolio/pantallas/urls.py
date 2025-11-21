@@ -48,7 +48,7 @@ urlpatterns = [
     path("datoslaura/", views.datoslaura, name="datoslaura"),
 
     path("adentro_material1/", views.adentro_material1, name="adentro_material1"),
-    path("evidencia_guia/", views.evidencia_guia, name="evidencia_guia"),
+    path("evidencia_guia/<int:evidencia_id>/", views.evidencia_guia, name="evidencia_guia"),
     path("evidencia_guia1/", views.evidencia_guia1, name="evidencia_guia1"),
     path("aprendiz/", views.inicio, name="inicio"),
     path("carpetas_aprendiz1/", views.carpetas_aprendiz1, name="carpetas_aprendiz1"),
@@ -106,6 +106,7 @@ urlpatterns = [
     path("", views.sesion, name="sesion"),
 
     path("configuracion_instructor/", views.configuracion_instructor, name="configuracion_instructor"),
+    path("actualizar_contrasena/", views.actualizar_contrasena, name="actualizar_contrasena"),
     path("configuracion_instructor_2/", views.configuracion_instructor_2, name="configuracion_instructor_2"),
     path("configuracion_aprendiz/", views.configuracion_aprendiz, name="configuracion_aprendiz"),
     path("configuracion_aprendiz_2/", views.configuracion_aprendiz_2, name="configuracion_aprendiz_2"),
@@ -139,11 +140,12 @@ urlpatterns = [
     path("administrar_usuario/crear/", views.administrar_usuario_crear, name="administrar_usuario_crear"),
     path("administrar_usuario/editar/<int:id>/", views.administrar_usuario_editar, name="administrar_usuario_editar"),
     path("usuario/eliminar/<int:usuario_id>/", views.eliminar_usuario, name="eliminar_usuario"),
-
+    path("datos/<int:id>/", views.datos_aprendiz, name="datos"),
+    path("actualizar_contrasena/", views.actualizar_contrasena, name="actualizar_contrasena"),
+    path("seleccionar_ficha/<int:id_ficha>/", views.seleccionar_ficha, name="seleccionar_ficha"),
+    path("configuracion_coordinador/eliminar_instructor/<int:usuario_id>/<int:ficha_id>/", views.eliminar_instructor, name="eliminar_instructor")
 
 
 
 
 ]
-
-

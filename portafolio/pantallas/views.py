@@ -1,9 +1,12 @@
 import mysql.connector
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 import os
 from dotenv import load_dotenv
-from .models import Usuario, UsuarioRol, Rol
+
+from .forms import UsuarioForm
+from django.http import HttpResponse
+from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario
 
 load_dotenv()
 
@@ -39,7 +42,7 @@ def fichas_ins(request):
     if 'usuario' not in request.session:
         return redirect('sesion')
 
-    usuario_nombre = request.session['usuario']
+    usuario_login = request.session['usuario']  # nombre de usuario, NO el nombre real
 
     conexion = mysql.connector.connect(
         host=os.getenv("DB_HOST"),
@@ -49,7 +52,8 @@ def fichas_ins(request):
     )
     cursor = conexion.cursor(dictionary=True)
 
-    cursor.execute("SELECT id FROM usuario WHERE usuario = %s", (usuario_nombre,))
+    # Obtener ID del usuario
+    cursor.execute("SELECT id FROM usuario WHERE usuario = %s", (usuario_login,))
     usuario = cursor.fetchone()
 
     if not usuario:
@@ -59,6 +63,22 @@ def fichas_ins(request):
 
     id_usuario = usuario['id']
 
+    # 🔥 Obtener primer nombre y primer apellido
+    cursor.execute("""
+        SELECT nombres, apellidos 
+        FROM usuario 
+        WHERE id = %s
+    """, (id_usuario,))
+    datos_nombre = cursor.fetchone()
+
+    if datos_nombre:
+        primer_nombre = datos_nombre['nombres'].split()[0].capitalize()     # Primer nombre
+        primer_apellido = datos_nombre['apellidos'].split()[0].capitalize()   # Primer apellido
+        usuario_nombre = f"{primer_nombre} {primer_apellido}"
+    else:
+        usuario_nombre = usuario_login
+
+    # Obtener fichas asignadas
     cursor.execute("""
         SELECT f.id, f.numero_ficha, p.programa, j.nombre AS jornada
         FROM ficha f
@@ -78,9 +98,6 @@ def fichas_ins(request):
         'usuario_nombre': usuario_nombre,
         'fichas': fichas
     })
-
-
-
 
 def tarea(request):
     return render(request, "paginas/aprendiz/tarea.html")
@@ -127,7 +144,23 @@ def datos_ins(request):
 
 
 def evidencias(request):
-    return render(request, "paginas/instructor/evidencias.html")
+    # Conectar a la base de datos
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+    
+    # Obtener todas las evidencias del instructor
+    cursor.execute("SELECT * FROM evidencias_instructor")
+    evidencias = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/evidencias.html", {"evidencias": evidencias})
 
 
 def material2(request):
@@ -167,6 +200,36 @@ def lista_aprendices(request):
     return render(request, "paginas/instructor/lista_aprendices.html", {
         "aprendices": aprendices
     })
+
+def datos_aprendiz(request, id):
+
+    # Conexion a base de datos
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+
+    # Obtener datos del aprendiz
+    cursor.execute("""
+        SELECT u.nombres, u.apellidos, u.correo, u.telefono,
+        d.tipo AS tipo_documento, d.numero AS num_documento
+        FROM usuario u
+        LEFT JOIN documento d ON u.iddocumento = d.id
+        WHERE u.id = %s
+    """, (id,))
+
+    aprendiz = cursor.fetchone()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/instructor/datos.html", {
+        "aprendiz": aprendiz
+    })
+
 
 
 def carpetas2(request):
@@ -213,8 +276,25 @@ def datoslaura(request):
 def adentro_material1(request):
     return render(request, "paginas/instructor/adentro_material1.html")
 
-def evidencia_guia(request):
-    return render(request, "paginas/instructor/evidencia_guia.html")
+def evidencia_guia(request, evidencia_id):
+    # Conectar a la base de datos
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+    
+    # Obtener la evidencia específica por su ID
+    cursor.execute("SELECT * FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
+    evidencia = cursor.fetchone()
+
+    cursor.close()
+    conexion.close()
+
+    # Pasar la evidencia encontrada a la plantilla
+    return render(request, "paginas/instructor/evidencia_guia.html", {"evidencia": evidencia})
 
 def evidencia_guia1(request):
     return render(request, "paginas/instructor/evidencia_guia1.html")
@@ -249,7 +329,7 @@ def inicio(request):
             cursor.close()
             conexion.close()
         except mysql.connector.Error as err:
-            messages.error(request, f"Error de base de datos: {err}")
+            messages.error(request, f"")
 
     return render(request, "paginas/aprendiz/inicio.html", {'competencias': competencias, 'nombre_aprendiz': nombre_aprendiz})
 
@@ -384,7 +464,9 @@ def evidencias_coordinador(request):
     return render(request, "paginas/coordinador/evidencias_coordinador.html")
 
 def inicio_coordinador(request):
-    return render(request, "paginas/coordinador/inicio_coordinador.html")
+    # Recuperamos la ficha seleccionada de la sesión
+    ficha_id = request.session.get('ficha_id')
+    return render(request, "paginas/coordinador/inicio_coordinador.html", {"ficha_id": ficha_id})
 
 def lista_aprendices_coordinador(request):
     return render(request, "paginas/coordinador/lista_aprendices_coordinador.html")
@@ -519,6 +601,7 @@ def sesion(request):
 def configuracion_instructor(request):
     return render(request, "paginas/instructor/configuracion_instructor.html")
 
+
 def configuracion_instructor_2(request):
     return render(request, "paginas/instructor/configuracion_instructor_2.html",)
 
@@ -536,7 +619,55 @@ def configuracion_observador_2(request):
     return render(request, "paginas/observador/configuracion_observador_2.html")
 
 def configuracion_coordinador(request):
-    return render(request, "paginas/coordinador/configuracion_coordinador.html")
+    # 1. Leer ficha desde URL o sesión
+    ficha_id = request.GET.get("ficha") or request.session.get("ficha_actual")
+
+    if not ficha_id:
+        messages.error(request, "Primero debes seleccionar una ficha.")
+        return redirect("inicio_coordinador")
+
+    # Guardar ficha en sesión para futuras acciones
+    request.session["ficha_actual"] = ficha_id
+
+    # 2. Traer instructores
+    instructores = Usuario.objects.filter(
+        usuariorol__idrol__tipo="instructor"
+    ).distinct()
+
+    if request.method == "POST":
+        seleccionados = request.POST.getlist("instructores")
+
+        # 3. Eliminar instructores anteriores
+        FichaUsuario.objects.filter(
+            idficha_id=ficha_id,
+            idusuario__usuariorol__idrol__tipo="instructor"
+        ).delete()
+
+        # 4. Guardar nuevos instructores asignados
+        for ins_id in seleccionados:
+            FichaUsuario.objects.create(
+                idficha_id=ficha_id,
+                idusuario_id=ins_id
+            )
+
+        messages.success(request, "¡Instructores asignados correctamente!")
+
+    # 5. Obtener instructores ya asignados a la ficha
+    instructores_asignados = Usuario.objects.filter(
+        fichausuario__idficha_id=ficha_id,
+        usuariorol__idrol__tipo="instructor"
+    ).distinct()
+
+    # Crear lista de IDs para usar en el template
+    ids_instructores_asignados = instructores_asignados.values_list('id', flat=True)
+
+    # 6. Pasar todo al contexto
+    return render(request, "paginas/coordinador/configuracion_coordinador.html", {
+        "instructores": instructores,
+        "instructores_asignados": instructores_asignados,
+        "ids_instructores_asignados": ids_instructores_asignados,
+        "ficha_id": ficha_id
+    })
 
 def evidencia_calificada(request):
     return render(request, "paginas/instructor/evidencia_calificada.html")
@@ -715,7 +846,6 @@ def administrar_usuario_crear(request):
     })
 
 
-# EDITAR USUARIO
 def administrar_usuario_editar(request, id):
     usuario = get_object_or_404(Usuario, id=id)
 
@@ -725,7 +855,13 @@ def administrar_usuario_editar(request, id):
             formulario.save()
             return redirect("administrar_usuario")
     else:
-        formulario = UsuarioForm(instance=usuario)
+        initial = {
+            "tipo_documento": usuario.iddocumento.id if usuario.iddocumento else None,
+            "numero_documento": usuario.iddocumento.numero if usuario.iddocumento else "",
+            "rol": usuario.usuariorol_set.first().idrol.id if usuario.usuariorol_set.exists() else None,
+        }
+
+        formulario = UsuarioForm(instance=usuario, initial=initial)
 
     return render(request, "paginas/coordinador/administrar_usuario_editar.html", {
         "formulario": formulario
@@ -735,4 +871,83 @@ def eliminar_usuario(request, usuario_id):
     Usuario.objects.filter(id=usuario_id).delete()
     return redirect("administrar_usuario")
 
+def actualizar_contrasena(request):
 
+    if request.method == "POST":
+
+        contrasena_actual = request.POST.get("actual")
+        nueva = request.POST.get("nueva")
+        confirmar = request.POST.get("confirmar")
+
+        # Obtener ID del usuario en sesión
+        id_usuario = request.session.get("id_usuario")
+
+        if not id_usuario:
+            messages.error(request, "No se encontró el usuario en la sesión.")
+            return redirect("configuracion_instructor")
+
+        try:
+            # Conexión a la BD
+            conexion = mysql.connector.connect(
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME")
+            )
+            cursor = conexion.cursor(dictionary=True)
+
+            # Obtener la contraseña actual
+            cursor.execute("SELECT contrasena FROM usuario WHERE id = %s", (id_usuario,))
+            usuario = cursor.fetchone()
+
+            if not usuario:
+                messages.error(request, "Usuario no encontrado.")
+                return redirect("configuracion_instructor")
+
+            # Validar contraseña actual
+            if usuario["contrasena"] != contrasena_actual:
+                messages.error(request, "La contraseña actual es incorrecta.")
+                return redirect("configuracion_instructor")
+
+            # Validar coincidencia
+            if nueva != confirmar:
+                messages.error(request, "Las contraseñas nuevas no coinciden.")
+                return redirect("configuracion_instructor")
+
+            # Actualizar contraseña
+            cursor.execute(
+                "UPDATE usuario SET contrasena = %s WHERE id = %s",
+                (nueva, id_usuario)
+            )
+            conexion.commit()
+
+            messages.success(request, "Contraseña actualizada correctamente.")
+            return redirect("configuracion_instructor")
+
+        except mysql.connector.Error as error:
+            messages.error(request, f"Error de base de datos: {error}")
+            return redirect("configuracion_instructor")
+
+        finally:
+            try:
+                cursor.close()
+                conexion.close()
+            except:
+                pass
+
+    return redirect("configuracion_instructor")
+
+
+def seleccionar_ficha(request, id_ficha):
+    # Guardamos la ficha seleccionada en la sesión
+    request.session['ficha_id'] = id_ficha
+    # Redirigimos a la pantalla principal del coordinador
+    return redirect('inicio_coordinador')
+
+def eliminar_instructor(request, usuario_id, ficha_id):
+    FichaUsuario.objects.filter(
+        idusuario_id=usuario_id,
+        idficha_id=ficha_id
+    ).delete()
+    messages.success(request, "Instructor eliminado correctamente.")
+    return redirect(f"/configuracion_coordinador/?ficha={ficha_id}")

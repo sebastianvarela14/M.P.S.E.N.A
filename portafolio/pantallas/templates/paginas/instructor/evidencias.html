@@ -71,26 +71,29 @@
         <!-- Título -->
         <h4 class="fw-bold mb-4">EVIDENCIAS</h4>
 
-        <!-- Tarjeta de evidencia 1 (Pendiente) -->
-        <a href="{% url 'evidencia_guia' %}" class="nav-link text-dark">
-        <div class="card shadow-sm border-0 rounded-3 mb-3">
-            <div class="card-body d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-journal-check fs-3 text-success me-3"></i>
-                <div>
-                <p class="fw-bold mb-1">Evidencia: Guía Lógica</p>
-                <small class="text-muted">Publicado: 07 / 07 / 2025</small>
+        {% for evidencia in evidencias %}
+            <a href="{% url 'evidencia_guia' evidencia.id %}" class="nav-link text-dark">
+                <div class="card shadow-sm border-0 rounded-3 mb-3">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-journal-check fs-3 text-success me-3"></i>
+                            <div>
+                                <p class="fw-bold mb-1">{{ evidencia.titulo }}</p>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block">Fecha Límite: {{ evidencia.fecha_de_entrega|date:"d / m / Y" }}</small>
+                        </div>
+                    </div>
                 </div>
+            </a>
+        {% empty %}
+            <div class="alert alert-info text-center" role="alert">
+                Aún no se han agregado evidencias. ¡Crea la primera usando el botón <i class="bi bi-plus-lg"></i>!
             </div>
-            <div class="text-end">
-                <small class="text-muted d-block">Fecha Limite: 11 / 07 / 2025</small>
-            </div>
-            </div>
-        </div>
-        </a>
+        {% endfor %}
     </div>
 
-    <!-- Botón fijo Calificaciones -->
     <a href="{% url 'calificaciones' %}" class="btn btn-success btn-fixed px-4">
         <i class="bi bi-list-check me-2"></i> CALIFICACIONES
     </a>

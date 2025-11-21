@@ -34,12 +34,12 @@
         <div class="card-body p-4">
             <!-- Título -->
             <h3 class="fw-bold text-success mb-3">
-            <i class="bi bi-journal-text"></i> Evidencia Guia Logica
+            <i class="bi bi-journal-text"></i> {{ evidencia.titulo }}
             </h3>
 
             <!-- Descripción -->
             <p class="text-muted mb-4">
-            De acuerdo con las instrucciones dadas en el PDF y lo visto en clase, se debe aplicar la estructura condicional if , elif , else para resolver el problema planteado, analizando cada condición de manera ordenada y mostrando el resultado correspondiente según la opción que cumpla la condición establecida.
+            {{ evidencia.instrucciones }}
             </p>
 
             <!-- Archivos adjuntos -->
@@ -48,7 +48,7 @@
             </h5>
             <ul class="list-group">
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
+                <div title="{{ evidencia.archivo }}">
                 <i class="bi bi-file-earmark-pdf text-danger"></i> Guía de estructuras con HTML
                 </div>
                 <a href="#" class="btn btn-sm btn-outline-success">
@@ -56,7 +56,7 @@
                 </a>
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
+                <div title="{{ evidencia.archivo }}">
                 <i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega
                 </div>
                 <a href="#" class="btn btn-sm btn-outline-success">
@@ -64,7 +64,7 @@
                 </a>
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
+                <div title="{{ evidencia.archivo }}">
                 <i class="bi bi-file-earmark-image text-warning"></i> Ejemplos prácticos
                 </div>
                 <a href="#" class="btn btn-sm btn-outline-success">

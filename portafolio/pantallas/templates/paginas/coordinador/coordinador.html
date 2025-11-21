@@ -94,9 +94,11 @@
 <body>
 
 <div class="container mt-5">
-    <!-- Barra superior con búsqueda y paginación -->
+    <!-- Barra superior con paginación y búsqueda -->
     <div class="top-bar">
+        <!-- Barra de búsqueda -->
         <input id="searchInput" type="text" class="form-control w-25" placeholder="Buscar...">
+        <!-- Controles de paginación movidos aquí -->
         <div id="paginationControls" class="pagination-controls">
             <button id="prevBtn" class="btn btn-outline-success">← Anterior</button>
             <span id="infoText" class="info-text"></span>
@@ -104,114 +106,63 @@
         </div>
     </div>
 
-    <h2>Fichas Registradas</h2>
-
-{% if fichas %}
+    <!-- Botones -->
     <div id="button-container" class="btn-container">
-        {% for ficha in fichas %}
-            <a href="{% url 'inicio_coordinador' %}" class="btn-custom">
-            3175010 - 8234560 - 6687667
-            </a>
-        {% endfor %}
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#3175010</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#3945038</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#5923045</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#4923567</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#2047395</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#84562314</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#3465734</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#8574901</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#2389475</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#7654321</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#1298347</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#63426890</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#7777777</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#8888888</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#9999999</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#1122334</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#2233445</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#3344556</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#4455667</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#5566778</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#1010101</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#2020202</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#3030303</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#4040404</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#5050505</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#6060606</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#7070707</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#8080808</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#9090909</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#1212121</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#2323232</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#3434343</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#4545454</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#5656565</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#6767676</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#7878787</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#8989898</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#9191919</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#9292929</a>
+        <a href="{% url 'inicio_coordinador'%}" class="btn-custom">#9393939</a>
     </div>
-{% else %}
-    <p><!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Fichas</title>
-
-    <style>
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h2 {
-            font-size: 28px;
-            font-weight: 600;
-            color: #2e3b32;
-            margin-bottom: 20px;
-        }
-
-        .btn-container {
-            display: flex;
-            gap: 20px;
-        }
-
-        .btn-ficha {
-            background-color: #2fa360;  /* Verde elegante */
-            color: #ffffff;
-            padding: 14px 28px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-size: 18px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-            transition: all 0.25s ease-in-out;
-        }
-
-        .btn-ficha:hover {
-            background-color: #278a52; /* Un tono más oscuro */
-            transform: translateY(-3px);
-            box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.22);
-        }
-
-    </style>
-</head>
-<body>
-
-    
-
-    <div class="btn-container">
-        <a href="#" class="btn-ficha">3175010</a>
-        <a href="#" class="btn-ficha">8234560</a>
-        <a href="#" class="btn-ficha">6687667</a>
     </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const searchInput = document.getElementById("searchInput");
-        const buttons = document.querySelectorAll("#button-container .btn-custom");
+<!-- Botones flotantes -->
+<div class="floating-buttons">
+    <!-- Botón "+" -->
+    <a href="{% url 'coordinador_agregar' %}" class="btn btn-success rounded-circle me-2" title="Agregar">
+        <i class="bi bi-plus-lg fs-4"></i>
+    </a>
 
-        searchInput.addEventListener("input", function () {
-            const filter = searchInput.value.trim().toLowerCase();
-
-            buttons.forEach(btn => {
-                const text = btn.textContent.toLowerCase();
-
-                if (text.includes(filter)) {
-                    btn.style.display = "flex";  
-                } else {
-                    btn.style.display = "none";
-                }
-            });
-        });
-    });
-</script>
-
-</body>
-</html></p>
-{% endif %}
-
-    <!-- Botones flotantes -->
-    <div class="floating-buttons">
-        <a href="{% url 'coordinador_agregar' %}" class="btn btn-success rounded-circle me-2" title="Agregar">
-            <i class="bi bi-plus-lg fs-4"></i>
-        </a>
-        <a href="{% url 'coordinador_editar' %}" class="btn btn-success rounded-circle" title="Editar">
-            <i class="bi bi-pencil-square fs-5"></i>
-        </a>
-    </div>
+    <!-- Botón Editar -->
+    <a href="{% url 'coordinador_editar' %}" class="btn btn-success rounded-circle" title="Editar">
+        <i class="bi bi-pencil-square fs-5"></i>
+    </a>
 </div>
-
 
 
 
@@ -223,3 +174,4 @@
 
 
 {% endblock %}
+
