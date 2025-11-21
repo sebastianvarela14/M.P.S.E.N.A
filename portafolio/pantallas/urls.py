@@ -129,6 +129,7 @@ urlpatterns = [
     path("material_editar/", views.material_editar, name="material_editar"),
     path("evidencia_guia_editar/", views.evidencia_guia_editar, name="evidencia_guia_editar"),
     path("carpetasins_editar/", views.carpetasins_editar, name="carpetasins_editar"),
+    path("evidencia/eliminar/<int:evidencia_id>/", views.eliminar_evidencia, name="eliminar_evidencia"),
     path("carpetasins_crear/", views.carpetasins_crear, name="carpetasins_crear"),
     path("carpetas_aprendiz_crear/", views.carpetas_aprendiz_crear, name="carpetas_aprendiz_crear"),
     path("carpetas_aprendiz_editar/", views.carpetas_aprendiz_editar, name="carpetas_aprendiz_editar"),
