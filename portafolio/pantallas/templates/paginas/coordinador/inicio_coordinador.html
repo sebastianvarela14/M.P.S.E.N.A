@@ -97,10 +97,17 @@
       <span>Portafolio</span>
     </a>
 
-    <a href="{% url 'evidencias_coordinador' %}" class="btn btn-card shadow-sm">
-      <i class="bi bi-journal-text"></i>
-      <span>Evidencias</span>
-    </a>
+    {% if ficha_id %}
+        <a href="{% url 'evidencias_coordinador' ficha_id %}" class="btn btn-card shadow-sm">
+          <i class="bi bi-journal-text"></i>
+          <span>Evidencias</span>
+        </a>
+    {% else %}
+        <a class="btn btn-card shadow-sm disabled" onclick="alert('Primero selecciona una ficha.')">
+          <i class="bi bi-journal-text"></i>
+          <span>Evidencias</span>
+        </a>
+    {% endif %}
 
     <a href="{% url 'material_principal_coordinador' %}" class="btn btn-card shadow-sm">
       <i class="bi bi-book"></i>

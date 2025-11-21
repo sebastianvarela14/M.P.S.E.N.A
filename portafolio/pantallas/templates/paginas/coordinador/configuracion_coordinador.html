@@ -201,140 +201,148 @@
 
 <main>
     <div class="explicacion">
-        <p><strong>Entraste a la ficha 3175020.</strong> Aquí puedes asignar instructores, aprendices y asignaturas. Usa las listas, buscadores o añade nuevos registros en caso necesario.</p>
+        <p><strong>Entraste a la ficha {{ ficha.numero_ficha }}</strong> Aquí puedes asignar instructores, aprendices y asignaturas. Usa las listas, buscadores o añade nuevos registros en caso necesario.</p>
     </div>
 
     <!-- Instructores -->
+    <section>
+        <h2>Asignar Instructores</h2>
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Enviar el ficha_id al backend -->
+            <input type="hidden" name="ficha_id" value="{{ ficha_id }}">
+            <div class="grupo">
+                <div class="buscar">
+                    <input type="text" id="buscarInstructor" 
+                        onkeyup="filtrar('buscarInstructor','listaInstructores')" 
+                        placeholder="Buscar instructor...">
+                </div>
+                <div id="listaInstructores">
+                    {% for ins in instructores %}
+                        <div class="opcion">
+                            <input type="checkbox"
+                                name="instructores"
+                                value="{{ ins.id }}"
+                                {% if ins.id in ids_instructores_asignados %}checked{% endif %}>
+                            {{ ins.nombres }} {{ ins.apellidos }}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="acciones">
+                    <button type="submit" class="btn-guardar">Guardar Instructores</button>
+
+                    <button type="button" class="btn-anadir" 
+                        onclick="abrirModal('modalInstructor')">Añadir Instructor</button>
+                </div>
+            </div>
+        </form>
+    </section>
+    <section>
+        <div class="lista-guardados">
+            <h4>Instructores en esta ficha</h4>
+
+            {% if instructores_asignados %}
+                {% for ins in instructores_asignados %}
+                    <div class="opcion" style="justify-content: space-between; margin: 6px 0;">
+                        <span>{{ ins.nombres }} {{ ins.apellidos }}</span>
+                        <form method="POST" action="{% url 'eliminar_instructor' ins.id ficha_id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn-eliminar">Eliminar</button>
+                        </form>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No hay instructores asignados.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Aprendices -->
 <section>
-    <h2>Asignar Instructores</h2>
+    <h2>Asignar Aprendices</h2>
     <form method="POST">
         {% csrf_token %}
 
         <!-- Enviar el ficha_id al backend -->
         <input type="hidden" name="ficha_id" value="{{ ficha_id }}">
+
         <div class="grupo">
             <div class="buscar">
-                <input type="text" id="buscarInstructor" 
-                       onkeyup="filtrar('buscarInstructor','listaInstructores')" 
-                       placeholder="Buscar instructor...">
+                <input type="text" id="buscarAprendiz" 
+                       onkeyup="filtrar('buscarAprendiz','listaAprendices')" 
+                       placeholder="Buscar aprendiz...">
             </div>
-            <div id="listaInstructores">
-                {% for ins in instructores %}
+
+            <div id="listaAprendices">
+                {% for apr in aprendices %}
                     <div class="opcion">
                         <input type="checkbox"
-                               name="instructores"
-                               value="{{ ins.id }}"
-                               {% if ins.id in ids_instructores_asignados %}checked{% endif %}>
-                        {{ ins.nombres }} {{ ins.apellidos }}
+                               name="aprendices"
+                               value="{{ apr.id }}"
+                               {% if apr.id in ids_aprendices_asignados %}checked{% endif %}>
+                        {{ apr.nombres }} {{ apr.apellidos }}
                     </div>
                 {% endfor %}
             </div>
+
             <div class="acciones">
-                <button type="submit" class="btn-guardar">Guardar Instructores</button>
+                <button type="submit" class="btn-guardar">Guardar Aprendices</button>
 
                 <button type="button" class="btn-anadir" 
-                    onclick="abrirModal('modalInstructor')">Añadir Instructor</button>
+                    onclick="abrirModal('modalAprendiz')">Añadir Aprendiz</button>
             </div>
         </div>
     </form>
 </section>
+
 <section>
     <div class="lista-guardados">
-        <h4>Instructores en esta ficha</h4>
+        <h4>Aprendices en esta ficha</h4>
 
-        {% if instructores_asignados %}
-            {% for ins in instructores_asignados %}
+        {% if aprendices_asignados %}
+            {% for apr in aprendices_asignados %}
                 <div class="opcion" style="justify-content: space-between; margin: 6px 0;">
-                    <span>{{ ins.nombres }} {{ ins.apellidos }}</span>
-                    <form method="POST" action="{% url 'eliminar_instructor' ins.id ficha_id %}" style="display:inline;">
+                    <span>{{ apr.nombres }} {{ apr.apellidos }}</span>
+
+                    <form method="POST" action="{% url 'eliminar_aprendiz' apr.id ficha_id %}" style="display:inline;">
                         {% csrf_token %}
                         <button class="btn-eliminar">Eliminar</button>
                     </form>
                 </div>
             {% endfor %}
         {% else %}
-            <p>No hay instructores asignados.</p>
+            <p>No hay aprendices asignados.</p>
         {% endif %}
     </div>
 </section>
 
-    <!-- Aprendices -->
-    <section>
-        <h2>👩‍🎓 Asignar Aprendices</h2>
-        <div class="grupo">
-            <div class="buscar">
-                <input type="text" id="buscarAprendiz" onkeyup="filtrar('buscarAprendiz','listaAprendices')" placeholder="Buscar aprendiz...">
-            </div>
-            <div id="listaAprendices">
-                <div class="opcion"><input type="checkbox"> Andrés Gómez</div>
-                <div class="opcion"><input type="checkbox"> Camila Torres</div>
-                <div class="opcion"><input type="checkbox"> Daniela Vargas</div>
-                <div class="opcion"><input type="checkbox"> Felipe Ramírez</div>
-                <div class="opcion"><input type="checkbox"> Juliana Castro</div>
-                <div class="opcion"><input type="checkbox"> Laura Castañeda</div>
-                <div class="opcion"><input type="checkbox"> Mateo Fernández</div>
-                <div class="opcion"><input type="checkbox"> Nicolás Jiménez</div>
-                <div class="opcion"><input type="checkbox"> Santiago Morales</div>
-                <div class="opcion"><input type="checkbox"> Sofía Herrera</div>
-            </div>
-            <div class="acciones">
-                <button class="btn-guardar">Guardar Aprendices</button>
-                <button class="btn-anadir" onclick="abrirModal('modalAprendiz')">Añadir Aprendiz</button>
-            </div>
-            <div class="lista-guardados">
-                <h4>Aprendices en esta ficha</h4>
-                <div class="item-guardado">Andrés Gómez <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Camila Torres <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Daniela Vargas <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Felipe Ramírez <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Juliana Castro <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Laura Castañeda <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Mateo Fernández <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Nicolás Jiménez <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Santiago Morales <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Sofía Herrera <button class="btn-eliminar">Eliminar</button></div>
-            </div>
-        </div>
-    </section>
+<!-- Asignaturas -->
+<section>
+    <h3>Asignaturas disponibles</h3>
+    <form method="POST">
+        {% csrf_token %}
+            {% for asignatura in todas_asignaturas %}
+                <label>
+                    <input type="checkbox" name="asignaturas" value="{{ asignatura.id }}"
+                        {% if asignatura.id in ids_asignaturas_ficha %}checked{% endif %}>
+                        {{ asignatura.nombre }}
+                    </label><br>
+                {% endfor %}
+                
 
-    <!-- Asignaturas -->
-    <section>
-        <h2>📚 Asignar Asignaturas</h2>
-        <div class="grupo">
-            <div class="buscar">
-                <input type="text" id="buscarAsignatura" onkeyup="filtrar('buscarAsignatura','listaAsignaturas')" placeholder="Buscar asignatura...">
-            </div>
-            <div id="listaAsignaturas">
-                <div class="opcion"><input type="checkbox"> Bases de Datos — Jorge Martínez</div>
-                <div class="opcion"><input type="checkbox"> Desarrollo Web — Fernanda Díaz</div>
-                <div class="opcion"><input type="checkbox"> Gestión Empresarial — Ana Torres</div>
-                <div class="opcion"><input type="checkbox"> Inglés Técnico — Carlos Ramírez</div>
-                <div class="opcion"><input type="checkbox"> Inteligencia Artificial — Sebastián Castillo</div>
-                <div class="opcion"><input type="checkbox"> Matemáticas Aplicadas — María López</div>
-                <div class="opcion"><input type="checkbox"> Programación Móvil — Esteban Muñoz</div>
-                <div class="opcion"><input type="checkbox"> Redes de Computadores — Pedro Hernández</div>
-                <div class="opcion"><input type="checkbox"> Seguridad Informática — Valentina Rojas</div>
-                <div class="opcion"><input type="checkbox"> Técnico en Programación — Juan Pérez</div>
-            </div>
-            <div class="acciones">
-                <button class="btn-guardar">Guardar Asignaturas</button>
-                <button class="btn-anadir" onclick="abrirModal('modalAsignatura')">Añadir Asignatura</button>
-            </div>
-            <div class="lista-guardados">
-                <h4>Asignaturas en esta ficha</h4>
-                <div class="item-guardado">Bases de Datos — Jorge Martínez <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Desarrollo Web — Fernanda Díaz <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Gestión Empresarial — Ana Torres <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Inglés Técnico — Carlos Ramírez <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Inteligencia Artificial — Sebastián Castillo <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Matemáticas Aplicadas — María López <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Programación Móvil — Esteban Muñoz <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Redes de Computadores — Pedro Hernández <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Seguridad Informática — Valentina Rojas <button class="btn-eliminar">Eliminar</button></div>
-                <div class="item-guardado">Técnico en Programación — Juan Pérez <button class="btn-eliminar">Eliminar</button></div>
-            </div>
-        </div>
-    </section>
+            <h3>Asignaturas asignadas a esta ficha</h3>
+            {% for asignatura in asignaturas_ficha %}
+                <label>
+                    <input type="checkbox" name="asignaturas" value="{{ asignatura.id }}" checked>
+                    {{ asignatura.nombre }}
+                </label><br>
+            {% endfor %}
+
+            <button type="submit">Guardar cambios</button>
+        </form>
+</section>
+
 </main>
 
 <!-- Modales -->
