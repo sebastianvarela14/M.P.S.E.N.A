@@ -1,4 +1,4 @@
-{% extends "plantillains.html" %}
+{% extends "plantillacoor_inicio.html" %}
 
 {% block contenido %}
     <!DOCTYPE html>
@@ -109,7 +109,7 @@
     <div class="container">
         <h2>Editar Datos Personales</h2>
 
-        <form method="POST" action="{% url 'datos_ins_editar' %}">
+        <form method="POST" action="{% url 'datos_coordinador_editar' %}">
             {% csrf_token %}
             <!-- Nombre -->
             <label>Nombre Completo</label>
@@ -144,7 +144,7 @@
             </div>
 
             <div class="btn-container">
-                <a href="{% url 'datos_ins' %}" class="btn btn-cancelar">Cancelar</a>
+                <a href="{% url 'datos_coordinador' %}" class="btn btn-cancelar">Cancelar</a>
                 <button type="submit" class="btn btn-guardar">Guardar Cambios</button>
             </div>
         </form>

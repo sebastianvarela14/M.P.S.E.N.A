@@ -57,6 +57,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.debug',
                 'pantallas.context_processors.usuario_instructor',
+                'pantallas.context_processors.ficha_context',
             ],
         },
     },

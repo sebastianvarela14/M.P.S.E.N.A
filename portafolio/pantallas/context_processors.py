@@ -25,3 +25,8 @@ def usuario_instructor(request):
 
     
     return {'usuario_nombre': nombre_completo}  
+
+def ficha_context(request):
+    return {
+        "ficha_id": request.session.get("ficha_actual")
+    }
