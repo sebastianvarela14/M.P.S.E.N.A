@@ -29,52 +29,74 @@
     </head>
     <body class="bg-light">
 
-    <div class="container mt-5">
-        <div class="card shadow-lg border-0 rounded-3">
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-3">
         <div class="card-body p-4">
-            <!-- Título -->
+
+            <!-- TÍTULO -->
             <h3 class="fw-bold text-success mb-3">
-            <i class="bi bi-journal-text"></i> Evidencia Guia Logica
+                <i class="bi bi-journal-text"></i> {{ evidencia.titulo }}
             </h3>
 
-            <!-- Descripción -->
+            <!-- DESCRIPCIÓN -->
             <p class="text-muted mb-4">
-            De acuerdo con las instrucciones dadas en el PDF y lo visto en clase, se debe aplicar la estructura condicional if , elif , else para resolver el problema planteado, analizando cada condición de manera ordenada y mostrando el resultado correspondiente según la opción que cumpla la condición establecida.
+                {{ evidencia.instrucciones }}
             </p>
 
-            <!-- Archivos adjuntos -->
+            <!-- ARCHIVOS ADJUNTOS -->
             <h5 class="fw-semibold mb-3">
-            <i class="bi bi-paperclip"></i> Archivos adjuntos
+                <i class="bi bi-paperclip"></i> Archivos adjuntos
             </h5>
+
             <ul class="list-group">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                <i class="bi bi-file-earmark-pdf text-danger"></i> Guía de estructuras con HTML
-                </div>
-                <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-                </a>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                <i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega
-                </div>
-                <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-                </a>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                <i class="bi bi-file-earmark-image text-warning"></i> Ejemplos prácticos
-                </div>
-                <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-                </a>
-            </li>
+
+                {% if evidencia.archivo1 %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-file-earmark-pdf text-danger"></i> {{ evidencia.nombre_archivo1 }}
+                    </div>
+                    <a href="/media/{{ evidencia.archivo1 }}" 
+                       class="btn btn-sm btn-outline-success" 
+                       target="_blank">
+                        <i class="bi bi-download"></i> Descargar
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if evidencia.archivo2 %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-file-earmark-word text-primary"></i> {{ evidencia.nombre_archivo2 }}
+                    </div>
+                    <a href="/media/{{ evidencia.archivo2 }}" 
+                       class="btn btn-sm btn-outline-success" 
+                       target="_blank">
+                        <i class="bi bi-download"></i> Descargar
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if evidencia.archivo3 %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-file-earmark-image text-warning"></i> {{ evidencia.nombre_archivo3 }}
+                    </div>
+                    <a href="/media/{{ evidencia.archivo3 }}" 
+                       class="btn btn-sm btn-outline-success" 
+                       target="_blank">
+                        <i class="bi bi-download"></i> Descargar
+                    </a>
+                </li>
+                {% endif %}
+
             </ul>
-        </div>
+
         </div>
     </div>
+</div>
+
+
 
     <!-- Botón flotante Editar -->
     <button class="btn btn-success btn-edit">

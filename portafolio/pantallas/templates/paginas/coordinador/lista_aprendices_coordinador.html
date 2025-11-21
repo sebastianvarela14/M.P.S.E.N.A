@@ -108,28 +108,15 @@
         <button class="btn btn-success" id="btnBuscar"><i class="bi bi-search"></i></button>
     </div>
 
-    <!-- Lista de aprendices -->
-    <div id="lista" class="list-group shadow-sm">
-        <a href="{% url 'datos_coordinador' %}" class="list-group-item list-group-item-action">
-        <i class="bi bi-person-circle"></i> Laura Camila Castañeda Rojas
+        <!-- Lista de aprendices -->
+        <div id="lista" class="list-group shadow-sm">
+    {% for a in aprendices %}
+        <a href="{% url 'datos_coor' a.id %}" class="list-group-item list-group-item-action">
+            <i class="bi bi-person-circle"></i> {{ a.nombres }} {{ a.apellidos }}
         </a>
-        <a href="" class="list-group-item list-group-item-action">
-        <i class="bi bi-person-circle"></i> Sayra Catalina Ortiz Alarcón
-        </a>
-        <a href="" class="list-group-item list-group-item-action">
-        <i class="bi bi-person-circle"></i> Andrea Tatiana Guzman González
-        </a>
-        <a href="" class="list-group-item list-group-item-action">
-        <i class="bi bi-person-circle"></i> Maria Alejandra Muñoz Sánchez
-        </a>
-        <a href="" class="list-group-item list-group-item-action">
-        <i class="bi bi-person-circle"></i> Juan Sebastián Varela Roncancio
-        </a>
-        <a href="" class="list-group-item list-group-item-action">
-        <i class="bi bi-person-circle"></i> Andrés Esteban Casallas Rodríguez
-        </a>
-    </div>
-    </div>
+    {% empty %}
+        <div class="list-group-item">No hay aprendices para mostrar.</div>
+    {% endfor %}
 
 
     <script>
