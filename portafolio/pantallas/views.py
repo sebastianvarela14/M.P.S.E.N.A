@@ -46,7 +46,7 @@ def agregar_evidencia(request):
             # ⿣ Obtener la ficha actual desde la sesión
             id_ficha = request.session.get("ficha_id")
 
-             # ⿤ Registrar la evidencia en evidencias_ficha
+            # ⿤ Registrar la evidencia en evidencias_ficha
             cursor.execute("""
                 INSERT INTO evidencias_ficha (idficha, idevidencias_instructor)
                 VALUES (%s, %s)
@@ -928,7 +928,57 @@ def ficha_aprendiz_2(request):
     return render(request, "paginas/aprendiz/ficha_aprendiz_2.html")
 
 def ficha_instructor(request):
-    return render(request, "paginas/instructor/ficha_instructor.html")
+    ficha_id = request.session.get('ficha_actual')
+
+    if not ficha_id:
+        messages.error(request, "No se ha seleccionado ninguna ficha. Por favor, vuelve a la lista de fichas.")
+        return redirect('fichas_ins')
+
+    ficha = None
+    aprendices = []
+
+    try:
+        # 2. Conectar a la base de datos para obtener los datos
+        conexion = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+        cursor = conexion.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT 
+                f.numero_ficha, 
+                j.nombre AS jornada,
+                p.programa AS programa_nombre,
+                'Activa' AS estado
+            FROM ficha f
+            LEFT JOIN jornada j ON f.idjornada = j.id
+            INNER JOIN programa p ON f.idprograma = p.id
+            WHERE f.id = %s
+        """, (ficha_id,))
+        ficha = cursor.fetchone()
+
+        # 4. Consulta para obtener la lista de aprendices de esa ficha y poder contarlos
+        cursor.execute("""
+            SELECT u.id, u.nombres, u.apellidos FROM usuario u
+            INNER JOIN ficha_usuario fu ON u.id = fu.idusuario
+            INNER JOIN usuario_rol ur ON u.id = ur.idusuario
+            WHERE fu.idficha = %s AND ur.idrol = 2
+        """, (ficha_id,))
+        aprendices = cursor.fetchall()
+
+    finally:
+        if 'conexion' in locals() and conexion.is_connected():
+            cursor.close()
+            conexion.close()
+
+    # 5. Enviar los datos consultados a la plantilla. No se envía ningún nombre de usuario.
+    return render(request, "paginas/instructor/ficha_instructor.html", {
+        'ficha': ficha, 
+        'aprendices': aprendices
+    })
 
 def ficha_observador(request):
     return render(request, "paginas/observador/ficha_observador.html")
@@ -1307,4 +1357,3 @@ def datos_coor(request, id):
     return render(request, "paginas/coordinador/datos_coor.html", {
         "aprendiz": aprendiz
     })
-
