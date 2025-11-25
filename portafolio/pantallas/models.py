@@ -122,7 +122,6 @@ class MaterialUsuario(models.Model):
 
 class NombreAsignatura(models.Model):
     idtipo_asignatura = models.ForeignKey('TipoAsignatura', models.DO_NOTHING, db_column='idtipo_asignatura', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla nombre_asignatura con tipo_asignatura')
-    idficha = models.ForeignKey(Ficha, models.DO_NOTHING, db_column='idficha', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla nombre_asignatura con ficha')
     nombre = models.CharField(max_length=200, db_comment='aqui va el nombre que se le asigne a la competencia')
 
     class Meta:
@@ -178,3 +177,15 @@ class UsuarioRol(models.Model):
     class Meta:
         managed = False
         db_table = 'usuario_rol'
+
+class FichaAsignatura(models.Model):
+    idficha = models.ForeignKey(Ficha, models.DO_NOTHING, db_column='idficha')
+    idasignatura = models.ForeignKey(
+        'NombreAsignatura',
+        models.DO_NOTHING,
+        db_column='idnombre_asignatura'
+    )
+
+    class Meta:
+        managed = False
+        db_table = 'ficha_asignatura'
