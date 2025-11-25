@@ -149,7 +149,7 @@ urlpatterns = [
     path("datos_coordinador_editar/", views.datos_coordinador_editar, name="datos_coordinador_editar"),
     path("eliminar_aprendiz/<int:aprendiz_id>/<int:ficha_id>/", views.eliminar_aprendiz, name="eliminar_aprendiz"),
     path('datos_coor/<int:id>/', views.datos_coor, name='datos_coor'),
-
+    path("eliminar_asignatura/<int:asig_id>/<int:ficha_id>/", views.eliminar_asignatura, name="eliminar_asignatura")
 
 
 ]

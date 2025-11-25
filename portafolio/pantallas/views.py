@@ -507,7 +507,7 @@ def evidencias_coordinador(request, ficha_id):
 
 def inicio_coordinador(request):
     # Recuperamos la ficha seleccionada de la sesión
-    ficha_id = request.session.get('ficha_id')
+    ficha_id = request.session.get("ficha_actual")  # <-- aquí el cambio
     return render(request, "paginas/coordinador/inicio_coordinador.html", {"ficha_id": ficha_id})
 
 def lista_aprendices_coordinador(request):
@@ -827,8 +827,13 @@ def configuracion_coordinador(request):
 
     # ========= ASIGNATURAS =========
     todas_asignaturas = NombreAsignatura.objects.all()
-    asignaturas_ficha = NombreAsignatura.objects.filter(idficha_id=ficha_id)
+    asignaturas_ficha = NombreAsignatura.objects.filter(fichaasignatura__idficha_id=ficha_id)
     ids_asignaturas_ficha = [a.id for a in asignaturas_ficha]
+
+    # ========= CARPETAS =========
+    todas_carpetas = Carpetas.objects.all()
+    carpetas_ficha = FichaCarpetas.objects.filter(idficha_id=ficha_id)
+    ids_carpetas_ficha = [c.idcarpetas_id for c in carpetas_ficha]
 
     # ========= GUARDAR =========
     if request.method == "POST":
@@ -871,20 +876,33 @@ def configuracion_coordinador(request):
         if "asignaturas" in request.POST:
             seleccionados = request.POST.getlist("asignaturas")
 
-            # Eliminar asignaturas previas de la ficha
-            NombreAsignatura.objects.filter(idficha_id=ficha_id).delete()
+            # eliminar relaciones previas
+            FichaAsignatura.objects.filter(idficha_id=ficha_id).delete()
 
-            # Volver a agregarlas
+            # asignar nuevas
             for asig_id in seleccionados:
-                base = NombreAsignatura.objects.get(id=asig_id)
-
-                NombreAsignatura.objects.create(
+                FichaAsignatura.objects.create(
                     idficha_id=ficha_id,
-                    nombre=base.nombre,
-                    idtipo_asignatura=base.idtipo_asignatura
+                    idasignatura_id=asig_id
                 )
 
             messages.success(request, "¡Asignaturas guardadas correctamente!")
+
+        # ---------- Guardar Carpetas ----------
+        if "carpetas" in request.POST:
+            seleccionadas = request.POST.getlist("carpetas")
+
+            # Eliminar todas las carpetas previas
+            FichaCarpetas.objects.filter(idficha_id=ficha_id).delete()
+
+            # Guardar las nuevas
+            for carpeta_id in seleccionadas:
+                FichaCarpetas.objects.create(
+                    idficha_id=ficha_id,
+                    idcarpetas_id=carpeta_id
+                )
+
+            messages.success(request, "¡Carpetas asignadas correctamente!")
 
         return redirect("configuracion_coordinador")
 
@@ -1210,30 +1228,51 @@ def configuracion_asignaturas(request):
         messages.error(request, "Primero debes seleccionar una ficha.")
         return redirect("inicio_coordinador")
 
-    ficha = Ficha.objects.get(id=ficha_id)
+    # ficha como objeto y como id entero
+    try:
+        ficha = Ficha.objects.get(id=ficha_id)
+    except Ficha.DoesNotExist:
+        messages.error(request, "La ficha seleccionada no existe.")
+        return redirect("inicio_coordinador")
 
-    # 1. Todas las asignaturas existentes
-    todas_asignaturas = NombreAsignatura.objects.filter(idficha__isnull=True)
+    # 1. Todas las asignaturas (catálogo)
+    todas_asignaturas = NombreAsignatura.objects.all()
 
-    # 2. Asignaturas asignadas a la ficha
-    asignaturas_ficha = NombreAsignatura.objects.filter(idficha=ficha)
+    # 2. Asignaturas asignadas a esta ficha (usando tabla intermedia)
+    # obtenemos los NombreAsignatura que están relacionados a la ficha
+    asignaturas_ficha_qs = NombreAsignatura.objects.filter(
+        fichaasignatura__idficha_id=ficha_id
+    ).distinct()
+
+    # lista de ids para marcar checkboxes en el template
+    ids_asignaturas_ficha = list(asignaturas_ficha_qs.values_list("id", flat=True))
 
     if request.method == "POST":
-        seleccionadas = request.POST.getlist("asignaturas")
+        seleccionadas = request.POST.getlist("asignaturas")  # <- debe coincidir con name="asignaturas" en template
 
-        # Desasignar asignaturas que ya no estén seleccionadas
-        NombreAsignatura.objects.filter(idficha=ficha).exclude(id__in=seleccionadas).update(idficha=None)
+        # convertir a enteros (seguro)
+        seleccionadas = [int(x) for x in seleccionadas] if seleccionadas else []
 
-        # Asignar nuevas asignaturas
-        NombreAsignatura.objects.filter(id__in=seleccionadas).update(idficha=ficha)
+        # BORRAR relaciones previas de esta ficha
+        FichaAsignatura.objects.filter(idficha_id=ficha_id).delete()
+
+        # CREAR nuevas relaciones (usar la columna real idnombre_asignatura)
+        for asignatura_id in seleccionadas:
+            FichaAsignatura.objects.create(
+                idficha_id=ficha_id,
+                idnombre_asignatura_id=asignatura_id
+            )
 
         messages.success(request, "Asignaturas actualizadas correctamente.")
+        # mantén la ficha en sesión (por si acaso)
+        request.session["ficha_actual"] = ficha_id
         return redirect("configuracion_asignaturas")
 
     return render(request, "paginas/coordinador/configuracion_asignaturas.html", {
         "ficha": ficha,
         "todas_asignaturas": todas_asignaturas,
-        "asignaturas_ficha": asignaturas_ficha,
+        "asignaturas_ficha": asignaturas_ficha_qs,
+        "ids_asignaturas_ficha": ids_asignaturas_ficha,
     })
 
 def eliminar_asignatura(request, id_asignatura):
