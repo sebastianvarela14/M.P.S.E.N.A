@@ -54,7 +54,7 @@
         <!-- Lista de aprendices -->
         <div id="lista" class="list-group shadow-sm">
     {% for a in aprendices %}
-        <a href="{% url 'datos' a.id %}" class="list-group-item list-group-item-action">
+        <a href="{% url 'datos' a.id %}" class="list-group-item list-group-item-action text-capitalize">
             <i class="bi bi-person-circle"></i> {{ a.nombres }} {{ a.apellidos }}
         </a>
     {% empty %}
