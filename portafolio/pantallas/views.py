@@ -286,6 +286,9 @@ def datos_aprendiz(request, id):
 
 
 def carpetas2(request):
+    ficha_id = request.GET.get("ficha")  # 1. Recibir ?ficha=xx desde el enlace
+    if ficha_id:
+        request.session["ficha_id"] = ficha_id  # 2. Guardar en sesión
     return render(request, "paginas/instructor/carpetas2.html")
 
 def portafolio(request):
@@ -452,7 +455,26 @@ def lista_aprendices_observador(request):
     return render(request, "paginas/observador/lista_aprendices_observador.html")
 
 def observador(request):
-    return render(request, "paginas/observador/observador.html")
+    ficha_id = request.GET.get("ficha")
+    ficha_actual = None
+    # Guardar ficha seleccionada en sesión
+    if ficha_id:
+        request.session["ficha_actual"] = ficha_id
+        try:
+            ficha_actual = Ficha.objects.get(id=ficha_id)
+        except Ficha.DoesNotExist:
+            ficha_actual = None
+    else:
+        # Si entra sin seleccionar ficha, mirar la sesión
+        ficha_session = request.session.get("ficha_actual")
+        if ficha_session:
+            ficha_actual = Ficha.objects.get(id=ficha_session)
+    fichas = Ficha.objects.all()
+
+    return render(request, "paginas/observador/observador.html", {
+        "fichas": fichas,
+        "ficha": ficha_actual
+    })
 
 def portafolio_aprendices_observador(request):
     return render(request, "paginas/observador/portafolio_aprendices_observador.html")
@@ -472,11 +494,20 @@ def adentro_material_observador(request):
 def material_principal_observador(request):
     return render(request, "paginas/observador/material_principal_observador.html")
 
-def evidencia_guia_observador(request):
-    return render(request, "paginas/observador/evidencia_guia_observador.html")
+def evidencia_guia_observador(request, id):
+    evidencia = EvidenciasInstructor.objects.get(id=id)
+    return render(request, "paginas/observador/evidencia_guia_observador.html", {
+        "evidencia": evidencia
+    })
 
-def evidencias_observador(request):
-    return render(request, "paginas/observador/evidencias_observador.html")
+def evidencias_observador(request, ficha_id):
+    evidencias = EvidenciasInstructor.objects.filter(
+        evidenciasficha__idficha=ficha_id
+    )
+
+    return render(request, "paginas/observador/evidencias_observador.html", {
+        "evidencias": evidencias
+    })
 
 def adentro_material_coordinador(request):
     return render(request, "paginas/observador/evidencias_observador.html")
@@ -937,7 +968,14 @@ def configuracion_coordinador_base_2(request):
     return render(request, "paginas/coordinador/configuracion_coordinador_base_2.html")
 
 def ficha_coordinador(request):
-    return render(request, "paginas/coordinador/ficha_coordinador.html")
+    ficha_id = request.session.get("ficha_actual")
+    if not ficha_id:
+        return redirect("coordinador")  # si no hay ficha seleccionada
+    ficha = Ficha.objects.select_related("idjornada", "idprograma").get(id=ficha_id)
+
+    return render(request, "paginas/coordinador/ficha_coordinador.html", {
+        "ficha": ficha
+    })
 
 def ficha_aprendiz(request):
     return render(request, "paginas/aprendiz/ficha_aprendiz.html")
@@ -1060,11 +1098,41 @@ def datos_ins_editar(request):
         "usuario": usuario
     })
 
-def coordinador_editar(request):
-    return render(request, "paginas/coordinador/coordinador_editar.html")
+def coordinador_editar(request, id):
+    ficha = get_object_or_404(Ficha, id=id)
+    jornadas = Jornada.objects.all()
+    programas = Programa.objects.all()
+    if request.method == "POST":
+        ficha.numero_ficha = request.POST.get("numero_ficha")
+        ficha.idjornada_id = request.POST.get("idjornada")
+        ficha.idprograma_id = request.POST.get("idprograma")
+        ficha.save()
+        return redirect("coordinador")  # regresa al listado
+
+    return render(request, "paginas/coordinador/coordinador_editar.html", {
+        "ficha": ficha,
+        "jornadas": jornadas,
+        "programas": programas
+    })
 
 def coordinador_agregar(request):
-    return render(request, "paginas/coordinador/coordinador_agregar.html")
+    jornadas = Jornada.objects.all()
+    programas = Programa.objects.all()
+    if request.method == "POST":
+        numero = request.POST.get("numero_ficha")
+        jornada = request.POST.get("idjornada")
+        programa = request.POST.get("idprograma")
+        Ficha.objects.create(
+            numero_ficha=numero,
+            idjornada_id=jornada,
+            idprograma_id=programa
+        )
+        return redirect("coordinador")  # volver al listado
+
+    return render(request, "paginas/coordinador/coordinador_agregar.html", {
+        "jornadas": jornadas,
+        "programas": programas
+    })
 
 def carpetas2_editar(request):
     return render(request, "paginas/instructor/carpetas2_editar.html")
@@ -1328,7 +1396,6 @@ def datos_coor(request, id):
         database=os.getenv("DB_NAME")
     )
     cursor = conexion.cursor(dictionary=True)
-
     # Obtener datos del aprendiz
     cursor.execute("""
             SELECT u.nombres, u.apellidos, u.correo, u.telefono,
@@ -1337,9 +1404,7 @@ def datos_coor(request, id):
             LEFT JOIN documento d ON u.iddocumento = d.id
             WHERE u.id = %s
         """, (id,))
-
     aprendiz = cursor.fetchone()
-
     cursor.close()
     conexion.close()
 
@@ -1347,3 +1412,25 @@ def datos_coor(request, id):
         "aprendiz": aprendiz
     })
 
+def ficha_coordinador_editar(request, id):
+    ficha = get_object_or_404(Ficha, id=id)
+    jornadas = Jornada.objects.all()
+    programas = Programa.objects.all()
+    if request.method == "POST":
+        ficha.numero_ficha = request.POST.get("numero_ficha")
+        ficha.idjornada_id = request.POST.get("idjornada")
+        ficha.idprograma_id = request.POST.get("idprograma")
+        ficha.save()
+        return redirect("ficha_coordinador")  # regresa al listado
+
+    return render(request, "paginas/coordinador/ficha_coordinador_editar.html", {
+        "ficha": ficha,
+        "jornadas": jornadas,
+        "programas": programas
+    })
+
+def seleccionar_ficha_observador(request, id_ficha):
+    # Guardamos la ficha seleccionada en la sesión
+    request.session['ficha_actual'] = id_ficha
+    # Redirigimos a la pantalla principal del coordinador
+    return redirect('inicio_observador')
