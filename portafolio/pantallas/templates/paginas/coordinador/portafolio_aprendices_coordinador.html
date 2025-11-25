@@ -1,192 +1,69 @@
 {% extends "plantillacoor.html" %}
 
 {% block contenido %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Portafolio de Aprendices</title>
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<div class="container mt-5">
+
     <style>
         body { background: #f4f6f9; }
         .paper {
-        background: #fff; border-radius: 20px; padding: 30px; width: 100%;
-        max-width: 750px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin: 50px auto 0 auto;
+            background: #fff; border-radius: 20px; padding: 30px; width: 100%;
+            max-width: 750px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin: 50px auto 0 auto;
         }
         .header { display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 25px; padding-bottom: 12px; border-bottom: 2px solid #eee; }
+            margin-bottom: 25px; padding-bottom: 12px; border-bottom: 2px solid #eee; }
         .header h1 { font-size: 22px; font-weight: 700; color: #2c3e50; }
         .list { display: flex; flex-direction: column; gap: 15px; }
         .item {
-        background: #fff; border: 2px solid #ddd; border-radius: 12px; padding: 14px;
-        text-align: center; font-size: 15px; font-weight: 500; color: #333;
-        cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: all 0.25s ease;
-        text-decoration: none; display: block;
+            background: #fff; border: 2px solid #ddd; border-radius: 12px; padding: 14px;
+            text-align: center; font-size: 15px; font-weight: 500; color: #333;
+            cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: all 0.25s ease;
+            text-decoration: none; display: block;
         }
         .item:hover { transform: translateY(-3px); box-shadow: 0 6px 14px rgba(0,0,0,0.12); border-color: #4caf50; color: #2e7d32; }
-        .item.active { background: #e8f5e9; border: 2px solid #4caf50; color: #2e7d32; font-weight: 600; }
         .floating-buttons {
-        position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; gap: 10px;
+            position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; gap: 10px;
         }
         .floating-buttons .btn {
-        width: 55px; height: 55px; display: flex; align-items: center; justify-content: center;
-        border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;
+            width: 55px; height: 55px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.3s ease;
         }
         .floating-buttons .btn:hover { transform: scale(1.1); }
     </style>
-    </head>
-    <body>
 
     <div class="paper">
-    <!-- Encabezado -->
-    <div class="header">
-        <h1>PORTAFOLIO DE APRENDICES</h1>
-        <div class="search-box">
-        <input type="text" placeholder="Buscar..." class="form-control form-control-sm" />
-        </div>
-    </div>
 
-    <!-- Lista de aprendices -->
-    <div class="list" id="portfolio-list">
-        <a href="{% url 'trimestre_general_coordinador' %}" class="item active">Portafolio general</a>
-        <a href="{% url 'trimestre_aprendiz_coordinador' %}" class="item">Laura Camila Castañeda Rojas</a>
-        <a href="{% url 'trimestre_general_coordinador' %}" class="item">Sayra Catalina Ortiz Alarcón</a>
-        <a href="{% url 'trimestre_general_coordinador' %}" class="item">Andrea Tatiana Guzman González</a>
-        <a href="{% url 'trimestre_general_coordinador' %}" class="item">Maria Alejandra Muñoz Sánchez</a>
-        <a href="{% url 'trimestre_general_coordinador' %}" class="item">Juan Sebastián Varela Roncancio</a>
-        <a href="{% url 'trimestre_general_coordinador' %}" class="item">Andrés Esteban Casallas Rodríguez</a>
-    </div>
-    </div>
-
-    <!-- Botones flotantes -->
-    <div class="floating-buttons">
-    <!-- Agregar -->
-    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAgregar" title="Agregar">
-        <i class="bi bi-plus-lg fs-4"></i>
-    </button>
-    <!-- Editar -->
-    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalEditar" title="Editar">
-        <i class="bi bi-pencil-square fs-5"></i>
-    </button>
-    </div>
-
-    <!-- Modal Agregar -->
-    <div class="modal fade" id="modalAgregar" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Agregar Portafolio</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-            <div class="mb-3">
-            <label class="form-label">Nombre del portafolio</label>
-            <input type="text" class="form-control" id="nuevoPortafolio">
-            </div>
-            <div class="mb-3">
-            <label class="form-label">Seleccionar a quien le pertenece</label>
-            <input type="text" class="form-control mb-2" placeholder="Buscar aprendiz..." id="buscarAprendiz">
-            <ul class="list-group" id="listaAprendices">
-                <li class="list-group-item">Omar Calderon</li>
-                <li class="list-group-item">Laura Camila Castañeda Rojas</li>
-                <li class="list-group-item">Sayra Catalina Ortiz Alarcón</li>
-                <li class="list-group-item">Andrea Tatiana Guzman González</li>
-                <li class="list-group-item">Maria Alejandra Muñoz Sánchez</li>
-                <li class="list-group-item">Juan Sebastián Varela Roncancio</li>
-                <li class="list-group-item">Andrés Esteban Casallas Rodríguez</li>
-            </ul>
+        <!-- Encabezado -->
+        <div class="header">
+            <h1>PORTAFOLIO DE APRENDICES</h1>
+            <div class="search-box">
+                <input type="text" placeholder="Buscar..." id="buscarAprendizPrincipal" class="form-control form-control-sm" />
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button class="btn btn-success" id="guardarPortafolio">Guardar</button>
-        </div>
-        </div>
-    </div>
-    </div>
 
-    <!-- Modal Editar -->
-    <div class="modal fade" id="modalEditar" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Editar Portafolio</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <!-- Lista -->
+        <div class="list" id="portfolio-list">
+
+            <!-- Portafolio general -->
+            <a href="{% url 'trimestre_general_coordinador'  %}" class="item">
+                Portafolio general
+            </a>
+
+            <!-- Lista dinámica de aprendices -->
+            {% for aprendiz in aprendices %}
+                <a href="{% url 'trimestre_aprendiz_coordinador' %}" class="item">
+                    {{ aprendiz.nombres }} {{ aprendiz.apellidos }}
+                </a>
+            {% empty %}
+                <p class="text-center text-muted mt-3">No hay aprendices en esta ficha.</p>
+            {% endfor %}
+
         </div>
-        <div class="modal-body">
-            <label class="form-label">Seleccione el portafolio</label>
-            <select class="form-select mb-3" id="editarSelect">
-            <option>Portafolio general</option>
-            <option>Laura Camila Castañeda Rojas</option>
-            <option>Sayra Catalina Ortiz Alarcón</option>
-            <option>Andrea Tatiana Guzman González</option>
-            <option>Maria Alejandra Muñoz Sánchez</option>
-            <option>Juan Sebastián Varela Roncancio</option>
-            <option>Andrés Esteban Casallas Rodríguez</option>
-            </select>
-            <input type="text" class="form-control" placeholder="Nuevo nombre" id="nuevoNombreEditar">
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button class="btn btn-success" id="guardarEdicion">Guardar cambios</button>
-        </div>
-        </div>
-    </div>
+
     </div>
 
-    <!-- Bootstrap JS + Script -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    // Filtrar lista de aprendices al escribir
-    document.getElementById("buscarAprendiz").addEventListener("keyup", function() {
-        let filtro = this.value.toLowerCase();
-        document.querySelectorAll("#listaAprendices li").forEach(li => {
-        li.style.display = li.textContent.toLowerCase().includes(filtro) ? "" : "none";
-        });
-    });
+</div>
 
-    // Guardar nuevo portafolio (solo ejemplo visual)
-    document.getElementById("guardarPortafolio").addEventListener("click", () => {
-        let nombre = document.getElementById("nuevoPortafolio").value;
-        let aprendiz = document.querySelector("#listaAprendices li.active");
-        if (nombre && aprendiz) {
-        let lista = document.getElementById("portfolio-list");
-        let nuevo = document.createElement("a");
-        nuevo.className = "item";
-        nuevo.textContent = nombre + " - " + aprendiz.textContent;
-        lista.appendChild(nuevo);
-        alert("Portafolio agregado!");
-        } else {
-        alert("Falta nombre o aprendiz seleccionado.");
-        }
-    });
 
-    // Seleccionar aprendiz de la lista
-    document.querySelectorAll("#listaAprendices li").forEach(li => {
-        li.addEventListener("click", () => {
-        document.querySelectorAll("#listaAprendices li").forEach(x => x.classList.remove("active"));
-        li.classList.add("active");
-        });
-    });
-
-    // Editar portafolio
-    document.getElementById("guardarEdicion").addEventListener("click", () => {
-        let select = document.getElementById("editarSelect");
-        let nuevoNombre = document.getElementById("nuevoNombreEditar").value;
-        if (nuevoNombre) {
-        select.options[select.selectedIndex].text = nuevoNombre;
-        alert("Portafolio editado!");
-        } else {
-        alert("Escriba el nuevo nombre.");
-        }
-    });
-    </script>
-    </body>
-    </html>
 
 {% endblock %}
