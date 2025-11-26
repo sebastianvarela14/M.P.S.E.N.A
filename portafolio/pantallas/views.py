@@ -306,10 +306,25 @@ def datos_aprendiz(request, id):
 
 
 def carpetas2(request):
-    ficha_id = request.GET.get("ficha")  # 1. Recibir ?ficha=xx desde el enlace
+    # 1. Recibir ficha desde GET
+    ficha_id = request.GET.get("ficha")
+
+    # 2. Si viene en el GET, actualizar sesión
     if ficha_id:
-        request.session["ficha_id"] = ficha_id  # 2. Guardar en sesión
-    return render(request, "paginas/instructor/carpetas2.html")
+        request.session["ficha_id"] = ficha_id
+    else:
+        ficha_id = request.session.get("ficha_id")  # 3. Recuperar si ya estaba en sesión
+
+    # 4. Cargar el objeto Ficha solo si existe
+    ficha = None
+    if ficha_id:
+        from .models import Ficha
+        ficha = Ficha.objects.get(id=ficha_id)
+
+    # 5. Enviar ficha al template ✔️
+    return render(request, "paginas/instructor/carpetas2.html", {
+        "ficha": ficha
+    })
 
 def portafolio(request, ficha_id):
     ficha = Ficha.objects.get(id=ficha_id)
@@ -417,36 +432,27 @@ def evidencia_guia1(request):
 def inicio(request):
     id_aprendiz = request.session.get('id_usuario')
     nombre_aprendiz = request.session.get('nombre_usuario', '')
-    competencias = []
+
+    asignaturas = []
 
     if id_aprendiz:
-        try:
-            conexion = mysql.connector.connect(
-                host=os.getenv("DB_HOST"),
-                user=os.getenv("DB_USER"),
-                password=os.getenv("DB_PASSWORD"),
-                database=os.getenv("DB_NAME")
-        )
-            cursor = conexion.cursor(dictionary=True)
 
-            # Consulta SQL para obtener las competencias de la ficha del aprendiz
-            query = """
-                SELECT c.id, c.nombre AS nombre_competencia
-                FROM competencia c
-                JOIN ficha_competencia fc ON c.id = fc.idcompetencia
-                JOIN ficha f ON fc.idficha = f.id
-                JOIN usuario_ficha uf ON f.id = uf.idficha
-                WHERE uf.idusuario = %s
-            """
-            cursor.execute(query, (id_aprendiz,))
-            competencias = cursor.fetchall()
+        # 1️⃣ Obtener la ficha a la que pertenece el aprendiz
+        ficha_usuario = FichaUsuario.objects.filter(idusuario_id=id_aprendiz).first()
 
-            cursor.close()
-            conexion.close()
-        except mysql.connector.Error as err:
-            messages.error(request, f"")
+        if ficha_usuario:
+            ficha_id = ficha_usuario.idficha_id
 
-    return render(request, "paginas/aprendiz/inicio.html", {'competencias': competencias, 'nombre_aprendiz': nombre_aprendiz})
+            # 2️⃣ Obtener las asignaturas asignadas a esa ficha
+            asignaturas = NombreAsignatura.objects.filter(
+                fichaasignatura__idficha_id=ficha_id
+            ).distinct()
+
+    return render(request, "paginas/aprendiz/inicio.html", {
+        'asignaturas': asignaturas,
+        'nombre_aprendiz': nombre_aprendiz
+    })
+
 
 
 def carpetas_aprendiz1(request):
@@ -480,8 +486,14 @@ def coordinador(request):
         "ficha": ficha_actual
     })
 
-def entrada(request):
-    return render(request, "paginas/aprendiz/entrada.html")
+def entrada(request, asignatura_id):
+    request.session["asignatura_actual"] = asignatura_id  # guardar asignatura actual
+
+    asignatura = NombreAsignatura.objects.get(id=asignatura_id)
+
+    return render(request, "paginas/aprendiz/entrada.html", {
+        "asignatura": asignatura
+    })
 
 def trimestre_laura(request):
     return render(request, "paginas/aprendiz/trimestre_laura.html")
@@ -861,7 +873,7 @@ def evidencia_calificar_coordinador(request):
 def sesion(request):
     usuario_ingresado = ""
 
-    # 🔹 Limpiar mensajes antiguos al entrar por GET
+    # Limpiar mensajes antiguos
     if request.method == "GET":
         storage = messages.get_messages(request)
         storage.used = True
@@ -878,58 +890,68 @@ def sesion(request):
             database=os.getenv("DB_NAME")
         )
         cursor = conexion.cursor(dictionary=True)
+
         cursor.execute("SELECT * FROM usuario WHERE usuario = %s", (usuario_input,))
         usuario = cursor.fetchone()
 
         if not usuario:
             messages.error(request, "El usuario no existe.")
             return redirect('sesion')
-        else:
-            contrasena_correcta = usuario['contrasena']
-            if contrasena_input != contrasena_correcta:
-                messages.error(request, "Contraseña incorrecta.")
-                return redirect('sesion')
+
+        if contrasena_input != usuario['contrasena']:
+            messages.error(request, "Contraseña incorrecta.")
+            return redirect('sesion')
+
+        # Guardamos datos base del usuario
+        request.session['id_usuario'] = usuario['id']
+        request.session['usuario'] = usuario['usuario']
+        request.session['nombre_usuario'] = f"{usuario['nombres']} {usuario['apellidos']}".upper()
+
+        # Obtener ROL del usuario
+        cursor.execute("""
+            SELECT r.tipo
+            FROM rol r
+            INNER JOIN usuario_rol ur ON ur.idrol = r.id
+            WHERE ur.idusuario = %s
+        """, (usuario['id'],))
+        rol = cursor.fetchone()
+
+        # 🔹 OBTENER FICHA DEL USUARIO Y GUARDARLA EN SESIÓN
+        cursor.execute("""
+            SELECT idficha 
+            FROM ficha_usuario
+            WHERE idusuario = %s
+        """, (usuario['id'],))
+
+        ficha = cursor.fetchone()
+        request.session['ficha_id'] = ficha['idficha'] if ficha else None
+
+        # Redirección según el rol
+        if rol:
+            tipo_rol = rol['tipo'].lower()
+
+            if tipo_rol == 'instructor':
+                return redirect('fichas_ins')
+            elif tipo_rol == 'aprendiz':
+                return redirect('inicio')
+            elif tipo_rol == 'coordinacion':
+                return redirect('coordinador')
+            elif tipo_rol == 'observador':
+                return redirect('observador')
             else:
-                request.session['id_usuario'] = usuario['id']
-                request.session['usuario'] = usuario['usuario']
-                request.session['nombre_usuario'] = f"{usuario['nombres']} {usuario['apellidos']}".upper()
-                cursor.execute("""
-                    SELECT r.tipo
-                    FROM rol r
-                    INNER JOIN usuario_rol ur ON ur.idrol = r.id
-                    WHERE ur.idusuario = %s
-                """, (usuario['id'],))
-                rol = cursor.fetchone()
+                messages.error(request, f"Rol desconocido: {tipo_rol}")
+                return redirect('sesion')
+        else:
+            messages.error(request, "No se encontró un rol asignado para este usuario.")
+            return redirect('sesion')
 
-                if rol:
-                    tipo_rol = rol['tipo'].lower()
-                    
-                    request.session['usuario_id'] = usuario['id']
-                    request.session['usuario_nombre'] = usuario['usuario']
-
-                    # Redirigir según el tipo de rol
-                    if tipo_rol == 'instructor':
-                        return redirect('fichas_ins')
-                    elif tipo_rol == 'aprendiz':
-                        return redirect('inicio')
-                    elif tipo_rol == 'coordinacion':
-                        return redirect('coordinador')
-                    elif tipo_rol == 'observador':
-                        return redirect('observador')
-                    else:
-                        messages.error(request, f"Rol desconocido: {tipo_rol}")
-                        return redirect('sesion')
-                else:
-                    messages.error(request, "No se encontró un rol asignado para este usuario.")
-                    return redirect('sesion')
-                
         cursor.close()
         conexion.close()
 
     return render(request, "paginas/instructor/sesion.html", {
         'usuario_ingresado': usuario_ingresado
-        }
-    )
+    })
+
 
 def configuracion_instructor(request):
     return render(request, "paginas/instructor/configuracion_instructor.html")
@@ -1108,7 +1130,26 @@ def ficha_coordinador(request):
     })
 
 def ficha_aprendiz(request):
-    return render(request, "paginas/aprendiz/ficha_aprendiz.html")
+    usuario_id = request.session.get("id_usuario")
+
+    ficha_info = None
+
+    if usuario_id:
+        try:
+            # 1. Buscar la relación entre el aprendiz y la ficha
+            relacion = FichaUsuario.objects.get(idusuario_id=usuario_id)
+
+            # 2. Obtener la información completa de la ficha
+            ficha_info = Ficha.objects.get(id=relacion.idficha_id)
+
+        except FichaUsuario.DoesNotExist:
+            ficha_info = None
+        except Ficha.DoesNotExist:
+            ficha_info = None
+
+    return render(request, "paginas/aprendiz/ficha_aprendiz.html", {
+        "ficha": ficha_info
+    })
 
 def ficha_aprendiz_2(request):
     return render(request, "paginas/aprendiz/ficha_aprendiz_2.html")
