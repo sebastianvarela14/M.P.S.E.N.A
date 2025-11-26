@@ -1387,11 +1387,47 @@ def datos_ins_editar(request):
         "usuario": usuario
     })
 
-def coordinador_editar(request):
-    return render(request, "paginas/coordinador/coordinador_editar.html")
+def coordinador_editar(request, id):
+    ficha = get_object_or_404(Ficha, id=id)
+    jornadas = Jornada.objects.all()
+    programas = Programa.objects.all()
+
+    if request.method == "POST":
+        ficha.numero_ficha = request.POST.get("numero_ficha")
+        ficha.idjornada_id = request.POST.get("idjornada")
+        ficha.idprograma_id = request.POST.get("idprograma")
+        ficha.save()
+
+        return redirect("coordinador")  # regresa al listado
+
+    return render(request, "paginas/coordinador/coordinador_editar.html", {
+        "ficha": ficha,
+        "jornadas": jornadas,
+        "programas": programas
+    })
 
 def coordinador_agregar(request):
-    return render(request, "paginas/coordinador/coordinador_agregar.html")
+    jornadas = Jornada.objects.all()
+    programas = Programa.objects.all()
+
+    if request.method == "POST":
+        numero = request.POST.get("numero_ficha")
+        jornada = request.POST.get("idjornada")
+        programa = request.POST.get("idprograma")
+
+        Ficha.objects.create(
+            numero_ficha=numero,
+            idjornada_id=jornada,
+            idprograma_id=programa
+        )
+
+        return redirect("coordinador")  # volver al listado
+
+    return render(request, "paginas/coordinador/coordinador_agregar.html", {
+        "jornadas": jornadas,
+        "programas": programas
+    })
+
 
 def carpetas2_editar(request):
     return render(request, "paginas/instructor/carpetas2_editar.html")
