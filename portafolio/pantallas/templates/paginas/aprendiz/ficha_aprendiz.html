@@ -87,41 +87,67 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2 id="tituloFicha">INFORMACIÓN DE LA FICHA</h2>
+<div class="container">
 
-    <div class="row">
-      <div class="label">Número de Ficha:</div>
-      <div class="value" id="numFicha">3175010</div>
-    </div>
+  <h2 id="tituloFicha">INFORMACIÓN DE LA FICHA</h2>
 
-    <div class="row">
-      <div class="label">Jornada:</div>
-      <div class="value" id="jornada">Diurna</div>
-    </div>
-
-    <div class="row">
-      <div class="label">Programa:</div>
-      <div class="value" id="programa">Técnico en Programación de Software</div>
-    </div>
-
-    <!-- MISMA FILA: Número de Aprendices y Estado de la Ficha -->
-    <div class="row-inline">
-      <div style="flex:1; display:flex; align-items:center;">
-        <div class="label">Número de Aprendices:</div>
-        <div class="value" id="numAprendices">20</div>
-      </div>
-      <div style="flex:1; display:flex; align-items:center;">
-        <div class="label">Estado de la Ficha:</div>
-        <div class="value" id="estadoFicha">Activa</div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="label">Instructor Responsable:</div>
-      <div class="value" id="instructorResp">José Omar Calderón</div>
+  <!-- Número de ficha -->
+  <div class="row">
+    <div class="label">Número de Ficha:</div>
+    <div class="value" id="numFicha">
+      {{ ficha.numero_ficha }}
     </div>
   </div>
 
+  <!-- Jornada -->
+  <div class="row">
+    <div class="label">Jornada:</div>
+    <div class="value" id="jornada">
+      {% if ficha.idjornada %}
+        {{ ficha.idjornada.nombre }}
+      {% else %}
+        No registrada
+      {% endif %}
+    </div>
+  </div>
 
+  <!-- Programa -->
+  <div class="row">
+    <div class="label">Programa:</div>
+    <div class="value" id="programa">
+      {% if ficha.idprograma %}
+        {{ ficha.idprograma.programa }}
+      {% else %}
+        No registrado
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Número de Aprendices (NO existe en BD → valor HTML) -->
+  <div class="row-inline">
+    <div style="flex:1; display:flex; align-items:center;">
+      <div class="label">Número de Aprendices:</div>
+      <div class="value" id="numAprendices">
+        20
+      </div>
+    </div>
+
+    <!-- Estado de la Ficha (NO existe en BD → valor HTML) -->
+    <div style="flex:1; display:flex; align-items:center;">
+      <div class="label">Estado de la Ficha:</div>
+      <div class="value" id="estadoFicha">
+        Activa
+      </div>
+    </div>
+  </div>
+
+  <!-- Instructor Responsable (NO existe en BD → valor HTML) -->
+  <div class="row">
+    <div class="label">Instructor Responsable:</div>
+    <div class="value" id="instructorResp">
+      José Omar Calderón
+    </div>
+  </div>
+
+</div>
 {% endblock %}

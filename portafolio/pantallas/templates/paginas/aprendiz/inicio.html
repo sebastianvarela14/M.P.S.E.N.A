@@ -38,7 +38,7 @@
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         margin: 10px;
         cursor: pointer;
-        text-decoration: none; /* 👈 Esto quita la línea debajo de los enlaces */
+        text-decoration: none;
     }
     .btn-custom:hover {
         transform: translateY(-4px);
@@ -52,6 +52,7 @@
         justify-content: center;
         gap: 20px;
         margin-bottom: 15px;
+        flex-wrap: wrap;
     }
     .no-competencias {
         background-color: #e9ecef;
@@ -67,46 +68,49 @@
 
 <div class="container mt-5">
 
-    <div class="btn-row">
-        {% if competencias %}
-            {% for comp in competencias %}
-                <a href="#" class="btn-custom"><i class="bi bi-journal-bookmark-fill"></i> {{ comp.nombre_competencia }}</a>
-            {% endfor %}
-        {% else %}
-            <div class="no-competencias">No tienes competencias asignadas</div>
-        {% endif %}
-    </div>
+<div class="btn-row">
+    {% if asignaturas %}
+        {% for asig in asignaturas %}
+            <a href="{% url 'entrada' asig.id %}" class="btn-custom">
+                <i class="bi bi-book-half"></i> 
+                {{ asig.nombre }}
+            </a>
+        {% endfor %}
+    {% else %}
+        <div class="no-competencias">No tienes asignaturas asignadas</div>
+    {% endif %}
 </div>
-<!-- BOTONES ESTILO FRECUENCIA SENA -->
+
+
+
+<!-- 🔹 BOTONES EXTERNOS -->
 <div style="width: 100%; display: flex; justify-content: flex-start; padding-bottom: 20px; gap: 80px; position: fixed; bottom: 0; padding-left: 220px;">
-    <!-- Tus botones aquí -->
 
-
-    <!-- Botón Zajuna -->
-    <a href="https://zajuna.sena.edu.co/" target="_blank" class="btn-custom" style="width:300px; padding:20px; display:flex; flex-direction:column; align-items:center; background-color:#f8f9fa; color:#000; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.15); text-decoration:none; cursor:pointer; font-family: 'Poppins', sans-serif; transition: transform 0.2s, box-shadow 0.2s; ">
+    <!-- Zajuna -->
+    <a href="https://zajuna.sena.edu.co/" target="_blank" 
+        class="btn-custom" 
+        style="width:300px; padding:20px; display:flex; flex-direction:column; align-items:center; background-color:#f8f9fa; color:#000; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
         <img src="{% static 'img/zajuna.png' %}" alt="Zajuna Logo" style="height:60px; border-radius:12px;">
         <div style="width: 80%; height: 4px; background-color: #4CAF50; margin-top:8px; border-radius:2px;"></div>
     </a>
 
-    <!-- Botón Sena Sofia Plus -->
-    <a href="http://senasofiaplus.edu.co/sofia-public/" target="_blank" class="btn-custom" style="width:250px; padding:20px; display:flex; flex-direction:column; align-items:center; background-color:#f8f9fa; color:#000; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.15); text-decoration:none; cursor:pointer; font-family: 'Poppins', sans-serif; transition: transform 0.2s, box-shadow 0.2s;">
+    <!-- Sofia Plus -->
+    <a href="http://senasofiaplus.edu.co/sofia-public/" target="_blank" 
+        class="btn-custom" 
+        style="width:250px; padding:20px; display:flex; flex-direction:column; align-items:center; background-color:#f8f9fa; color:#000; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
         <img src="{% static 'img/sena_sofia.jpg' %}" alt="Sena Sofia Plus" style="height:60px; border-radius:12px;">
         <div style="width: 80%; height: 4px; background-color: #4CAF50; margin-top:8px; border-radius:2px;"></div>
     </a>
 
 </div>
 
-
-<!-- Fuente moderna de Google -->
+<!-- Google font -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
 
-</html>
-
-
 {% endblock %}
-

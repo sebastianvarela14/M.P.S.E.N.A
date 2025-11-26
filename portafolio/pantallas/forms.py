@@ -30,17 +30,21 @@ class UsuarioForm(forms.ModelForm):
         ]
 
     def save(self, commit=True):
-        # Guardar usuario principal
         usuario = super().save(commit=False)
 
-        # Obtener el documento
-        documento = self.cleaned_data["tipo_documento"]
+        # Asignar tipo de documento
+        usuario.iddocumento = self.cleaned_data["tipo_documento"]
 
-        # Vincular documento al usuario
-        usuario.iddocumento = documento
-
-        # Guardar usuario
         if commit:
             usuario.save()
 
-            # Guardar la relación Usuario-Rol
+            # Crear o actualizar relación usuario-rol
+            rol = self.cleaned_data["rol"]
+
+            UsuarioRol.objects.update_or_create(
+                idusuario=usuario,
+                defaults={"idrol": rol}
+            )
+
+        return usuario
+
