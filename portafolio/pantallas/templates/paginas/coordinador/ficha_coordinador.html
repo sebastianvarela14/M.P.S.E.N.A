@@ -90,21 +90,20 @@
   <div class="container">
     <h2 id="tituloFicha">INFORMACIÓN DE LA FICHA</h2>
 
-<div class="row">
-  <div class="label">Número de Ficha:</div>
-  <div class="value">{{ ficha.numero_ficha }}</div>
-</div>
+    <div class="row">
+      <div class="label">Número de Ficha:</div>
+      <div class="value" id="numFicha">3175010</div>
+    </div>
 
-<div class="row">
-  <div class="label">Jornada:</div>
-  <div class="value">{{ ficha.idjornada.nombre }}</div>
-</div>
+    <div class="row">
+      <div class="label">Jornada:</div>
+      <div class="value" id="jornada">Diurna</div>
+    </div>
 
-<div class="row">
-  <div class="label">Programa:</div>
-  <div class="value">{{ ficha.idprograma.programa }}</div>
-</div>
-
+    <div class="row">
+      <div class="label">Programa:</div>
+      <div class="value" id="programa">Técnico en Programación de Software</div>
+    </div>
 
     <!-- MISMA FILA: Número de Aprendices y Estado de la Ficha -->
     <div class="row-inline">
@@ -125,15 +124,94 @@
   </div>
 
   <!-- Botón flotante Editar -->
-<a href="{% url 'ficha_coordinador_editar' ficha.id %}" class="btn-edit">
-  <i class="bi bi-pencil-square"></i>
-</a>
+  <button class="btn-edit" data-bs-toggle="modal" data-bs-target="#modalEditarFicha">
+    <i class="bi bi-pencil-square"></i>
+  </button>
 
+  <!-- Modal Editar Ficha -->
+  <div class="modal fade" id="modalEditarFicha" tabindex="-1" aria-labelledby="modalEditarFichaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content shadow">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="modalEditarFichaLabel">✏️ Editar Información de la Ficha</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formEditarFicha">
+            <!-- Número de Ficha -->
+            <div class="mb-3">
+              <label class="form-label">Número de Ficha</label>
+              <input type="text" class="form-control" id="inputNumFicha" value="317501">
+            </div>
 
+            <!-- Jornada -->
+            <div class="mb-3">
+              <label class="form-label">Jornada</label>
+              <select class="form-select" id="inputJornada">
+                <option value="Diurna" selected>Diurna</option>
+                <option value="Nocturna">Nocturna</option>
+                <option value="Mixta">Mixta</option>
+                <option value="Virtual">Virtual</option>
+              </select>
+            </div>
+
+            <!-- Programa -->
+            <div class="mb-3">
+              <label class="form-label">Programa</label>
+              <input type="text" class="form-control" id="inputPrograma" value="Técnico en Programación de Software">
+            </div>
+
+            <!-- Número de Aprendices y Estado en el modal -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Número de Aprendices</label>
+                <input type="number" class="form-control" id="inputNumAprendices" value="20">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Estado de la Ficha</label>
+                <select class="form-select" id="inputEstadoFicha">
+                  <option value="Activa" selected>Activa</option>
+                  <option value="Inactiva">Inactiva</option>
+                  <option value="Finalizada">Finalizada</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Instructor Responsable -->
+            <div class="mb-3">
+              <label class="form-label">Instructor Responsable</label>
+              <input type="text" class="form-control" id="inputInstructorResp" value="José Omar Calderón">
+            </div>
+
+            <!-- Botones -->
+            <div class="text-end">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-success">Guardar Cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Guardar cambios y reflejarlos en la tarjeta
+    document.getElementById("formEditarFicha").addEventListener("submit", function(e) {
+      e.preventDefault();
+      document.getElementById("numFicha").innerText = document.getElementById("inputNumFicha").value;
+      document.getElementById("jornada").innerText = document.getElementById("inputJornada").value;
+      document.getElementById("programa").innerText = document.getElementById("inputPrograma").value;
+      document.getElementById("numAprendices").innerText = document.getElementById("inputNumAprendices").value;
+      document.getElementById("estadoFicha").innerText = document.getElementById("inputEstadoFicha").value;
+      document.getElementById("instructorResp").innerText = document.getElementById("inputInstructorResp").value;
 
+      // Cerrar modal
+      var modal = bootstrap.Modal.getInstance(document.getElementById("modalEditarFicha"));
+      modal.hide();
+    });
+  </script>
 </body>
 </html>
 {% endblock %}
