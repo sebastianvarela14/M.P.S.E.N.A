@@ -1284,20 +1284,8 @@ def material_editar(request):
 def evidencia_guia_editar(request):
     return render(request, "paginas/instructor/evidencia_guia_editar.html")
 
-
-def carpetasins_editar(request, carpeta_id):
-    carpeta = get_object_or_404(Carpetas, id=carpeta_id)
-
-    if request.method == "POST":
-        carpeta.nombre = request.POST.get("nombre")
-        carpeta.descripcion = request.POST.get("descripcion")
-        carpeta.save()
-        return redirect("carpetasins")
-
-    return render(request, "paginas/instructor/carpetasins_editar.html", {
-        "carpeta": carpeta,
-    })
-
+def carpetasins_editar(request):
+    return render(request, "paginas/instructor/carpetasins_editar.html")
 
 def carpetasins_crear(request):
     return render(request, "paginas/instructor/carpetasins_crear.html")
