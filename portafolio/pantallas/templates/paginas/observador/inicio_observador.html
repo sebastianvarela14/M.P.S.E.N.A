@@ -55,18 +55,10 @@
       <span>Portafolio</span>
     </a>
 
-{% if ficha_id %}
-    <a href="{% url 'evidencias_observador' ficha_id %}" class="btn btn-success btn-card shadow-sm">
+    <a href="{% url 'evidencias_observador' %}" class="btn btn-success btn-card shadow-sm">
       <i class="bi bi-journal-text"></i>
       <span>Evidencias</span>
     </a>
-{% else %}
-    <a class="btn btn-success btn-card shadow-sm disabled" onclick="alert('Primero selecciona una ficha.')">
-      <i class="bi bi-journal-text"></i>
-      <span>Evidencias</span>
-    </a>
-{% endif %}
-
 
     <a href="{% url 'material_principal_observador' %}" class="btn btn-success btn-card shadow-sm">
       <i class="bi bi-book"></i>

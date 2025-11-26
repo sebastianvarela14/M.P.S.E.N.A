@@ -590,26 +590,7 @@ def lista_aprendices_observador(request):
     return render(request, "paginas/observador/lista_aprendices_observador.html")
 
 def observador(request):
-    ficha_id = request.GET.get("ficha")
-    ficha_actual = None
-    # Guardar ficha seleccionada en sesión
-    if ficha_id:
-        request.session["ficha_actual"] = ficha_id
-        try:
-            ficha_actual = Ficha.objects.get(id=ficha_id)
-        except Ficha.DoesNotExist:
-            ficha_actual = None
-    else:
-        # Si entra sin seleccionar ficha, mirar la sesión
-        ficha_session = request.session.get("ficha_actual")
-        if ficha_session:
-            ficha_actual = Ficha.objects.get(id=ficha_session)
-    fichas = Ficha.objects.all()
-
-    return render(request, "paginas/observador/observador.html", {
-        "fichas": fichas,
-        "ficha": ficha_actual
-    })
+    return render(request, "paginas/observador/observador.html")
 
 def portafolio_aprendices_observador(request):
     return render(request, "paginas/observador/portafolio_aprendices_observador.html")
@@ -629,20 +610,11 @@ def adentro_material_observador(request):
 def material_principal_observador(request):
     return render(request, "paginas/observador/material_principal_observador.html")
 
-def evidencia_guia_observador(request, id):
-    evidencia = EvidenciasInstructor.objects.get(id=id)
-    return render(request, "paginas/observador/evidencia_guia_observador.html", {
-        "evidencia": evidencia
-    })
+def evidencia_guia_observador(request):
+    return render(request, "paginas/observador/evidencia_guia_observador.html")
 
-def evidencias_observador(request, ficha_id):
-    evidencias = EvidenciasInstructor.objects.filter(
-        evidenciasficha__idficha=ficha_id
-    )
-
-    return render(request, "paginas/observador/evidencias_observador.html", {
-        "evidencias": evidencias
-    })
+def evidencias_observador(request):
+    return render(request, "paginas/observador/evidencias_observador.html")
 
 def adentro_material_coordinador(request):
     return render(request, "paginas/observador/evidencias_observador.html")
@@ -673,7 +645,7 @@ def evidencias_coordinador(request, ficha_id):
 
 def inicio_coordinador(request):
     # Recuperamos la ficha seleccionada de la sesión
-    ficha_id = request.session.get("ficha_actual")  # <-- aquí el cambio
+    ficha_id = request.session.get('ficha_id')
     return render(request, "paginas/coordinador/inicio_coordinador.html", {"ficha_id": ficha_id})
 
 def lista_aprendices_coordinador(request):
@@ -1074,13 +1046,8 @@ def configuracion_coordinador(request):
 
     # ========= ASIGNATURAS =========
     todas_asignaturas = NombreAsignatura.objects.all()
-    asignaturas_ficha = NombreAsignatura.objects.filter(fichaasignatura__idficha_id=ficha_id)
+    asignaturas_ficha = NombreAsignatura.objects.filter(idficha_id=ficha_id)
     ids_asignaturas_ficha = [a.id for a in asignaturas_ficha]
-
-    # ========= CARPETAS =========
-    todas_carpetas = Carpetas.objects.all()
-    carpetas_ficha = FichaCarpetas.objects.filter(idficha_id=ficha_id)
-    ids_carpetas_ficha = [c.idcarpetas_id for c in carpetas_ficha]
 
     # ========= GUARDAR =========
     if request.method == "POST":
@@ -1123,33 +1090,20 @@ def configuracion_coordinador(request):
         if "asignaturas" in request.POST:
             seleccionados = request.POST.getlist("asignaturas")
 
-            # eliminar relaciones previas
-            FichaAsignatura.objects.filter(idficha_id=ficha_id).delete()
+            # Eliminar asignaturas previas de la ficha
+            NombreAsignatura.objects.filter(idficha_id=ficha_id).delete()
 
-            # asignar nuevas
+            # Volver a agregarlas
             for asig_id in seleccionados:
-                FichaAsignatura.objects.create(
+                base = NombreAsignatura.objects.get(id=asig_id)
+
+                NombreAsignatura.objects.create(
                     idficha_id=ficha_id,
-                    idasignatura_id=asig_id
+                    nombre=base.nombre,
+                    idtipo_asignatura=base.idtipo_asignatura
                 )
 
             messages.success(request, "¡Asignaturas guardadas correctamente!")
-
-        # ---------- Guardar Carpetas ----------
-        if "carpetas" in request.POST:
-            seleccionadas = request.POST.getlist("carpetas")
-
-            # Eliminar todas las carpetas previas
-            FichaCarpetas.objects.filter(idficha_id=ficha_id).delete()
-
-            # Guardar las nuevas
-            for carpeta_id in seleccionadas:
-                FichaCarpetas.objects.create(
-                    idficha_id=ficha_id,
-                    idcarpetas_id=carpeta_id
-                )
-
-            messages.success(request, "¡Carpetas asignadas correctamente!")
 
         return redirect("configuracion_coordinador")
 
@@ -1184,14 +1138,7 @@ def configuracion_coordinador_base_2(request):
     return render(request, "paginas/coordinador/configuracion_coordinador_base_2.html")
 
 def ficha_coordinador(request):
-    ficha_id = request.session.get("ficha_actual")
-    if not ficha_id:
-        return redirect("coordinador")  # si no hay ficha seleccionada
-    ficha = Ficha.objects.select_related("idjornada", "idprograma").get(id=ficha_id)
-
-    return render(request, "paginas/coordinador/ficha_coordinador.html", {
-        "ficha": ficha
-    })
+    return render(request, "paginas/coordinador/ficha_coordinador.html")
 
 def ficha_aprendiz(request):
     usuario_id = request.session.get("id_usuario")
@@ -1412,41 +1359,11 @@ def datos_ins_editar(request):
         "usuario": usuario
     })
 
-def coordinador_editar(request, id):
-    ficha = get_object_or_404(Ficha, id=id)
-    jornadas = Jornada.objects.all()
-    programas = Programa.objects.all()
-    if request.method == "POST":
-        ficha.numero_ficha = request.POST.get("numero_ficha")
-        ficha.idjornada_id = request.POST.get("idjornada")
-        ficha.idprograma_id = request.POST.get("idprograma")
-        ficha.save()
-        return redirect("coordinador")  # regresa al listado
-
-    return render(request, "paginas/coordinador/coordinador_editar.html", {
-        "ficha": ficha,
-        "jornadas": jornadas,
-        "programas": programas
-    })
+def coordinador_editar(request):
+    return render(request, "paginas/coordinador/coordinador_editar.html")
 
 def coordinador_agregar(request):
-    jornadas = Jornada.objects.all()
-    programas = Programa.objects.all()
-    if request.method == "POST":
-        numero = request.POST.get("numero_ficha")
-        jornada = request.POST.get("idjornada")
-        programa = request.POST.get("idprograma")
-        Ficha.objects.create(
-            numero_ficha=numero,
-            idjornada_id=jornada,
-            idprograma_id=programa
-        )
-        return redirect("coordinador")  # volver al listado
-
-    return render(request, "paginas/coordinador/coordinador_agregar.html", {
-        "jornadas": jornadas,
-        "programas": programas
-    })
+    return render(request, "paginas/coordinador/coordinador_agregar.html")
 
 def carpetas2_editar(request):
     return render(request, "paginas/instructor/carpetas2_editar.html")
@@ -1610,51 +1527,30 @@ def configuracion_asignaturas(request):
         messages.error(request, "Primero debes seleccionar una ficha.")
         return redirect("inicio_coordinador")
 
-    # ficha como objeto y como id entero
-    try:
-        ficha = Ficha.objects.get(id=ficha_id)
-    except Ficha.DoesNotExist:
-        messages.error(request, "La ficha seleccionada no existe.")
-        return redirect("inicio_coordinador")
+    ficha = Ficha.objects.get(id=ficha_id)
 
-    # 1. Todas las asignaturas (catálogo)
-    todas_asignaturas = NombreAsignatura.objects.all()
+    # 1. Todas las asignaturas existentes
+    todas_asignaturas = NombreAsignatura.objects.filter(idficha__isnull=True)
 
-    # 2. Asignaturas asignadas a esta ficha (usando tabla intermedia)
-    # obtenemos los NombreAsignatura que están relacionados a la ficha
-    asignaturas_ficha_qs = NombreAsignatura.objects.filter(
-        fichaasignatura__idficha_id=ficha_id
-    ).distinct()
-
-    # lista de ids para marcar checkboxes en el template
-    ids_asignaturas_ficha = list(asignaturas_ficha_qs.values_list("id", flat=True))
+    # 2. Asignaturas asignadas a la ficha
+    asignaturas_ficha = NombreAsignatura.objects.filter(idficha=ficha)
 
     if request.method == "POST":
-        seleccionadas = request.POST.getlist("asignaturas")  # <- debe coincidir con name="asignaturas" en template
+        seleccionadas = request.POST.getlist("asignaturas")
 
-        # convertir a enteros (seguro)
-        seleccionadas = [int(x) for x in seleccionadas] if seleccionadas else []
+        # Desasignar asignaturas que ya no estén seleccionadas
+        NombreAsignatura.objects.filter(idficha=ficha).exclude(id__in=seleccionadas).update(idficha=None)
 
-        # BORRAR relaciones previas de esta ficha
-        FichaAsignatura.objects.filter(idficha_id=ficha_id).delete()
-
-        # CREAR nuevas relaciones (usar la columna real idnombre_asignatura)
-        for asignatura_id in seleccionadas:
-            FichaAsignatura.objects.create(
-                idficha_id=ficha_id,
-                idnombre_asignatura_id=asignatura_id
-            )
+        # Asignar nuevas asignaturas
+        NombreAsignatura.objects.filter(id__in=seleccionadas).update(idficha=ficha)
 
         messages.success(request, "Asignaturas actualizadas correctamente.")
-        # mantén la ficha en sesión (por si acaso)
-        request.session["ficha_actual"] = ficha_id
         return redirect("configuracion_asignaturas")
 
     return render(request, "paginas/coordinador/configuracion_asignaturas.html", {
         "ficha": ficha,
         "todas_asignaturas": todas_asignaturas,
-        "asignaturas_ficha": asignaturas_ficha_qs,
-        "ids_asignaturas_ficha": ids_asignaturas_ficha,
+        "asignaturas_ficha": asignaturas_ficha,
     })
 
 def eliminar_asignatura(request, id_asignatura):
@@ -1710,6 +1606,7 @@ def datos_coor(request, id):
         database=os.getenv("DB_NAME")
     )
     cursor = conexion.cursor(dictionary=True)
+
     # Obtener datos del aprendiz
     cursor.execute("""
             SELECT u.nombres, u.apellidos, u.correo, u.telefono,
@@ -1718,7 +1615,9 @@ def datos_coor(request, id):
             LEFT JOIN documento d ON u.iddocumento = d.id
             WHERE u.id = %s
         """, (id,))
+
     aprendiz = cursor.fetchone()
+
     cursor.close()
     conexion.close()
 
