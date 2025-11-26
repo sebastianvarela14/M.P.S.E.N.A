@@ -317,75 +317,30 @@
     </div>
 </section>
 
-<!-- Asignar Asignaturas -->
+<!-- Asignaturas -->
 <section>
-    <h2>Asignar Asignaturas</h2>
+    <h3>Asignaturas disponibles</h3>
     <form method="POST">
         {% csrf_token %}
-        
-        <!-- Enviar ficha_id -->
-        <input type="hidden" name="ficha_id" value="{{ ficha_id }}">
-
-        <div class="grupo">
-
-            <!-- Buscador -->
-            <div class="buscar">
-                <input type="text" id="buscarAsignatura"
-                       onkeyup="filtrar('buscarAsignatura', 'listaAsignaturas')"
-                       placeholder="Buscar asignatura...">
-            </div>
-
-            <!-- Lista de asignaturas disponibles -->
-            <div id="listaAsignaturas">
-                {% for asig in todas_asignaturas %}
-                    <div class="opcion">
-                        <input type="checkbox"
-                            name="asignaturas"
-                            value="{{ asig.id }}"
-                            {% if asig.id in ids_asignaturas_ficha %}checked{% endif %}>
-                        {{ asig.nombre }}
-                    </div>
+            {% for asignatura in todas_asignaturas %}
+                <label>
+                    <input type="checkbox" name="asignaturas" value="{{ asignatura.id }}"
+                        {% if asignatura.id in ids_asignaturas_ficha %}checked{% endif %}>
+                        {{ asignatura.nombre }}
+                    </label><br>
                 {% endfor %}
-            </div>
+                
 
-            <!-- Acciones -->
-            <div class="acciones">
-                <button type="submit" class="btn-guardar">
-                    Guardar Asignaturas
-                </button>
-
-                <button type="button" class="btn-anadir"
-                        onclick="abrirModal('modalAsignatura')">
-                    Añadir Asignatura
-                </button>
-            </div>
-        </div>
-    </form>
-</section>
-
-<!-- Asignaturas asignadas -->
-<section>
-    <div class="lista-guardados">
-        <h4>Asignaturas en esta ficha</h4>
-
-        {% if asignaturas_ficha %}
-            {% for fa in asignaturas_ficha %}
-                <div class="opcion" style="justify-content: space-between; margin: 6px 0;">
-                    
-                    <!-- nombre de la asignatura dentro de fichaasignatura -->
-                    <span>{{ fa.idasignatura.nombre }}</span>
-
-                    <!-- eliminar fichaasignatura -->
-                    <form method="POST" action="{% url 'eliminar_asignatura' fa.id ficha_id %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button class="btn-eliminar">Eliminar</button>
-                    </form>
-                </div>
+            <h3>Asignaturas asignadas a esta ficha</h3>
+            {% for asignatura in asignaturas_ficha %}
+                <label>
+                    <input type="checkbox" name="asignaturas" value="{{ asignatura.id }}" checked>
+                    {{ asignatura.nombre }}
+                </label><br>
             {% endfor %}
-        {% else %}
-            <p>No hay asignaturas asignadas.</p>
-        {% endif %}
-    </div>
+
+            <button type="submit">Guardar cambios</button>
+        </form>
 </section>
 
 </main>
