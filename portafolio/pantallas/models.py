@@ -2,32 +2,21 @@ from django.db import models
 
 
 class Archivos(models.Model):
-    nombre_archivo = models.CharField(max_length=100)
-    fecha_entrega = models.DateField(blank=True, null=True)
-    archivo = models.FileField(upload_to='archivos/', null=True, blank=True)
-    idcarpetas = models.ForeignKey('Carpetas', models.DO_NOTHING, db_column='idcarpetas', blank=True, null=True)
+    nombre_archivo = models.CharField(max_length=100, db_comment='nombre de la evidencia para su identificacion en carpetas')
+    fecha_entrega = models.DateField(blank=True, null=True, db_comment='fecha limite de entrega de la evidencia')
+    idcarpetas = models.ForeignKey('Carpetas', models.DO_NOTHING, db_column='idcarpetas', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla archivos con carpetas')
 
     class Meta:
         managed = False
         db_table = 'archivos'
 
 
-
 class Carpetas(models.Model):
-    nombre = models.CharField(
-        max_length=100, 
-        db_comment='nombre de la carpeta (ej: plan concertado, evidencias de aprendizaje, etc.)'
-    )
-    descripcion = models.TextField(
-        null=True, 
-        blank=True, 
-        db_comment='descripción informativa de la carpeta'
-    )
+    nombre = models.CharField(max_length=100, db_comment='nombre de la carpeta (ej: plan concertado, evidencias de aprendizaje, guias de aprendizajes,  etc.)')
 
     class Meta:
         managed = False
         db_table = 'carpetas'
-
 
 
 class Documento(models.Model):
@@ -201,29 +190,3 @@ class FichaAsignatura(models.Model):
     class Meta:
         managed = False
         db_table = 'ficha_asignatura'
-
-class ArchivoInstructorFicha(models.Model):
-    idarchivoficha = models.AutoField(primary_key=True)
-    archivo = models.FileField(upload_to='portafolio_instructor/')
-    fecha_subida = models.DateTimeField(auto_now_add=True)
-
-    instructor = models.ForeignKey(
-        'Usuario',
-        on_delete=models.DO_NOTHING,
-        db_column='idusuario'
-    )
-    ficha = models.ForeignKey(
-        'Ficha',
-        on_delete=models.DO_NOTHING,
-        db_column='idficha'
-    )
-    carpeta = models.ForeignKey(
-        'Carpetas',
-        on_delete=models.DO_NOTHING,
-        db_column='idcarpetas'
-    )
-
-    class Meta:
-        managed = True
-        db_table = 'archivo_instructor_ficha'
-
