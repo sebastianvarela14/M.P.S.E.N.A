@@ -306,25 +306,12 @@ def datos_aprendiz(request, id):
 
 
 def carpetas2(request):
-    # 1. Recibir ficha desde GET
-    ficha_id = request.GET.get("ficha")
+    ficha_id = request.GET.get("ficha")  # 1. Recibir ?ficha=xx desde el enlace
 
-    # 2. Si viene en el GET, actualizar sesión
     if ficha_id:
-        request.session["ficha_id"] = ficha_id
-    else:
-        ficha_id = request.session.get("ficha_id")  # 3. Recuperar si ya estaba en sesión
+        request.session["ficha_id"] = ficha_id  # 2. Guardar en sesión
 
-    # 4. Cargar el objeto Ficha solo si existe
-    ficha = None
-    if ficha_id:
-        from .models import Ficha
-        ficha = Ficha.objects.get(id=ficha_id)
-
-    # 5. Enviar ficha al template ✔️
-    return render(request, "paginas/instructor/carpetas2.html", {
-        "ficha": ficha
-    })
+    return render(request, "paginas/instructor/carpetas2.html")
 
 def portafolio(request, ficha_id):
     ficha = Ficha.objects.get(id=ficha_id)
@@ -618,7 +605,28 @@ def lista_aprendices_observador(request):
     return render(request, "paginas/observador/lista_aprendices_observador.html")
 
 def observador(request):
-    return render(request, "paginas/observador/observador.html")
+    ficha_id = request.GET.get("ficha")
+    ficha_actual = None
+
+    # Guardar ficha seleccionada en sesión
+    if ficha_id:
+        request.session["ficha_actual"] = ficha_id
+        try:
+            ficha_actual = Ficha.objects.get(id=ficha_id)
+        except Ficha.DoesNotExist:
+            ficha_actual = None
+    else:
+        # Si entra sin seleccionar ficha, mirar la sesión
+        ficha_session = request.session.get("ficha_actual")
+        if ficha_session:
+            ficha_actual = Ficha.objects.get(id=ficha_session)
+
+    fichas = Ficha.objects.all()
+
+    return render(request, "paginas/observador/observador.html", {
+        "fichas": fichas,
+        "ficha": ficha_actual
+    })
 
 def portafolio_aprendices_observador(request):
     return render(request, "paginas/observador/portafolio_aprendices_observador.html")
@@ -638,11 +646,20 @@ def adentro_material_observador(request):
 def material_principal_observador(request):
     return render(request, "paginas/observador/material_principal_observador.html")
 
-def evidencia_guia_observador(request):
-    return render(request, "paginas/observador/evidencia_guia_observador.html")
+def evidencia_guia_observador(request, id):
+    evidencia = EvidenciasInstructor.objects.get(id=id)
+    return render(request, "paginas/observador/evidencia_guia_observador.html", {
+        "evidencia": evidencia
+    })
 
-def evidencias_observador(request):
-    return render(request, "paginas/observador/evidencias_observador.html")
+def evidencias_observador(request, ficha_id):
+    evidencias = EvidenciasInstructor.objects.filter(
+        evidenciasficha__idficha=ficha_id
+    )
+
+    return render(request, "paginas/observador/evidencias_observador.html", {
+        "evidencias": evidencias
+    })
 
 def adentro_material_coordinador(request):
     return render(request, "paginas/observador/evidencias_observador.html")
@@ -672,9 +689,9 @@ def evidencias_coordinador(request, ficha_id):
     })
 
 def inicio_coordinador(request):
-    # Recuperamos la ficha seleccionada de la sesión
-    ficha_id = request.session.get('ficha_id')
+    ficha_id = request.session.get('ficha_actual')  # ← ahora sí coincide
     return render(request, "paginas/coordinador/inicio_coordinador.html", {"ficha_id": ficha_id})
+
 
 def lista_aprendices_coordinador(request):
         conexion = mysql.connector.connect(
@@ -1166,7 +1183,16 @@ def configuracion_coordinador_base_2(request):
     return render(request, "paginas/coordinador/configuracion_coordinador_base_2.html")
 
 def ficha_coordinador(request):
-    return render(request, "paginas/coordinador/ficha_coordinador.html")
+    ficha_id = request.session.get("ficha_actual")
+
+    if not ficha_id:
+        return redirect("coordinador")  # si no hay ficha seleccionada
+
+    ficha = Ficha.objects.select_related("idjornada", "idprograma").get(id=ficha_id)
+
+    return render(request, "paginas/coordinador/ficha_coordinador.html", {
+        "ficha": ficha
+    })
 
 def ficha_aprendiz(request):
     usuario_id = request.session.get("id_usuario")
