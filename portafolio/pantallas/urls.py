@@ -11,7 +11,7 @@ urlpatterns = [
 
     path("material/", views.material, name="material"),
 
-    path("portafolio_aprendices/", views.portafolio_aprendices, name="portafolio_aprendices"),
+    path("portafolio_aprendices/<int:ficha_id>/", views.portafolio_aprendices, name="portafolio_aprendices"),
     path("trimestre1/", views.trimestre1, name="trimestre1"),
     path("trimestre2/", views.trimestre2, name="trimestre2"),
     path("trimestre3/", views.trimestre3, name="trimestre3"),
@@ -29,7 +29,7 @@ urlpatterns = [
 
     path("lista_aprendices/", views.lista_aprendices, name="lista_aprendices"),
 
-    path("portafolio/", views.portafolio, name="portafolio"),
+    path("portafolio/<int:ficha_id>/", views.portafolio, name="portafolio"),
     path("carpetas2/", views.carpetas2, name="carpetas2"),
 
     path("taller/", views.taller, name="taller"),
@@ -46,7 +46,14 @@ urlpatterns = [
     path("adentro_material/", views.adentro_material, name="adentro_material"),
     path("lista_aprendices1/", views.lista_aprendices1, name="lista_aprendices1"),
     path("datoslaura/", views.datoslaura, name="datoslaura"),
-    path("entrada/", views.entrada, name="entrada"),
+    path("entrada/<int:asignatura_id>/", views.entrada, name="entrada"),
+    path('archivo/agregar/<int:carpeta_id>/', views.archivo_agregar, name='archivo_agregar'),
+    path('archivo/editar/<int:archivo_id>/', views.archivo_editar, name='archivo_editar'),
+    path('archivo/eliminar/<int:archivo_id>/', views.archivo_eliminar, name='archivo_eliminar'),
+
+
+    
+
 
     path("adentro_material1/", views.adentro_material1, name="adentro_material1"),
     path("evidencia_guia/<int:evidencia_id>/", views.evidencia_guia, name="evidencia_guia"),
@@ -84,7 +91,6 @@ urlpatterns = [
     path("lista_aprendices_coordinador/", views.lista_aprendices_coordinador, name="lista_aprendices_coordinador"),
     path("material_principal_coordinador/", views.material_principal_coordinador, name="material_principal_coordinador"),
     path("portafolio_aprendices_coordinador/", views.portafolio_aprendices_coordinador, name="portafolio_aprendices_coordinador"),
-    path("portafolio_coordinador/", views.portafolio_coordinador, name="portafolio_coordinador"),
     path("trimestre_coordinador/", views.trimestre_coordinador, name="trimestre_coordinador"),
     path("datos_coordinador/", views.datos_coordinador, name="datos_coordinador"),
 
@@ -128,7 +134,9 @@ urlpatterns = [
     path("equipo_coordinador/", views.equipo_coordinador, name="equipo_coordinador"),
     path("material_editar/", views.material_editar, name="material_editar"),
     path("evidencia_guia_editar/", views.evidencia_guia_editar, name="evidencia_guia_editar"),
-    path("carpetasins_editar/", views.carpetasins_editar, name="carpetasins_editar"),
+    
+    path('carpetasins_editar/<int:carpeta_id>/', views.carpetasins_editar, name='carpetasins_editar'),
+
     path("evidencia/eliminar/<int:evidencia_id>/", views.eliminar_evidencia, name="eliminar_evidencia"),
     path("carpetasins_crear/", views.carpetasins_crear, name="carpetasins_crear"),
     path("carpetas_aprendiz_crear/", views.carpetas_aprendiz_crear, name="carpetas_aprendiz_crear"),
@@ -149,7 +157,10 @@ urlpatterns = [
     path("datos_coordinador_editar/", views.datos_coordinador_editar, name="datos_coordinador_editar"),
     path("eliminar_aprendiz/<int:aprendiz_id>/<int:ficha_id>/", views.eliminar_aprendiz, name="eliminar_aprendiz"),
     path('datos_coor/<int:id>/', views.datos_coor, name='datos_coor'),
-
-
-
-]
+    path("eliminar_asignatura/<int:asig_id>/<int:ficha_id>/", views.eliminar_asignatura, name="eliminar_asignatura"),
+    path('ficha_coordinador_editar/<int:id>/', views.ficha_coordinador_editar, name='ficha_coordinador_editar'),
+    path("seleccionar_ficha_observador/<int:id_ficha>/", views.seleccionar_ficha_observador, name="seleccionar_ficha_observador"),
+    path("opc_equipoejecutor_coordinador/", views.opc_equipoejecutor_coordinador, name="opc_equipoejecutor_coordinador"),
+    path("equipo_ejecutor_coordinador/", views.equipo_ejecutor_coordinador, name="equipo_ejecutor_coordinador"),
+    path("portafolio_coordinador/", views.portafolio_coordinador, name="portafolio_coordinador"),
+    ]

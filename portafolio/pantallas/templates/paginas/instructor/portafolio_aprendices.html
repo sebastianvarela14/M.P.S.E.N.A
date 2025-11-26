@@ -129,10 +129,13 @@
         <!-- Lista -->
         <div class="list">
             <a href="{% url 'trimestre_general' %}" class="item active">Portafolio general</a>
-            <a href="{% url 'trimestre_aprendiz' %}" class="item">Laura Camila Castañeda Rojas</a>
-        </div>
-    </div>
-
+            {% for aprendiz in aprendices %}
+                <a href="{% url 'trimestre_aprendiz' %}" class="item">
+                    {{ aprendiz.nombres }} {{ aprendiz.apellidos }}
+                </a>
+            {% empty %}
+                <p class="text-center text-muted mt-3">No hay aprendices en esta ficha.</p>
+            {% endfor %}
 </body>
 
 {% endblock %}

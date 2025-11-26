@@ -71,8 +71,28 @@ def calificaciones(request):
 def material(request):
     return render(request, "paginas/instructor/material.html")
 
-def portafolio_aprendices(request):
-    return render(request, "paginas/instructor/portafolio_aprendices.html")
+def portafolio_aprendices(request, ficha_id):
+
+    # Guardar ficha para otras vistas si la necesitas
+    request.session["ficha_actual"] = ficha_id
+
+    aprendices = []
+
+    # Buscar todos los usuarios asociados a esa ficha
+    usuarios_ficha = FichaUsuario.objects.filter(idficha=ficha_id)
+
+    # Rol aprendiz
+    rol_aprendiz = Rol.objects.get(tipo="aprendiz")
+
+    # Filtrar aprendices
+    for relacion in usuarios_ficha:
+        usuario = relacion.idusuario
+        if UsuarioRol.objects.filter(idusuario=usuario, idrol=rol_aprendiz).exists():
+            aprendices.append(usuario)
+
+    return render(request, "paginas/instructor/portafolio_aprendices.html", {
+        "aprendices": aprendices
+    })
 
 def trimestre1(request):
     return render(request, "paginas/carpetas.html")
@@ -286,26 +306,147 @@ def datos_aprendiz(request, id):
 
 
 def carpetas2(request):
-    return render(request, "paginas/instructor/carpetas2.html")
+    # 1. Recibir ficha desde GET
+    ficha_id = request.GET.get("ficha")
 
-def portafolio(request):
-    return render(request, "paginas/instructor/portafolio.html")
+    # 2. Si viene en el GET, actualizar sesión
+    if ficha_id:
+        request.session["ficha_id"] = ficha_id
+    else:
+        ficha_id = request.session.get("ficha_id")  # 3. Recuperar si ya estaba en sesión
+
+    # 4. Cargar el objeto Ficha solo si existe
+    ficha = None
+    if ficha_id:
+        from .models import Ficha
+        ficha = Ficha.objects.get(id=ficha_id)
+
+    # 5. Enviar ficha al template ✔️
+    return render(request, "paginas/instructor/carpetas2.html", {
+        "ficha": ficha
+    })
+
+def portafolio(request, ficha_id):
+    ficha = Ficha.objects.get(id=ficha_id)
+
+    return render(request, "paginas/instructor/portafolio.html", {
+        "ficha": ficha
+    })
 
 def taller(request):
     return render(request, "paginas/instructor/taller.html")
 
 
 def carpetasins(request):
-    return render(request, "paginas/instructor/carpetasins.html")
+    # Orden personalizado
+    orden = [
+        "Plan concertado",
+        "Guías de aprendizaje",
+        "Evidencias de aprendizaje",
+        "Planes de acción de mejora",
+        "Formato diligenciado de Planeación, Seguimiento y Evaluación Etapa productiva."
+    ]
+
+    # Obtener todas las carpetas
+    carpetas = Carpetas.objects.all()
+
+    # Orden personalizado
+    carpetas = sorted(
+        carpetas,
+        key=lambda c: orden.index(c.nombre) if c.nombre in orden else 999
+    )
+
+    # Agregar archivos a cada carpeta
+    for carpeta in carpetas:
+        carpeta.archivos = Archivos.objects.filter(idcarpetas=carpeta.id)
+
+    return render(request, "paginas/instructor/carpetasins.html", {
+        "carpetas": carpetas
+    })
+
+
+def archivo_agregar(request, carpeta_id):
+    carpeta = get_object_or_404(Carpetas, id=carpeta_id)
+
+    if request.method == "POST":
+        archivo_subido = request.FILES.get("archivo")
+
+        Archivos.objects.create(
+            nombre_archivo=request.POST.get("nombre_archivo"),
+            fecha_entrega=request.POST.get("fecha_entrega"),
+            archivo=archivo_subido,
+            idcarpetas=carpeta
+        )
+        return redirect("carpetasins")
+
+    return render(request, "paginas/instructor/archivo_form.html", {
+        "carpeta": carpeta,
+    })
+
+
+def archivo_editar(request, archivo_id):
+    archivo = get_object_or_404(Archivos, id=archivo_id)
+
+    if request.method == "POST":
+        archivo.nombre_archivo = request.POST.get("nombre_archivo")
+        archivo.fecha_entrega = request.POST.get("fecha_entrega")
+        archivo.save()
+        return redirect("carpetasins")
+
+    return render(request, "paginas/instructor/archivo_form.html", {
+        "archivo": archivo,
+    })
+
+
+def archivo_eliminar(request, archivo_id):
+    archivo = get_object_or_404(Archivos, id=archivo_id)
+    archivo.delete()
+    return redirect("carpetasins")
+
 
 def trimestre(request):
-    return render(request, "paginas/instructor/trimestre.html")
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/instructor/trimestre.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
 
 def carpetas_aprendiz(request):
     return render(request, "paginas/instructor/carpetas_aprendiz.html")
 
 def trimestre_aprendiz(request):
-    return render(request, "paginas/instructor/trimestre_aprendiz.html")
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/instructor/trimestre_aprendiz.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
+
 
 def trimestre_general(request):
     return render(request, "paginas/instructor/trimestre_general.html")
@@ -355,36 +496,27 @@ def evidencia_guia1(request):
 def inicio(request):
     id_aprendiz = request.session.get('id_usuario')
     nombre_aprendiz = request.session.get('nombre_usuario', '')
-    competencias = []
+
+    asignaturas = []
 
     if id_aprendiz:
-        try:
-            conexion = mysql.connector.connect(
-                host=os.getenv("DB_HOST"),
-                user=os.getenv("DB_USER"),
-                password=os.getenv("DB_PASSWORD"),
-                database=os.getenv("DB_NAME")
-        )
-            cursor = conexion.cursor(dictionary=True)
 
-            # Consulta SQL para obtener las competencias de la ficha del aprendiz
-            query = """
-                SELECT c.id, c.nombre AS nombre_competencia
-                FROM competencia c
-                JOIN ficha_competencia fc ON c.id = fc.idcompetencia
-                JOIN ficha f ON fc.idficha = f.id
-                JOIN usuario_ficha uf ON f.id = uf.idficha
-                WHERE uf.idusuario = %s
-            """
-            cursor.execute(query, (id_aprendiz,))
-            competencias = cursor.fetchall()
+        # 1️⃣ Obtener la ficha a la que pertenece el aprendiz
+        ficha_usuario = FichaUsuario.objects.filter(idusuario_id=id_aprendiz).first()
 
-            cursor.close()
-            conexion.close()
-        except mysql.connector.Error as err:
-            messages.error(request, f"")
+        if ficha_usuario:
+            ficha_id = ficha_usuario.idficha_id
 
-    return render(request, "paginas/aprendiz/inicio.html", {'competencias': competencias, 'nombre_aprendiz': nombre_aprendiz})
+            # 2️⃣ Obtener las asignaturas asignadas a esa ficha
+            asignaturas = NombreAsignatura.objects.filter(
+                fichaasignatura__idficha_id=ficha_id
+            ).distinct()
+
+    return render(request, "paginas/aprendiz/inicio.html", {
+        'asignaturas': asignaturas,
+        'nombre_aprendiz': nombre_aprendiz
+    })
+
 
 
 def carpetas_aprendiz1(request):
@@ -418,8 +550,14 @@ def coordinador(request):
         "ficha": ficha_actual
     })
 
-def entrada(request):
-    return render(request, "paginas/aprendiz/entrada.html")
+def entrada(request, asignatura_id):
+    request.session["asignatura_actual"] = asignatura_id  # guardar asignatura actual
+
+    asignatura = NombreAsignatura.objects.get(id=asignatura_id)
+
+    return render(request, "paginas/aprendiz/entrada.html", {
+        "asignatura": asignatura
+    })
 
 def trimestre_laura(request):
     return render(request, "paginas/aprendiz/trimestre_laura.html")
@@ -540,13 +678,50 @@ def material_principal_coordinador(request):
     return render(request, "paginas/coordinador/material_principal_coordinador.html")
 
 def portafolio_aprendices_coordinador(request):
-    return render(request, "paginas/coordinador/portafolio_aprendices_coordinador.html")
+    ficha_id = request.session.get("ficha_actual")
+
+    aprendices = []
+
+    if ficha_id:
+        # 1. Traer usuarios de esa ficha
+        usuarios_ficha = FichaUsuario.objects.filter(idficha=ficha_id)
+
+        # 2. Identificar cuáles de esos usuarios son aprendices
+        rol_aprendiz = Rol.objects.get(tipo="aprendiz")
+
+        for relacion in usuarios_ficha:
+            usuario = relacion.idusuario
+            
+            # Revisar que el usuario tenga el rol de aprendiz
+            if UsuarioRol.objects.filter(idusuario=usuario, idrol=rol_aprendiz).exists():
+                aprendices.append(usuario)
+
+    return render(request, "paginas/coordinador/portafolio_aprendices_coordinador.html", {
+        "aprendices": aprendices
+    })
 
 def portafolio_coordinador(request):
     return render(request, "paginas/coordinador/portafolio_coordinador.html")
 
 def trimestre_coordinador(request):
-    return render(request, "paginas/coordinador/trimestre_coordinador.html")
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/coordinador/trimestre_coordinador.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
 
 def datos_coordinador(request):
     usuario_id = request.session.get('usuario_id')  # 🔹 Obtener ID de la sesión
@@ -682,11 +857,45 @@ def datos_observador(request):
 def carpetas_general(request):
     return render(request, "paginas/coordinador/carpetas_general.html")
 
-def trimestre_general_coordinador(request):
-    return render(request, "paginas/coordinador/trimestre_general_coordinador.html")
+def trimestre_general_coordinador(request,):
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
 
-def trimestre_aprendiz_coordinador(request):
-    return render(request, "paginas/coordinador/trimestre_aprendiz_coordinador.html")
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/coordinador/trimestre_general_coordinador.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
+
+def trimestre_aprendiz_coordinador(request, ):
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/coordinador/trimestre_aprendiz_coordinador.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
 
 def carpetas_aprendiz_coordinador(request):
     return render(request, "paginas/coordinador/carpetas_aprendiz_coordinador.html")
@@ -700,7 +909,7 @@ def evidencia_calificar_coordinador(request):
 def sesion(request):
     usuario_ingresado = ""
 
-    # 🔹 Limpiar mensajes antiguos al entrar por GET
+    # Limpiar mensajes antiguos
     if request.method == "GET":
         storage = messages.get_messages(request)
         storage.used = True
@@ -717,58 +926,68 @@ def sesion(request):
             database=os.getenv("DB_NAME")
         )
         cursor = conexion.cursor(dictionary=True)
+
         cursor.execute("SELECT * FROM usuario WHERE usuario = %s", (usuario_input,))
         usuario = cursor.fetchone()
 
         if not usuario:
             messages.error(request, "El usuario no existe.")
             return redirect('sesion')
-        else:
-            contrasena_correcta = usuario['contrasena']
-            if contrasena_input != contrasena_correcta:
-                messages.error(request, "Contraseña incorrecta.")
-                return redirect('sesion')
+
+        if contrasena_input != usuario['contrasena']:
+            messages.error(request, "Contraseña incorrecta.")
+            return redirect('sesion')
+
+        # Guardamos datos base del usuario
+        request.session['id_usuario'] = usuario['id']
+        request.session['usuario'] = usuario['usuario']
+        request.session['nombre_usuario'] = f"{usuario['nombres']} {usuario['apellidos']}".upper()
+
+        # Obtener ROL del usuario
+        cursor.execute("""
+            SELECT r.tipo
+            FROM rol r
+            INNER JOIN usuario_rol ur ON ur.idrol = r.id
+            WHERE ur.idusuario = %s
+        """, (usuario['id'],))
+        rol = cursor.fetchone()
+
+        # 🔹 OBTENER FICHA DEL USUARIO Y GUARDARLA EN SESIÓN
+        cursor.execute("""
+            SELECT idficha 
+            FROM ficha_usuario
+            WHERE idusuario = %s
+        """, (usuario['id'],))
+
+        ficha = cursor.fetchone()
+        request.session['ficha_id'] = ficha['idficha'] if ficha else None
+
+        # Redirección según el rol
+        if rol:
+            tipo_rol = rol['tipo'].lower()
+
+            if tipo_rol == 'instructor':
+                return redirect('fichas_ins')
+            elif tipo_rol == 'aprendiz':
+                return redirect('inicio')
+            elif tipo_rol == 'coordinacion':
+                return redirect('coordinador')
+            elif tipo_rol == 'observador':
+                return redirect('observador')
             else:
-                request.session['id_usuario'] = usuario['id']
-                request.session['usuario'] = usuario['usuario']
-                request.session['nombre_usuario'] = f"{usuario['nombres']} {usuario['apellidos']}".upper()
-                cursor.execute("""
-                    SELECT r.tipo
-                    FROM rol r
-                    INNER JOIN usuario_rol ur ON ur.idrol = r.id
-                    WHERE ur.idusuario = %s
-                """, (usuario['id'],))
-                rol = cursor.fetchone()
+                messages.error(request, f"Rol desconocido: {tipo_rol}")
+                return redirect('sesion')
+        else:
+            messages.error(request, "No se encontró un rol asignado para este usuario.")
+            return redirect('sesion')
 
-                if rol:
-                    tipo_rol = rol['tipo'].lower()
-                    
-                    request.session['usuario_id'] = usuario['id']
-                    request.session['usuario_nombre'] = usuario['usuario']
-
-                    # Redirigir según el tipo de rol
-                    if tipo_rol == 'instructor':
-                        return redirect('fichas_ins')
-                    elif tipo_rol == 'aprendiz':
-                        return redirect('inicio')
-                    elif tipo_rol == 'coordinacion':
-                        return redirect('coordinador')
-                    elif tipo_rol == 'observador':
-                        return redirect('observador')
-                    else:
-                        messages.error(request, f"Rol desconocido: {tipo_rol}")
-                        return redirect('sesion')
-                else:
-                    messages.error(request, "No se encontró un rol asignado para este usuario.")
-                    return redirect('sesion')
-                
         cursor.close()
         conexion.close()
 
     return render(request, "paginas/instructor/sesion.html", {
         'usuario_ingresado': usuario_ingresado
-        }
-    )
+    })
+
 
 def configuracion_instructor(request):
     return render(request, "paginas/instructor/configuracion_instructor.html")
@@ -922,7 +1141,26 @@ def ficha_coordinador(request):
     return render(request, "paginas/coordinador/ficha_coordinador.html")
 
 def ficha_aprendiz(request):
-    return render(request, "paginas/aprendiz/ficha_aprendiz.html")
+    usuario_id = request.session.get("id_usuario")
+
+    ficha_info = None
+
+    if usuario_id:
+        try:
+            # 1. Buscar la relación entre el aprendiz y la ficha
+            relacion = FichaUsuario.objects.get(idusuario_id=usuario_id)
+
+            # 2. Obtener la información completa de la ficha
+            ficha_info = Ficha.objects.get(id=relacion.idficha_id)
+
+        except FichaUsuario.DoesNotExist:
+            ficha_info = None
+        except Ficha.DoesNotExist:
+            ficha_info = None
+
+    return render(request, "paginas/aprendiz/ficha_aprendiz.html", {
+        "ficha": ficha_info
+    })
 
 def ficha_aprendiz_2(request):
     return render(request, "paginas/aprendiz/ficha_aprendiz_2.html")
@@ -984,7 +1222,24 @@ def ficha_observador(request):
     return render(request, "paginas/observador/ficha_observador.html")
 
 def equipo_ejecutor(request):
-    return render(request, "paginas/instructor/equipo_ejecutor.html")
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/instructor/equipo_ejecutor.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
 
 def opc_equipoejecutor(request):
     return render(request, "paginas/instructor/opc_equipoejecutor.html")
@@ -1001,8 +1256,20 @@ def material_editar(request):
 def evidencia_guia_editar(request):
     return render(request, "paginas/instructor/evidencia_guia_editar.html")
 
-def carpetasins_editar(request):
-    return render(request, "paginas/instructor/carpetasins_editar.html")
+
+def carpetasins_editar(request, carpeta_id):
+    carpeta = get_object_or_404(Carpetas, id=carpeta_id)
+
+    if request.method == "POST":
+        carpeta.nombre = request.POST.get("nombre")
+        carpeta.descripcion = request.POST.get("descripcion")
+        carpeta.save()
+        return redirect("carpetasins")
+
+    return render(request, "paginas/instructor/carpetasins_editar.html", {
+        "carpeta": carpeta,
+    })
+
 
 def carpetasins_crear(request):
     return render(request, "paginas/instructor/carpetasins_crear.html")
@@ -1356,4 +1623,85 @@ def datos_coor(request, id):
 
     return render(request, "paginas/coordinador/datos_coor.html", {
         "aprendiz": aprendiz
+    })
+
+def ficha_coordinador_editar(request, id):
+    ficha = get_object_or_404(Ficha, id=id)
+    jornadas = Jornada.objects.all()
+    programas = Programa.objects.all()
+    if request.method == "POST":
+        ficha.numero_ficha = request.POST.get("numero_ficha")
+        ficha.idjornada_id = request.POST.get("idjornada")
+        ficha.idprograma_id = request.POST.get("idprograma")
+        ficha.save()
+        return redirect("ficha_coordinador")  # regresa al listado
+
+    return render(request, "paginas/coordinador/ficha_coordinador_editar.html", {
+        "ficha": ficha,
+        "jornadas": jornadas,
+        "programas": programas
+    })
+
+def seleccionar_ficha_observador(request, id_ficha):
+    # Guardamos la ficha seleccionada en la sesión
+    request.session['ficha_actual'] = id_ficha
+    # Redirigimos a la pantalla principal del coordinador
+    return redirect('inicio_observador')
+
+def equipo_ejecutor_coordinador(request):
+
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/coordinador/equipo_ejecutor_coordinador.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
+
+
+def opc_equipoejecutor_coordinador(request):
+    usuario = request.session.get("id_usuario")
+
+    # 1. Verificar rol
+    es_coordinador = UsuarioRol.objects.filter(
+        idusuario=usuario,
+        idrol__tipo="coordinacion"
+    ).exists()
+
+    if not es_coordinador:
+        return HttpResponse("<h3 style='color:red;'>No eres coordinador</h3>")
+
+    # 2. Ficha seleccionada
+    ficha_id = request.session.get("ficha_actual")
+    if not ficha_id:
+        return HttpResponse("<h3>No hay ficha seleccionada</h3>")
+
+    ficha = Ficha.objects.get(id=ficha_id)
+
+    # 3. Carpetas
+    carpetas = FichaCarpetas.objects.filter(idficha=ficha_id)
+
+    # 4. Archivos
+    data = []
+    for fc in carpetas:
+        archivos = Archivos.objects.filter(idcarpetas=fc.idcarpetas)
+        data.append({
+            "carpeta": fc.idcarpetas,
+            "archivos": archivos
+        })
+
+    return render(request, "paginas/coordinador/opc_equipoejecutor_coordinador.html", {
+        "data": data,
+        "ficha": ficha
     })
