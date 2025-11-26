@@ -71,8 +71,28 @@ def calificaciones(request):
 def material(request):
     return render(request, "paginas/instructor/material.html")
 
-def portafolio_aprendices(request):
-    return render(request, "paginas/instructor/portafolio_aprendices.html")
+def portafolio_aprendices(request, ficha_id):
+
+    # Guardar ficha para otras vistas si la necesitas
+    request.session["ficha_actual"] = ficha_id
+
+    aprendices = []
+
+    # Buscar todos los usuarios asociados a esa ficha
+    usuarios_ficha = FichaUsuario.objects.filter(idficha=ficha_id)
+
+    # Rol aprendiz
+    rol_aprendiz = Rol.objects.get(tipo="aprendiz")
+
+    # Filtrar aprendices
+    for relacion in usuarios_ficha:
+        usuario = relacion.idusuario
+        if UsuarioRol.objects.filter(idusuario=usuario, idrol=rol_aprendiz).exists():
+            aprendices.append(usuario)
+
+    return render(request, "paginas/instructor/portafolio_aprendices.html", {
+        "aprendices": aprendices
+    })
 
 def trimestre1(request):
     return render(request, "paginas/carpetas.html")
@@ -291,8 +311,12 @@ def carpetas2(request):
         request.session["ficha_id"] = ficha_id  # 2. Guardar en sesión
     return render(request, "paginas/instructor/carpetas2.html")
 
-def portafolio(request):
-    return render(request, "paginas/instructor/portafolio.html")
+def portafolio(request, ficha_id):
+    ficha = Ficha.objects.get(id=ficha_id)
+
+    return render(request, "paginas/instructor/portafolio.html", {
+        "ficha": ficha
+    })
 
 def taller(request):
     return render(request, "paginas/instructor/taller.html")
@@ -302,13 +326,48 @@ def carpetasins(request):
     return render(request, "paginas/instructor/carpetasins.html")
 
 def trimestre(request):
-    return render(request, "paginas/instructor/trimestre.html")
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/instructor/trimestre.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
 
 def carpetas_aprendiz(request):
     return render(request, "paginas/instructor/carpetas_aprendiz.html")
 
 def trimestre_aprendiz(request):
-    return render(request, "paginas/instructor/trimestre_aprendiz.html")
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/instructor/trimestre_aprendiz.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
+
 
 def trimestre_general(request):
     return render(request, "paginas/instructor/trimestre_general.html")
@@ -571,13 +630,50 @@ def material_principal_coordinador(request):
     return render(request, "paginas/coordinador/material_principal_coordinador.html")
 
 def portafolio_aprendices_coordinador(request):
-    return render(request, "paginas/coordinador/portafolio_aprendices_coordinador.html")
+    ficha_id = request.session.get("ficha_actual")
+
+    aprendices = []
+
+    if ficha_id:
+        # 1. Traer usuarios de esa ficha
+        usuarios_ficha = FichaUsuario.objects.filter(idficha=ficha_id)
+
+        # 2. Identificar cuáles de esos usuarios son aprendices
+        rol_aprendiz = Rol.objects.get(tipo="aprendiz")
+
+        for relacion in usuarios_ficha:
+            usuario = relacion.idusuario
+            
+            # Revisar que el usuario tenga el rol de aprendiz
+            if UsuarioRol.objects.filter(idusuario=usuario, idrol=rol_aprendiz).exists():
+                aprendices.append(usuario)
+
+    return render(request, "paginas/coordinador/portafolio_aprendices_coordinador.html", {
+        "aprendices": aprendices
+    })
 
 def portafolio_coordinador(request):
     return render(request, "paginas/coordinador/portafolio_coordinador.html")
 
 def trimestre_coordinador(request):
-    return render(request, "paginas/coordinador/trimestre_coordinador.html")
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/coordinador/trimestre_coordinador.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
 
 def datos_coordinador(request):
     usuario_id = request.session.get('usuario_id')  # 🔹 Obtener ID de la sesión
@@ -713,11 +809,45 @@ def datos_observador(request):
 def carpetas_general(request):
     return render(request, "paginas/coordinador/carpetas_general.html")
 
-def trimestre_general_coordinador(request):
-    return render(request, "paginas/coordinador/trimestre_general_coordinador.html")
+def trimestre_general_coordinador(request,):
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
 
-def trimestre_aprendiz_coordinador(request):
-    return render(request, "paginas/coordinador/trimestre_aprendiz_coordinador.html")
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/coordinador/trimestre_general_coordinador.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
+
+def trimestre_aprendiz_coordinador(request, ):
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/coordinador/trimestre_aprendiz_coordinador.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
 
 def carpetas_aprendiz_coordinador(request):
     return render(request, "paginas/coordinador/carpetas_aprendiz_coordinador.html")
@@ -990,7 +1120,24 @@ def ficha_observador(request):
     return render(request, "paginas/observador/ficha_observador.html")
 
 def equipo_ejecutor(request):
-    return render(request, "paginas/instructor/equipo_ejecutor.html")
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/instructor/equipo_ejecutor.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
 
 def opc_equipoejecutor(request):
     return render(request, "paginas/instructor/opc_equipoejecutor.html")
@@ -1434,3 +1581,61 @@ def seleccionar_ficha_observador(request, id_ficha):
     request.session['ficha_actual'] = id_ficha
     # Redirigimos a la pantalla principal del coordinador
     return redirect('inicio_observador')
+
+def equipo_ejecutor_coordinador(request):
+
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/coordinador/equipo_ejecutor_coordinador.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
+
+
+def opc_equipoejecutor_coordinador(request):
+    usuario = request.session.get("id_usuario")
+
+    # 1. Verificar rol
+    es_coordinador = UsuarioRol.objects.filter(
+        idusuario=usuario,
+        idrol__tipo="coordinacion"
+    ).exists()
+
+    if not es_coordinador:
+        return HttpResponse("<h3 style='color:red;'>No eres coordinador</h3>")
+
+    # 2. Ficha seleccionada
+    ficha_id = request.session.get("ficha_actual")
+    if not ficha_id:
+        return HttpResponse("<h3>No hay ficha seleccionada</h3>")
+
+    ficha = Ficha.objects.get(id=ficha_id)
+
+    # 3. Carpetas
+    carpetas = FichaCarpetas.objects.filter(idficha=ficha_id)
+
+    # 4. Archivos
+    data = []
+    for fc in carpetas:
+        archivos = Archivos.objects.filter(idcarpetas=fc.idcarpetas)
+        data.append({
+            "carpeta": fc.idcarpetas,
+            "archivos": archivos
+        })
+
+    return render(request, "paginas/coordinador/opc_equipoejecutor_coordinador.html", {
+        "data": data,
+        "ficha": ficha
+    })
