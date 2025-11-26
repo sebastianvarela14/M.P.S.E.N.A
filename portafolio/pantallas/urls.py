@@ -133,8 +133,9 @@ urlpatterns = [
     path("fichas_equipoejecutor_coordinador/", views.fichas_equipoejecutor_coordinador, name="fichas_equipoejecutor_coordinador"),
     path("equipo_coordinador/", views.equipo_coordinador, name="equipo_coordinador"),
     path("material_editar/", views.material_editar, name="material_editar"),
-    path("evidencia_guia_editar/", views.evidencia_guia_editar, name="evidencia_guia_editar"),
-    
+    path("evidencia_guia_editar/<int:evidencia_id>/", views.evidencia_guia_editar, name="evidencia_guia_editar"),
+    path("evidencia/eliminar/", views.eliminar_evidencia, name="eliminar_evidencia"),
+
     path('carpetasins_editar/<int:carpeta_id>/', views.carpetasins_editar, name='carpetasins_editar'),
 
     path("evidencia/eliminar/<int:evidencia_id>/", views.eliminar_evidencia, name="eliminar_evidencia"),

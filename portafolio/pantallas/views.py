@@ -239,9 +239,6 @@ def evidencias(request):
 def material2(request):
     return render(request, "paginas/instructor/material2.html")
 
-def portafolio_aprendices(request):
-    return render(request, "paginas/instructor/portafolio_aprendices.html")
-
 def tareas(request):
     return render(request, "paginas/aprendiz/tareas.html")
 
@@ -486,24 +483,30 @@ def adentro_material1(request):
     return render(request, "paginas/instructor/adentro_material1.html")
 
 def evidencia_guia(request, evidencia_id):
-    # Conectar a la base de datos
-    conexion = mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME")
-    )
-    cursor = conexion.cursor(dictionary=True)
-    
-    # Obtener la evidencia específica por su ID
-    cursor.execute("SELECT * FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
-    evidencia = cursor.fetchone()
+    try:
+        conexion = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+        cursor = conexion.cursor(dictionary=True)
 
-    cursor.close()
-    conexion.close()
+        cursor.execute("SELECT * FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
+        evidencia = cursor.fetchone()
 
-    # Pasar la evidencia encontrada a la plantilla
-    return render(request, "paginas/instructor/evidencia_guia.html", {"evidencia": evidencia})
+        if not evidencia:
+            messages.error(request, "La evidencia no existe.")
+            return redirect("evidencias")
+
+    finally:
+        cursor.close()
+        conexion.close()
+
+    return render(request, "paginas/instructor/evidencia_guia.html", {
+        "evidencia": evidencia
+    })
+
 
 def evidencia_guia1(request):
     return render(request, "paginas/instructor/evidencia_guia1.html")
@@ -1307,8 +1310,67 @@ def equipo_coordinador(request):
 def material_editar(request):
     return render(request, "paginas/instructor/material_editar.html")
 
-def evidencia_guia_editar(request):
-    return render(request, "paginas/instructor/evidencia_guia_editar.html")
+def evidencia_guia_editar(request, evidencia_id):
+    try:
+        conexion = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+        cursor = conexion.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
+        evidencia = cursor.fetchone()
+
+        if not evidencia:
+            messages.error(request, "La evidencia no existe.")
+            return redirect("evidencias")
+
+    finally:
+        cursor.close()
+        conexion.close()
+
+    return render(request, "paginas/instructor/evidencia_guia_editar.html", {
+        "evidencia": evidencia
+    })
+
+def eliminar_evidencia(request, evidencia_id):
+    # Traer la evidencia, si no existe devuelve 404
+    conexion = None
+    try:
+        import mysql.connector
+        conexion = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+        cursor = conexion.cursor(dictionary=True)
+
+        cursor.execute("SELECT archivo FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
+        evidencia = cursor.fetchone()
+        if not evidencia:
+            return redirect('evidencias')  # Si no existe, redirigir a la lista
+
+        archivo = evidencia['archivo']
+
+        # Eliminar de la base de datos
+        cursor.execute("DELETE FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
+        conexion.commit()
+
+        # Eliminar archivo físico si existe
+        if archivo and archivo != 'No subido':
+            ruta = os.path.join('media', 'evidencias', archivo)
+            if os.path.exists(ruta):
+                os.remove(ruta)
+
+    finally:
+        if conexion:
+            cursor.close()
+            conexion.close()
+
+    return redirect('evidencias')
 
 
 def carpetasins_editar(request, carpeta_id):
@@ -1651,41 +1713,46 @@ def eliminar_asignatura(request, id_asignatura):
     return redirect("configuracion_coordinador")
 
 def eliminar_evidencia(request, evidencia_id):
-    if request.method == "GET":
-        try:
-            conexion = mysql.connector.connect(
-                host=os.getenv("DB_HOST"),
-                user=os.getenv("DB_USER"),
-                password=os.getenv("DB_PASSWORD"),
-                database=os.getenv("DB_NAME")
-            )
-            cursor = conexion.cursor(dictionary=True)
+    try:
+        conexion = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+        cursor = conexion.cursor(dictionary=True)
 
-            cursor.execute("SELECT archivo FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
-            resultado = cursor.fetchone()
+        # Obtener archivo antes de borrar
+        cursor.execute("SELECT archivo FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
+        registro = cursor.fetchone()
 
-            if resultado:
-                nombre_archivo = resultado.get('archivo')
+        if not registro:
+            messages.error(request, "La evidencia no existe.")
+            return redirect("evidencias")
 
-                cursor.execute("DELETE FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
-                conexion.commit()
+        archivo = registro["archivo"]
 
-                if nombre_archivo and nombre_archivo != 'No subido':
-                    ruta_archivo = os.path.join('media', 'evidencias', nombre_archivo)
-                    if os.path.exists(ruta_archivo):
-                        os.remove(ruta_archivo)
-                
-                messages.success(request, "La evidencia ha sido eliminada correctamente.")
-            else:
-                messages.error(request, "No se encontró la evidencia para eliminar.")
+        # Eliminar evidencia
+        cursor.execute("DELETE FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
+        conexion.commit()
 
-        except mysql.connector.Error as err:
-            messages.error(request, f"Error al eliminar la evidencia: {err}")
-        finally:
-            if 'conexion' in locals() and conexion.is_connected():
-                cursor.close()
-                conexion.close()
-    return redirect('evidencias')
+        # Eliminar archivo si existe
+        if archivo and archivo != "No subido":
+            ruta = os.path.join("media", "evidencias", archivo)
+            if os.path.exists(ruta):
+                os.remove(ruta)
+
+        messages.success(request, "La evidencia fue eliminada correctamente.")
+
+    except Exception as e:
+        messages.error(request, f"Error al eliminar evidencia: {e}")
+
+    finally:
+        if cursor: cursor.close()
+        if conexion and conexion.is_connected(): conexion.close()
+
+    return redirect("evidencias")
+
 
 def datos_coor(request, id):
     # Conexion a base de datos
