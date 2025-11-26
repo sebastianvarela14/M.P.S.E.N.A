@@ -77,8 +77,8 @@ urlpatterns = [
     path("trimestre_observador/", views.trimestre_observador, name="trimestre_observador"),
     path("adentro_material_observador/", views.adentro_material_observador, name="adentro_material_observador"),
     path("material_principal_observador/", views.material_principal_observador, name="material_principal_observador"),
-    path("evidencia_guia_observador/", views.evidencia_guia_observador, name="evidencia_guia_observador"),
-    path("evidencias_observador/", views.evidencias_observador, name="evidencias_observador"),
+    path("evidencia_guia_observador/<int:id>/", views.evidencia_guia_observador, name="evidencia_guia_observador"),
+    path("evidencias_observador/<int:ficha_id>", views.evidencias_observador, name="evidencias_observador"),
     path("adentro_material_coordinador/", views.adentro_material_coordinador, name="adentro_material_coordinador"),
     path("carpetas_coordinador/", views.carpetas_coordinador, name="carpetas_coordinador"),
     path("evidencia_guia_coordinador/<int:id>/", views.evidencia_guia_coordinador, name="evidencia_guia_coordinador"),
@@ -136,8 +136,7 @@ urlpatterns = [
     path("carpetas_aprendiz_crear/", views.carpetas_aprendiz_crear, name="carpetas_aprendiz_crear"),
     path("carpetas_aprendiz_editar/", views.carpetas_aprendiz_editar, name="carpetas_aprendiz_editar"),
     path("datos_ins_editar/", views.datos_ins_editar, name="datos_ins_editar"),
-    path("coordinador_editar/", views.coordinador_editar, name="coordinador_editar"),
-    path("coordinador_agregar/", views.coordinador_agregar, name="coordinador_agregar"),
+    path("coordinador_editar/<int:id>/", views.coordinador_editar, name="coordinador_editar"),    path("coordinador_agregar/", views.coordinador_agregar, name="coordinador_agregar"),
     path("carpetas2_editar/", views.carpetas2_editar, name="carpetas2_editar"),
     path("carpetas2_crear/", views.carpetas2_crear, name="carpetas2_crear"),
     path("administrar_usuario/", views.administrar_usuario, name="administrar_usuario"),
@@ -153,8 +152,9 @@ urlpatterns = [
     path('datos_coor/<int:id>/', views.datos_coor, name='datos_coor'),
     path("eliminar_asignatura/<int:asig_id>/<int:ficha_id>/", views.eliminar_asignatura, name="eliminar_asignatura"),
     path('ficha_coordinador_editar/<int:id>/', views.ficha_coordinador_editar, name='ficha_coordinador_editar'),
-    path("seleccionar_ficha_observador/<int:id_ficha>/", views.seleccionar_ficha_observador, name="seleccionar_ficha_observador"),
-    path("opc_equipoejecutor_coordinador/", views.opc_equipoejecutor_coordinador, name="opc_equipoejecutor_coordinador"),
+    path("seleccionar_ficha_observador/<int:id_ficha>/", views.seleccionar_ficha_observador, name="seleccionar_ficha_observador"),    path("opc_equipoejecutor_coordinador/", views.opc_equipoejecutor_coordinador, name="opc_equipoejecutor_coordinador"),
     path("equipo_ejecutor_coordinador/", views.equipo_ejecutor_coordinador, name="equipo_ejecutor_coordinador"),
     path("portafolio_coordinador/", views.portafolio_coordinador, name="portafolio_coordinador"),
+
+
     ]
