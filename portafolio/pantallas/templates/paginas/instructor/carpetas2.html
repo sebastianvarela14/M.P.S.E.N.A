@@ -92,7 +92,7 @@
 <body>
 
   <div class="container d-flex justify-content-center mt-5 flex-wrap" style="gap: 40px;">
-    <a href="{% url 'portafolio' ficha.id %}" class="btn btn-card shadow-sm">
+    <a href="{% if ficha %}{% url 'portafolio' ficha.id %}{% else %}#{% endif %}" class="btn btn-card shadow-sm">
       <i class="bi bi-folder"></i>
       <span>Portafolio</span>
     </a>

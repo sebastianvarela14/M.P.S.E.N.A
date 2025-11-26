@@ -1795,3 +1795,6 @@ def opc_equipoejecutor_coordinador(request):
         "data": data,
         "ficha": ficha
     })
+
+def crear_material(request):
+    return render(request, "paginas/instructor/crear_material.html")

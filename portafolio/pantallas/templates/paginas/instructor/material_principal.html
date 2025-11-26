@@ -64,11 +64,10 @@
   </div>
 
   <!-- BOTÓN FLOTANTE QUE ABRE EL MODAL -->
-  <button class="btn btn-success rounded-circle btn-fixed-plus"
-          data-bs-toggle="modal"
-          data-bs-target="#modalAgregarMaterial">
-      <i class="bi bi-plus-lg fs-4"></i>
-  </button>
+  <a href="{% url 'crear_material' %}" class="btn btn-fixed-plus btn-success rounded-circle">
+    <i class="bi bi-plus-lg fs-3 text-white"></i>
+  </a>
+
 
   <!-- ============================================================== -->
   <!-- ======================= MODAL AGREGAR MATERIAL =============== -->
