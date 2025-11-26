@@ -336,24 +336,52 @@ def portafolio(request, ficha_id):
 def taller(request):
     return render(request, "paginas/instructor/taller.html")
 
+import unicodedata
+
+def normalizar(texto):
+    if not texto:
+        return ""
+    texto = texto.lower()
+    texto = ''.join(c for c in unicodedata.normalize('NFD', texto)
+                    if unicodedata.category(c) != 'Mn')
+    return texto.strip()
+
+
+def normalizar(texto):
+    """Convierte texto a minúsculas y elimina tildes para comparar correctamente."""
+    if not texto:
+        return ""
+    texto = texto.lower()
+    texto = ''.join(
+        c for c in unicodedata.normalize('NFD', texto)
+        if unicodedata.category(c) != 'Mn'
+    )
+    return texto.strip()
+
 
 def carpetasins(request):
-    # Orden personalizado
+    # Orden personalizado normalizado
     orden = [
-        "Plan concertado",
-        "Guías de aprendizaje",
-        "Evidencias de aprendizaje",
-        "Planes de acción de mejora",
-        "Formato diligenciado de Planeación, Seguimiento y Evaluación Etapa productiva."
+        "plan concertado",
+        "guias de aprendizaje",
+        "evidencias de aprendizaje",
+        "planes de accion de mejora",
+        "formato diligenciado de planeacion, seguimiento y evaluacion etapa productiva."
     ]
 
-    # Obtener todas las carpetas
+    orden_normalizado = [normalizar(o) for o in orden]
+
+    # Obtener carpetas desde BD
     carpetas = Carpetas.objects.all()
 
-    # Orden personalizado
+    # Ordenarlas según el orden definido
     carpetas = sorted(
         carpetas,
-        key=lambda c: orden.index(c.nombre) if c.nombre in orden else 999
+        key=lambda c: (
+            orden_normalizado.index(normalizar(c.nombre))
+            if normalizar(c.nombre) in orden_normalizado
+            else 999
+        )
     )
 
     # Agregar archivos a cada carpeta
@@ -1256,20 +1284,8 @@ def material_editar(request):
 def evidencia_guia_editar(request):
     return render(request, "paginas/instructor/evidencia_guia_editar.html")
 
-
-def carpetasins_editar(request, carpeta_id):
-    carpeta = get_object_or_404(Carpetas, id=carpeta_id)
-
-    if request.method == "POST":
-        carpeta.nombre = request.POST.get("nombre")
-        carpeta.descripcion = request.POST.get("descripcion")
-        carpeta.save()
-        return redirect("carpetasins")
-
-    return render(request, "paginas/instructor/carpetasins_editar.html", {
-        "carpeta": carpeta,
-    })
-
+def carpetasins_editar(request):
+    return render(request, "paginas/instructor/carpetasins_editar.html")
 
 def carpetasins_crear(request):
     return render(request, "paginas/instructor/carpetasins_crear.html")
