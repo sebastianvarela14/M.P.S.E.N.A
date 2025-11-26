@@ -338,7 +338,71 @@ def taller(request):
 
 
 def carpetasins(request):
-    return render(request, "paginas/instructor/carpetasins.html")
+    # Orden personalizado
+    orden = [
+        "Plan concertado",
+        "Guías de aprendizaje",
+        "Evidencias de aprendizaje",
+        "Planes de acción de mejora",
+        "Formato diligenciado de Planeación, Seguimiento y Evaluación Etapa productiva."
+    ]
+
+    # Obtener todas las carpetas
+    carpetas = Carpetas.objects.all()
+
+    # Orden personalizado
+    carpetas = sorted(
+        carpetas,
+        key=lambda c: orden.index(c.nombre) if c.nombre in orden else 999
+    )
+
+    # Agregar archivos a cada carpeta
+    for carpeta in carpetas:
+        carpeta.archivos = Archivos.objects.filter(idcarpetas=carpeta.id)
+
+    return render(request, "paginas/instructor/carpetasins.html", {
+        "carpetas": carpetas
+    })
+
+
+def archivo_agregar(request, carpeta_id):
+    carpeta = get_object_or_404(Carpetas, id=carpeta_id)
+
+    if request.method == "POST":
+        archivo_subido = request.FILES.get("archivo")
+
+        Archivos.objects.create(
+            nombre_archivo=request.POST.get("nombre_archivo"),
+            fecha_entrega=request.POST.get("fecha_entrega"),
+            archivo=archivo_subido,
+            idcarpetas=carpeta
+        )
+        return redirect("carpetasins")
+
+    return render(request, "paginas/instructor/archivo_form.html", {
+        "carpeta": carpeta,
+    })
+
+
+def archivo_editar(request, archivo_id):
+    archivo = get_object_or_404(Archivos, id=archivo_id)
+
+    if request.method == "POST":
+        archivo.nombre_archivo = request.POST.get("nombre_archivo")
+        archivo.fecha_entrega = request.POST.get("fecha_entrega")
+        archivo.save()
+        return redirect("carpetasins")
+
+    return render(request, "paginas/instructor/archivo_form.html", {
+        "archivo": archivo,
+    })
+
+
+def archivo_eliminar(request, archivo_id):
+    archivo = get_object_or_404(Archivos, id=archivo_id)
+    archivo.delete()
+    return redirect("carpetasins")
+
 
 def trimestre(request):
     ficha_id = request.session.get("ficha_actual")
@@ -1195,8 +1259,20 @@ def material_editar(request):
 def evidencia_guia_editar(request):
     return render(request, "paginas/instructor/evidencia_guia_editar.html")
 
-def carpetasins_editar(request):
-    return render(request, "paginas/instructor/carpetasins_editar.html")
+
+def carpetasins_editar(request, carpeta_id):
+    carpeta = get_object_or_404(Carpetas, id=carpeta_id)
+
+    if request.method == "POST":
+        carpeta.nombre = request.POST.get("nombre")
+        carpeta.descripcion = request.POST.get("descripcion")
+        carpeta.save()
+        return redirect("carpetasins")
+
+    return render(request, "paginas/instructor/carpetasins_editar.html", {
+        "carpeta": carpeta,
+    })
+
 
 def carpetasins_crear(request):
     return render(request, "paginas/instructor/carpetasins_crear.html")
