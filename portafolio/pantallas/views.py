@@ -336,24 +336,52 @@ def portafolio(request, ficha_id):
 def taller(request):
     return render(request, "paginas/instructor/taller.html")
 
+import unicodedata
+
+def normalizar(texto):
+    if not texto:
+        return ""
+    texto = texto.lower()
+    texto = ''.join(c for c in unicodedata.normalize('NFD', texto)
+                    if unicodedata.category(c) != 'Mn')
+    return texto.strip()
+
+
+def normalizar(texto):
+    """Convierte texto a minúsculas y elimina tildes para comparar correctamente."""
+    if not texto:
+        return ""
+    texto = texto.lower()
+    texto = ''.join(
+        c for c in unicodedata.normalize('NFD', texto)
+        if unicodedata.category(c) != 'Mn'
+    )
+    return texto.strip()
+
 
 def carpetasins(request):
-    # Orden personalizado
+    # Orden personalizado normalizado
     orden = [
-        "Plan concertado",
-        "Guías de aprendizaje",
-        "Evidencias de aprendizaje",
-        "Planes de acción de mejora",
-        "Formato diligenciado de Planeación, Seguimiento y Evaluación Etapa productiva."
+        "plan concertado",
+        "guias de aprendizaje",
+        "evidencias de aprendizaje",
+        "planes de accion de mejora",
+        "formato diligenciado de planeacion, seguimiento y evaluacion etapa productiva."
     ]
 
-    # Obtener todas las carpetas
+    orden_normalizado = [normalizar(o) for o in orden]
+
+    # Obtener carpetas desde BD
     carpetas = Carpetas.objects.all()
 
-    # Orden personalizado
+    # Ordenarlas según el orden definido
     carpetas = sorted(
         carpetas,
-        key=lambda c: orden.index(c.nombre) if c.nombre in orden else 999
+        key=lambda c: (
+            orden_normalizado.index(normalizar(c.nombre))
+            if normalizar(c.nombre) in orden_normalizado
+            else 999
+        )
     )
 
     # Agregar archivos a cada carpeta
@@ -1359,11 +1387,47 @@ def datos_ins_editar(request):
         "usuario": usuario
     })
 
-def coordinador_editar(request):
-    return render(request, "paginas/coordinador/coordinador_editar.html")
+def coordinador_editar(request, id):
+    ficha = get_object_or_404(Ficha, id=id)
+    jornadas = Jornada.objects.all()
+    programas = Programa.objects.all()
+
+    if request.method == "POST":
+        ficha.numero_ficha = request.POST.get("numero_ficha")
+        ficha.idjornada_id = request.POST.get("idjornada")
+        ficha.idprograma_id = request.POST.get("idprograma")
+        ficha.save()
+
+        return redirect("coordinador")  # regresa al listado
+
+    return render(request, "paginas/coordinador/coordinador_editar.html", {
+        "ficha": ficha,
+        "jornadas": jornadas,
+        "programas": programas
+    })
 
 def coordinador_agregar(request):
-    return render(request, "paginas/coordinador/coordinador_agregar.html")
+    jornadas = Jornada.objects.all()
+    programas = Programa.objects.all()
+
+    if request.method == "POST":
+        numero = request.POST.get("numero_ficha")
+        jornada = request.POST.get("idjornada")
+        programa = request.POST.get("idprograma")
+
+        Ficha.objects.create(
+            numero_ficha=numero,
+            idjornada_id=jornada,
+            idprograma_id=programa
+        )
+
+        return redirect("coordinador")  # volver al listado
+
+    return render(request, "paginas/coordinador/coordinador_agregar.html", {
+        "jornadas": jornadas,
+        "programas": programas
+    })
+
 
 def carpetas2_editar(request):
     return render(request, "paginas/instructor/carpetas2_editar.html")
