@@ -12,9 +12,6 @@ urlpatterns = [
     path("material/", views.material, name="material"),
 
     path("portafolio_aprendices/<int:ficha_id>/", views.portafolio_aprendices, name="portafolio_aprendices"),
-    path("trimestre1/", views.trimestre1, name="trimestre1"),
-    path("trimestre2/", views.trimestre2, name="trimestre2"),
-    path("trimestre3/", views.trimestre3, name="trimestre3"),
 
     path("calificacion/", views.calificacion, name="calificacion"),
     path("tarea/", views.tarea, name="tarea"),
@@ -82,7 +79,7 @@ urlpatterns = [
     path("adentro_material_observador/", views.adentro_material_observador, name="adentro_material_observador"),
     path("material_principal_observador/", views.material_principal_observador, name="material_principal_observador"),
     path("evidencia_guia_observador/", views.evidencia_guia_observador, name="evidencia_guia_observador"),
-    path("evidencias_observador/", views.evidencias_observador, name="evidencias_observador"),
+    path('evidencias_observador/<int:ficha_id>/', views.evidencias_observador, name='evidencias_observador'),
     path("adentro_material_coordinador/", views.adentro_material_coordinador, name="adentro_material_coordinador"),
     path("carpetas_coordinador/", views.carpetas_coordinador, name="carpetas_coordinador"),
     path("evidencia_guia_coordinador/<int:id>/", views.evidencia_guia_coordinador, name="evidencia_guia_coordinador"),
@@ -133,8 +130,9 @@ urlpatterns = [
     path("fichas_equipoejecutor_coordinador/", views.fichas_equipoejecutor_coordinador, name="fichas_equipoejecutor_coordinador"),
     path("equipo_coordinador/", views.equipo_coordinador, name="equipo_coordinador"),
     path("material_editar/", views.material_editar, name="material_editar"),
-    path("evidencia_guia_editar/", views.evidencia_guia_editar, name="evidencia_guia_editar"),
-    
+    path("evidencia_guia_editar/<int:evidencia_id>/", views.evidencia_guia_editar, name="evidencia_guia_editar"),
+    path("evidencia/eliminar/", views.eliminar_evidencia, name="eliminar_evidencia"),
+
     path('carpetasins_editar/<int:carpeta_id>/', views.carpetasins_editar, name='carpetasins_editar'),
 
     path("evidencia/eliminar/<int:evidencia_id>/", views.eliminar_evidencia, name="eliminar_evidencia"),
