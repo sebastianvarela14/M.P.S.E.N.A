@@ -111,29 +111,21 @@
         <thead>
         <tr>
             <th scope="col">Aprendiz</th>
-            {% for guia in guias_ficha %}
-                <th scope="col">{{ guia.titulo }}</th>
-            {% endfor %}
+            <th scope="col">Guía Logica</th>
+            <th scope="col">Proyecto Final</th>
         </tr>
         </thead>
         <tbody>
-        {% for item in aprendices_calificaciones %}
-            <tr>
-                <th scope="row">{{ item.aprendiz.nombres|title }} {{ item.aprendiz.apellidos|title }}</th>
-                {% for calificacion in item.calificaciones %}
-                    <td class="{{ calificacion.clase_css }}">
-                        {{ calificacion.texto }}
-                        {% if calificacion.url %}
-                            <br><a href="{{ calificacion.url }}">ver</a>
-                        {% endif %}
-                    </td>
-                {% endfor %}
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="{{ guias_ficha|length|add:1 }}">No hay aprendices asignados a esta ficha.</td>
-            </tr>
-        {% endfor %}
+        <tr>
+            <th scope="row">Julia Andrea Quiroga</th>
+            <td>Sin calificar <br><a href="{% url 'evidencia_calificar' %}">ver</a></td>
+            <td>100/100 <br><a href="">ver</a></td>
+        </tr>
+        <tr>
+            <th scope="row">Santiago Andres Padilla Ortiz</th>
+            <td>100/100 <br><a href="{% url 'evidencia_calificada' %}">ver</a></td>
+            <td>Sin calificar <br><a href="#">ver</a></td>
+        </tr>
         </tbody>
     </table>
 </body>

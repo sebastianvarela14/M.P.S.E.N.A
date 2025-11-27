@@ -71,6 +71,17 @@
 
     <h4 class="fw-bold mb-4">EVIDENCIAS</h4>
 
+
+<!-- ENCABEZADO TÉCNICO -->
+<div class="d-flex align-items-center mb-3">
+    <h5 class="fw-bold text-success mb-0 me-3">TÉCNICO</h5>
+    <div style="height: 3px; background: #198754; flex-grow: 1; border-radius: 4px;"></div>
+</div>
+
+
+
+
+
     {% for e in evidencias %}
     <a href="{% url 'evidencia_guia_coordinador' e.id %}" class="nav-link text-dark">
         <div class="card shadow-sm border-0 rounded-3 mb-3">
@@ -97,6 +108,7 @@
 
 </div>
 
+<div style="height: 3px; background: #198754; border-radius: 4px; margin-top: 10px;"></div>
 
 
     <!-- Botón fijo Calificaciones -->

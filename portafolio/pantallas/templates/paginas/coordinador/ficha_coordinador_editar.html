@@ -1,4 +1,4 @@
-{% extends "plantillacoor_inicio.html" %}
+{% extends "plantillacoor.html" %}
 {% load static %}
 
 {% block contenido %}
@@ -119,20 +119,8 @@
             </select>
         </div>
 
-<div class="mb-3">
-    <label>Nombre del Programa</label>
-    <select class="form-select custom-input" name="nombre_programa">
-        <option selected>Hadware</option>
-        <option selected>Fotografia</option>
-        <option selected>Diseño Gráfico</option>
-        <option selected>Programación de Software</option>
-    </select>
-</div>
-
-
-
         <div class="btn-container">
-            <a href="{% url 'coordinador' %}" class="btn btn-cancelar">Cancelar</a>
+            <a href="{% url 'ficha_coordinador' %}" class="btn btn-cancelar">Cancelar</a>
             <button type="submit" class="btn btn-success">Guardar Cambios</button>
         </div>
     </form>

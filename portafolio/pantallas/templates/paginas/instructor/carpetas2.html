@@ -92,7 +92,7 @@
 <body>
 
   <div class="container d-flex justify-content-center mt-5 flex-wrap" style="gap: 40px;">
-    <a href="{% url 'portafolio' ficha.id %}" class="btn btn-card shadow-sm">
+    <a href="{% url 'portafolio' ficha_id %}" class="btn btn-card shadow-sm">
       <i class="bi bi-folder"></i>
       <span>Portafolio</span>
     </a>
@@ -108,19 +108,6 @@
       <span>Material</span>
     </a>
   </div>
-
-<!-- Botones flotantes -->
-<div class="floating-buttons">
-    
-    <!-- Botón "+" convertido en enlace -->
-    <a href="{% url 'carpetas2_crear' %}" class="btn btn-float shadow">
-        <i class="bi bi-plus-lg"></i>
-    </a>
-
-    <!-- Botón Editar convertido en enlace -->
-    <a href="{% url 'carpetas2_editar' %}" class="btn btn-float shadow">
-        <i class="bi bi-pencil-square"></i>
-    </a>
 
 </div>
 

@@ -107,15 +107,41 @@
     </div>
 
     <!-- Botones -->
-    
-    <div id="button-container" class="btn-container">
-        {% for ficha in fichas %}
-            <a href="{% url 'seleccionar_ficha' ficha.id %}" class="btn-custom">
-                #{{ ficha.numero_ficha }}
-            </a>
-        {% endfor %}
+<div id="button-container" class="btn-container">
+    {% for ficha in fichas %}
+    <div class="ficha-wrapper" style="position: relative;">
+
+        <!-- Botón de seleccionar ficha -->
+        <a href="{% url 'seleccionar_ficha' ficha.id %}" class="btn-custom">
+            #{{ ficha.numero_ficha }}
+        </a>
+
+        <!-- Botón pequeño de editar en la esquina -->
+        <a href="{% url 'coordinador_editar' ficha.id %}"
+           title="Editar ficha"
+           style="
+                position: absolute;
+                top: -6px;
+                right: -6px;
+                background-color: #2ecc71;
+                color: white;
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+           ">
+            <i class="bi bi-pencil"></i>
+        </a>
+
     </div>
-    
+    {% endfor %}
+</div>
+
 <!-- Botones flotantes -->
 <div class="floating-buttons">
     <!-- Botón "+" -->
@@ -123,12 +149,26 @@
         <i class="bi bi-plus-lg fs-4"></i>
     </a>
 
-    <!-- Botón Editar -->
-    <a href="{% url 'coordinador_editar' %}" class="btn btn-success rounded-circle" title="Editar">
-        <i class="bi bi-pencil-square fs-5"></i>
-    </a>
-</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("searchInput");
+    const fichas = document.querySelectorAll(".ficha-wrapper");
 
+    searchInput.addEventListener("input", function () {
+        const query = this.value.toLowerCase().trim();
+
+        fichas.forEach(ficha => {
+            const numero = ficha.textContent.toLowerCase();
+
+            if (numero.includes(query)) {
+                ficha.style.display = "block";
+            } else {
+                ficha.style.display = "none";
+            }
+        });
+    });
+});
+</script>
 
 
 
