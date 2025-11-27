@@ -94,14 +94,6 @@ def portafolio_aprendices(request, ficha_id):
         "aprendices": aprendices
     })
 
-def trimestre1(request):
-    return render(request, "paginas/carpetas.html")
-
-def trimestre2(request):
-    return render(request, "paginas/carpetas.html")
-
-def trimestre3(request):
-    return render(request, "paginas/carpetas.html")
 
 def fichas_ins(request):
     if 'usuario' not in request.session:
@@ -473,7 +465,30 @@ def adentro_material(request):
     return render(request, "paginas/instructor/adentro_material.html")
 
 def lista_aprendices1(request):
-    return render(request, "paginas/aprendiz/lista_aprendices1.html")
+    conexion = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+    
+
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT u.id, u.nombres, u.apellidos
+        FROM usuario u
+        WHERE u.id IN (3, 4)
+    """)
+
+    aprendices = cursor.fetchall()
+
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/aprendiz/lista_aprendices1.html", {
+        "aprendices": aprendices
+    })
 
 def datoslaura(request):
     return render(request, "paginas/aprendiz/datoslaura.html")
@@ -578,7 +593,24 @@ def entrada(request, asignatura_id):
     })
 
 def trimestre_laura(request):
-    return render(request, "paginas/aprendiz/trimestre_laura.html")
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+    return render(request, "paginas/aprendiz/trimestre_laura.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
 
 def carpetas_laura(request):
     return render(request, "paginas/aprendiz/carpetas_laura.html")
@@ -663,12 +695,6 @@ def evidencias_observador(request, ficha_id):
     return render(request, "paginas/observador/evidencias_observador.html", {
         "evidencias": evidencias
     })
-
-def adentro_material_coordinador(request):
-    return render(request, "paginas/observador/evidencias_observador.html")
-
-def evidencias_observador(request):
-    return render(request, "paginas/observador/evidencias_observador.html")
 
 def adentro_material_coordinador(request):
     return render(request, "paginas/coordinador/adentro_material_coordinador.html")
@@ -1334,43 +1360,6 @@ def evidencia_guia_editar(request, evidencia_id):
     return render(request, "paginas/instructor/evidencia_guia_editar.html", {
         "evidencia": evidencia
     })
-
-def eliminar_evidencia(request, evidencia_id):
-    # Traer la evidencia, si no existe devuelve 404
-    conexion = None
-    try:
-        import mysql.connector
-        conexion = mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
-        )
-        cursor = conexion.cursor(dictionary=True)
-
-        cursor.execute("SELECT archivo FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
-        evidencia = cursor.fetchone()
-        if not evidencia:
-            return redirect('evidencias')  # Si no existe, redirigir a la lista
-
-        archivo = evidencia['archivo']
-
-        # Eliminar de la base de datos
-        cursor.execute("DELETE FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
-        conexion.commit()
-
-        # Eliminar archivo físico si existe
-        if archivo and archivo != 'No subido':
-            ruta = os.path.join('media', 'evidencias', archivo)
-            if os.path.exists(ruta):
-                os.remove(ruta)
-
-    finally:
-        if conexion:
-            cursor.close()
-            conexion.close()
-
-    return redirect('evidencias')
 
 
 def carpetasins_editar(request, carpeta_id):

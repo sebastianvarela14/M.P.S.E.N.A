@@ -12,9 +12,6 @@ urlpatterns = [
     path("material/", views.material, name="material"),
 
     path("portafolio_aprendices/<int:ficha_id>/", views.portafolio_aprendices, name="portafolio_aprendices"),
-    path("trimestre1/", views.trimestre1, name="trimestre1"),
-    path("trimestre2/", views.trimestre2, name="trimestre2"),
-    path("trimestre3/", views.trimestre3, name="trimestre3"),
 
     path("calificacion/", views.calificacion, name="calificacion"),
     path("tarea/", views.tarea, name="tarea"),
@@ -82,7 +79,7 @@ urlpatterns = [
     path("adentro_material_observador/", views.adentro_material_observador, name="adentro_material_observador"),
     path("material_principal_observador/", views.material_principal_observador, name="material_principal_observador"),
     path("evidencia_guia_observador/", views.evidencia_guia_observador, name="evidencia_guia_observador"),
-    path("evidencias_observador/", views.evidencias_observador, name="evidencias_observador"),
+    path('evidencias_observador/<int:ficha_id>/', views.evidencias_observador, name='evidencias_observador'),
     path("adentro_material_coordinador/", views.adentro_material_coordinador, name="adentro_material_coordinador"),
     path("carpetas_coordinador/", views.carpetas_coordinador, name="carpetas_coordinador"),
     path("evidencia_guia_coordinador/<int:id>/", views.evidencia_guia_coordinador, name="evidencia_guia_coordinador"),
