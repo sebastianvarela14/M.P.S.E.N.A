@@ -18,7 +18,7 @@
     }
 
     .crear-header {
-        background: #198754; /* Verde estilo SENA */
+        background: #198754;
         color: white;
         padding: 30px;
         text-align: center;
@@ -48,9 +48,9 @@
 
 <div class="container mt-4 mb-5">
 
-    <!-- ENCABEZADO BONITO -->
     <div class="card card-crear">
 
+        <!-- ENCABEZADO -->
         <div class="crear-header">
             <h4>📚 Agregar Nuevo Material</h4>
             <p class="mb-0">Completa la información para subir un nuevo material</p>
@@ -66,14 +66,14 @@
                 <div class="mb-3">
                     <label class="form-label">Título del Material</label>
                     <input type="text" class="form-control rounded-3"
-                        name="titulo" placeholder="Ej: Material de apoyo guía 1" required>
+                        name="titulo" placeholder="Ej: Guía de apoyo 1" required>
                 </div>
 
                 <!-- Descripción -->
                 <div class="mb-3">
                     <label class="form-label">Descripción</label>
                     <textarea class="form-control rounded-3" name="descripcion" rows="4"
-                            placeholder="Describe brevemente el contenido del material..." required></textarea>
+                            placeholder="Describe el contenido del material..." required></textarea>
                 </div>
 
                 <!-- Archivo -->
@@ -81,12 +81,6 @@
                     <label class="form-label">📎 Archivo (opcional)</label>
                     <input type="file" name="archivo" class="form-control rounded-3">
                     <small class="text-muted">Puedes subir PDF, imágenes, Word, etc.</small>
-                </div>
-
-                <!-- Fecha -->
-                <div class="mb-3">
-                    <label class="form-label">Fecha de entrega (opcional)</label>
-                    <input type="date" name="fecha_entrega" class="form-control rounded-3">
                 </div>
 
                 <!-- BOTONES -->
