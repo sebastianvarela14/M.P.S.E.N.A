@@ -77,13 +77,30 @@ class EvidenciasInstructor(models.Model):
 
 
 class Ficha(models.Model):
-    numero_ficha = models.IntegerField(db_comment='aqui se define a cual ficha pertenece')
-    idjornada = models.ForeignKey('Jornada', models.DO_NOTHING, db_column='idjornada', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla ficha con jornada')
-    idprograma = models.ForeignKey('Programa', models.DO_NOTHING, db_column='idprograma', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla ficha con programa')
+    numero_ficha = models.IntegerField()
+    idjornada = models.ForeignKey('Jornada', models.DO_NOTHING, db_column='idjornada', null=True, blank=True)
+    idprograma = models.ForeignKey('Programa', models.DO_NOTHING, db_column='idprograma', null=True, blank=True)
+    nombre_programa = models.ForeignKey(
+        'NombrePrograma',
+        models.DO_NOTHING,
+        db_column='idnombre_programa',
+        null=True,
+        blank=True
+    )
+
+    ESTADOS = (
+        ('Activa', 'Activa'),
+        ('Inactiva', 'Inactiva'),
+        ('Finalizada', 'Finalizada'),
+    )
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='Activa')
 
     class Meta:
         managed = False
         db_table = 'ficha'
+
+
+
 
 
 class FichaCarpetas(models.Model):
@@ -226,4 +243,15 @@ class ArchivoInstructorFicha(models.Model):
     class Meta:
         managed = True
         db_table = 'archivo_instructor_ficha'
+
+class NombrePrograma(models.Model):
+    nombre = models.CharField(max_length=200, unique=True)
+
+    class Meta:
+        managed = False   # si la tabla ya existe
+        db_table = 'nombre_programa'
+
+    def __str__(self):
+        return self.nombre
+
 
