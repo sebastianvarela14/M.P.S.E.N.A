@@ -1,97 +1,116 @@
 {% extends "plantillains.html" %}
 
-{% block contenido %} 
+{% block contenido %}
 
-
-    <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Apoyo Guía Uno</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        /* Estilo del botón flotante */
-        .btn-edit {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        border-radius: 50%;
-        width: 55px;
-        height: 55px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        z-index: 999;
-        }
-    </style>
-    </head>
-    <body class="bg-light">
-
-    <div class="container mt-5">
-        <div class="card shadow-lg border-0 rounded-3">
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-3">
         <div class="card-body p-4">
-            <!-- Título -->
+
+            <!-- TÍTULO -->
             <h3 class="fw-bold text-success mb-3">
-            <i class="bi bi-journal-text"></i> Apoyo proyecto final
+                <i class="bi bi-journal-text"></i> {{ material.titulo }}
             </h3>
 
-            <!-- Descripción -->
+            <!-- DESCRIPCIÓN -->
+            {% if material.descripcion %}
             <p class="text-muted mb-4">
-            Este material corresponde al acompañamiento para la elaboración del proyecto final. 
-            Aquí encontrarás lineamientos, recursos prácticos y ejemplos que servirán como guía 
-            para estructurar, desarrollar y presentar de manera adecuada tu propuesta.
+                {{ material.descripcion }}
             </p>
+            {% endif %}
 
-            <!-- Archivos adjuntos -->
-            <h5 class="fw-semibold mb-3">
-            <i class="bi bi-paperclip"></i> Archivos adjuntos
-            </h5>
-            <ul class="list-group">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                <i class="bi bi-file-earmark-pdf text-danger"></i> Guía Proyecto final e instrucciones
-                </div>
-                <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-                </a>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                <i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega
-                </div>
-                <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-                </a>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                <i class="bi bi-file-earmark-image text-warning"></i> Ejemplo Ilustrativo
-                </div>
-                <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-                </a>
-            </li>
-            </ul>
+<!-- ARCHIVO ADJUNTO -->
+<h5 class="fw-semibold mb-3">
+    <i class="bi bi-paperclip"></i> Archivo adjunto
+</h5>
+
+{% if material.archivo %}
+<ul class="list-group">
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+
+        <!-- IZQUIERDA: BOTÓN ELIMINAR + ICONO + NOMBRE -->
+        <div class="d-flex align-items-center gap-2">
+            <!-- BOTÓN ELIMINAR PEQUEÑO -->
+            <form method="POST" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" name="eliminar_archivo" value="1"
+                        class="btn btn-sm btn-outline-danger p-1"
+                        title="Eliminar archivo">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+
+            <!-- ICONO DEL ARCHIVO -->
+            <i class="bi bi-file-earmark"></i>
+
+            <!-- NOMBRE DEL ARCHIVO -->
+            <span class="text-truncate" style="max-width: 200px;">
+                {{ material.archivo }}
+            </span>
         </div>
+
+        <!-- DERECHA: BOTÓN DESCARGAR -->
+        <a href="/media/{{ material.archivo }}" download
+        class="btn btn-sm btn-outline-success">
+            <i class="bi bi-download"></i> Descargar
+        </a>
+
+    </li>
+</ul>
+{% else %}
+<p class="text-muted">Este material no tiene archivos adjuntos.</p>
+{% endif %}
+
+
+
+{% if material.archivo %}
+<ul class="list-group">
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            {{ material.archivo }}
+        </div>
+
+        <a href="/media/{{ material.archivo }}" download
+        class="btn btn-sm btn-outline-success">
+            <i class="bi bi-download"></i> Descargar
+        </a>
+    </li>
+</ul>
+{% else %}
+<p class="text-muted">Este material no tiene archivos adjuntos.</p>
+{% endif %}
+
+
+            {% if material.archivo %}
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-file-earmark"></i>
+                        {{ material.archivo }}   <!-- muestra el nombre tal cual haya sido guardado -->
+
+                    </div>
+
+                    <a href="/media/{{ material.archivo }}" download
+                    class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-download"></i> Descargar
+                    </a>
+                </li>
+            </ul>
+            {% else %}
+            <p class="text-muted">Este material no tiene archivos adjuntos.</p>
+            {% endif %}
+
         </div>
     </div>
+</div>
 
-    <!-- Botón flotante de lápiz (Editar) -->
-    <button class="btn btn-success btn-edit">
-        <i class="bi bi-pencil-square"></i>
-    </button>
-
-    <!-- Botón flotante de eliminar -->
-<button class="btn btn-danger btn-delete" style="position: fixed; bottom: 20px; right: 90px; border-radius: 50%; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 999;">
-    <i class="bi bi-trash3"></i>
-</button>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
-    </html>
+<!-- BOTÓN EDITAR -->
+<a href="{% url 'material_editar' material.id %}"
+class="btn btn-success"
+style="position: fixed; bottom: 20px; right: 20px; border-radius: 50%;
+        width: 55px; height: 55px; display: flex; align-items: center;
+        justify-content: center; font-size: 1.5rem; z-index: 999;">
+    <i class="bi bi-pencil-square"></i>
+</a>
 
 
 {% endblock %}
