@@ -46,6 +46,12 @@
     <!-- Título -->
     <h4 class="fw-bold mb-4">MATERIAL</h4>
 
+<!-- ENCABEZADO TÉCNICO -->
+<div class="d-flex align-items-center mb-3">
+    <h5 class="fw-bold text-success mb-0 me-3">TÉCNICO</h5>
+    <div style="height: 3px; background: #198754; flex-grow: 1; border-radius: 4px;"></div>
+</div>
+
     <!-- Tarjeta de material 1 -->
     <a href="{% url 'adentro_material_coordinador' %}" class="nav-link text-dark">
       <div class="card shadow-sm border-0 rounded-3 mb-3">
@@ -64,24 +70,8 @@
       </div>
     </a>
 
-    <!-- Tarjeta de material 2 -->
-    <a href="{% url 'adentro_material1' %}" class="nav-link text-dark">
-      <div class="card shadow-sm border-0 rounded-3 mb-3">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center">
-            <i class="bi bi-folder-fill fs-3 text-success me-3"></i>
-            <div>
-              <p class="fw-bold mb-1">Material: Proyecto Final</p>
-              <small class="text-muted">Publicado: 12 / 07 / 2025</small>
-            </div>
-          </div>
-          <div class="text-end">
-            <small class="text-muted d-block">Entrega: 20 / 07 / 2025</small>
-          </div>
-        </div>
-      </div>
-    </a>
-  </div>
+<div style="height: 3px; background: #198754; border-radius: 4px; margin-top: 10px;"></div>
+
 
   <!-- Botón flotante con + -->
   <a href="{% url 'material' %}" class="btn btn-success rounded-circle btn-fixed-plus">
