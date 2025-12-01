@@ -80,6 +80,15 @@
       background-color: #1b5e20;
       transform: scale(1.1);
     }
+
+    select option {
+        text-transform: uppercase;
+    }
+
+    select, select option {
+    text-transform: uppercase;
+}
+
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -94,35 +103,29 @@
   <div class="label">Número de Ficha:</div>
   <div class="value">{{ ficha.numero_ficha }}</div>
 </div>
-
 <div class="row">
   <div class="label">Jornada:</div>
-  <div class="value">{{ ficha.idjornada.nombre }}</div>
+  <div class="value">{{ ficha.idjornada.nombre|upper }}</div>
 </div>
 
 <div class="row">
   <div class="label">Programa:</div>
-  <div class="value">{{ ficha.idprograma.programa }}</div>
+  <div class="value">{{ ficha.idprograma.programa|upper }}</div>
+</div>
+
+<div class="row">
+  <div class="label">Nombre del Programa:</div>
+  <div class="value">{{ ficha.nombre_programa.nombre|upper }}</div>
 </div>
 
 
-    <!-- MISMA FILA: Número de Aprendices y Estado de la Ficha -->
-    <div class="row-inline">
-      <div style="flex:1; display:flex; align-items:center;">
-        <div class="label">Número de Aprendices:</div>
-        <div class="value" id="numAprendices">20</div>
-      </div>
-      <div style="flex:1; display:flex; align-items:center;">
-        <div class="label">Estado de la Ficha:</div>
-        <div class="value" id="estadoFicha">Activa</div>
-      </div>
-    </div>
 
-    <div class="row">
-      <div class="label">Instructor Responsable:</div>
-      <div class="value" id="instructorResp">José Omar Calderón</div>
-    </div>
-  </div>
+<div class="row">
+  <div class="label">Estado de la Ficha:</div>
+  <div class="value" id="estadoFicha">{{ ficha.estado|upper }}</div>
+</div>
+
+
 
   <!-- Botón flotante Editar -->
 <a href="{% url 'ficha_coordinador_editar' ficha.id %}" class="btn-edit">

@@ -6,80 +6,105 @@
 <style>
     .agregar-container {
         max-width: 650px;
-        margin: 60px auto;
+        margin: 70px auto;
         background: #ffffff;
-        border-radius: 14px;
-        padding: 35px 40px;
-        box-shadow: 0 4px 18px rgba(0,0,0,0.12);
-        border-top: 6px solid #198754;
+        border-radius: 16px;
+        padding: 50px;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.12);
+        border-top: 7px solid #198754;
         animation: fadeInUp 0.6s ease;
     }
 
     h2 {
         text-align: center;
         color: #198754;
-        font-size: 24px;
+        font-size: 27px;
         font-weight: 700;
+        margin-bottom: 45px;
         letter-spacing: 1px;
-        margin-bottom: 30px;
-        text-transform: uppercase;
     }
 
     label {
         font-weight: 600;
-        color: #222;
         margin-bottom: 6px;
+        color: #222;
+        font-size: 15px;
     }
 
     .custom-input {
-        border-radius: 8px !important;
-        padding: 12px !important;
-        font-size: 16px !important;
+        border-radius: 10px !important;
+        padding: 14px !important;
+        font-size: 15.5px !important;
         border: 1px solid #cfcfcf;
         transition: 0.2s;
     }
 
     .custom-input:focus {
         border-color: #198754;
-        box-shadow: 0 0 4px rgba(25,135,84,0.5);
+        box-shadow: 0 0 5px rgba(25,135,84,0.4);
     }
 
+    /* Nuevo estilo del botón MÁS */
+    .btn-otro {
+        background: #198754;
+        color: white;
+        border: none;
+        padding: 7px 14px;
+        font-size: 16px;
+        border-radius: 50px; /* redondito */
+        margin-left: 10px;
+        transition: all 0.25s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        box-shadow: 0 3px 10px rgba(25,135,84,0.3);
+    }
+
+    .btn-otro:hover {
+        background: #146c43;
+        transform: scale(1.08);
+        box-shadow: 0 4px 12px rgba(20,108,67,0.35);
+    }
+
+    /* Botones finales */
     .btn-success {
         background-color: #198754 !important;
         border: none;
-        padding: 10px 18px;
-        border-radius: 8px;
-        font-size: 16px;
-    }
-
-    .btn-success:hover {
-        background-color: #146c43 !important;
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-size: 17px;
     }
 
     .btn-cancelar {
-        background: #c9c9c9;
+        background: #d1d1d1;
         color: #000;
-        padding: 10px 18px;
-        border-radius: 8px;
-        font-size: 16px;
-    }
-
-    .btn-cancelar:hover {
-        background: #b4b4b4;
+        padding: 12px 30px;
+        font-size: 17px;
+        border-radius: 10px;
     }
 
     .btn-container {
         display: flex;
         justify-content: flex-end;
-        margin-top: 30px;
-        gap: 10px;
+        gap: 15px;
+        margin-top: 40px;
+    }
+    select option {
+        text-transform: uppercase;
     }
 
+    select, select option {
+    text-transform: uppercase;
+}
+
+
     @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
+        from { opacity: 0; transform: translateY(25px); }
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
+
 
 <div class="agregar-container">
 
@@ -88,45 +113,71 @@
 
         <h2>➕ Agregar Ficha</h2>
 
-        <div class="mb-3">
+        <!-- Número de Ficha -->
+        <div class="mb-4">
             <label for="numeroFicha">Número de Ficha</label>
-            <input name="numero_ficha"
-                   type="number"
-                   id="numeroFicha"
-                   class="form-control custom-input">
+                <input name="numero_ficha"
+                    type="number"
+                    id="numeroFicha"
+                    class="form-control custom-input">
+            </div>
+
+        <!-- JORNADA -->
+        <div class="mb-4">
+            <label>Jornada</label>
+            <div class="d-flex">
+                <select name="idjornada" class="form-select custom-input">
+                    {% for j in jornadas %}
+                    <option value="{{ j.id }}">{{ j.nombre }}</option>
+                    {% endfor %}
+                </select>
+
+                <a href="{% url 'agregar_jornada' %}" class="btn-otro">+</a>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label for="jornada">Jornada</label>
-            <select name="idjornada" id="jornada" class="form-select custom-input">
-                {% for j in jornadas %}
-                <option value="{{ j.id }}">{{ j.nombre }}</option>
-                {% endfor %}
-            </select>
+        <!-- PROGRAMA -->
+        <div class="mb-4">
+            <label>Programa</label>
+            <div class="d-flex">
+                <select name="idprograma" class="form-select custom-input">
+                    {% for p in programas %}
+                    <option value="{{ p.id }}">{{ p.programa }}</option>
+                    {% endfor %}
+                </select>
+
+                <a href="{% url 'agregar_programa' %}" class="btn-otro">+</a>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label for="programa">Programa</label>
-            <select name="idprograma"
-                    id="programa"
-                    class="form-select custom-input">
-                {% for p in programas %}
-                <option value="{{ p.id }}">{{ p.programa }}</option>
-                {% endfor %}
-            </select>
-        </div>
+        <!-- NOMBRE DEL PROGRAMA -->
+        <div class="mb-4">
+            <label>Nombre del Programa</label>
+            <div class="d-flex">
+                <select class="form-select custom-input" name="nombre_programa">
+                    {% for np in nombres_programa %}
+                        <option value="{{ np.id }}"
+                            {% if ficha.nombre_programa_id == np.id %}selected{% endif %}>
+                            {{ np.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
 
-<div class="mb-3">
-    <label>Nombre del Programa</label>
-    <select class="form-select custom-input" name="nombre_programa">
-        <option selected>Hadware</option>
-        <option selected>Fotografia</option>
-        <option selected>Diseño Gráfico</option>
-        <option selected>Programación de Software</option>
+                <a href="{% url 'agregar_nombre_programa' %}" class="btn-otro">+</a>
+            </div>
+        </div>
+        
+<div class="mb-4">
+    <label>Estado de la Ficha</label>
+    <select name="estado" class="form-select custom-input">
+        <option value="Activa" {% if ficha.estado == "Activa" %}selected{% endif %}>ACTIVA</option>
+        <option value="Inactiva" {% if ficha.estado == "Inactiva" %}selected{% endif %}>INACTIVA</option>
+        <option value="Finalizada" {% if ficha.estado == "Finalizada" %}selected{% endif %}>FINALIZADA</option>
     </select>
 </div>
 
 
+        <!-- Botones -->
         <div class="btn-container">
             <a href="{% url 'coordinador' %}" class="btn btn-cancelar">Cancelar</a>
             <button type="submit" class="btn btn-success">Guardar</button>

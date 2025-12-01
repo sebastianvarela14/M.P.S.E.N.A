@@ -161,4 +161,7 @@ urlpatterns = [
     path("opc_equipoejecutor_coordinador/", views.opc_equipoejecutor_coordinador, name="opc_equipoejecutor_coordinador"),
     path("equipo_ejecutor_coordinador/", views.equipo_ejecutor_coordinador, name="equipo_ejecutor_coordinador"),
     path("portafolio_coordinador/", views.portafolio_coordinador, name="portafolio_coordinador"),
+    path("agregar_jornada/", views.agregar_jornada, name="agregar_jornada"),
+    path("agregar_programa/", views.agregar_programa, name="agregar_programa"),
+    path("agregar_nombre_programa/", views.agregar_nombre_programa, name="agregar_nombre_programa"),
     ]
