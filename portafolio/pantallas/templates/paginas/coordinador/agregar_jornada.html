@@ -1,0 +1,111 @@
+{% extends "plantillacoor_inicio.html" %}
+
+{% block contenido %}
+
+<style>
+    .agregar-container {
+        max-width: 550px;
+        margin: 60px auto;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 35px 40px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+        border-top: 6px solid #198754;
+        animation: fadeInUp 0.6s ease;
+    }
+
+    h2 {
+        text-align: center;
+        color: #198754;
+        font-size: 23px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 25px;
+        text-transform: uppercase;
+    }
+
+    label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 6px;
+    }
+
+    .custom-input {
+        border-radius: 10px !important;
+        padding: 12px !important;
+        font-size: 15px !important;
+        border: 1px solid #cfcfcf;
+        transition: 0.2s;
+    }
+
+    .custom-input:focus {
+        border-color: #198754;
+        box-shadow: 0 0 5px rgba(25,135,84,0.4);
+    }
+
+    .btn-success {
+        background-color: #198754 !important;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .btn-success:hover {
+        background-color: #146c43 !important;
+    }
+
+    .btn-cancelar {
+        background: #e2e2e2;
+        color: #000;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .btn-cancelar:hover {
+        background: #cfcfcf;
+    }
+
+    .btn-container {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 30px;
+    }
+
+    select option {
+        text-transform: uppercase;
+    }
+
+    select, select option {
+    text-transform: uppercase;
+}
+
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="agregar-container">
+
+<form method="POST">
+    {% csrf_token %}
+    <h2>➕ Agregar Jornada</h2>
+
+    <label>Nombre de la Jornada</label>
+    <input type="text" name="nombre" class="form-control custom-input" placeholder="Ejemplo: Mañana" required>
+
+    <div class="btn-container mt-4">
+        <a class="btn btn-cancelar" href="{% url 'coordinador_agregar' %}">Cancelar</a>
+        <button class="btn btn-success" type="submit">Guardar</button>
+    </div>
+</form>
+
+</div>
+
+{% endblock %}

@@ -422,6 +422,18 @@ def trimestre(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/instructor/trimestre.html", {
         "ficha": ficha_actual,
@@ -445,6 +457,18 @@ def trimestre_aprendiz(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/instructor/trimestre_aprendiz.html", {
         "ficha": ficha_actual,
@@ -606,6 +630,18 @@ def trimestre_laura(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/aprendiz/trimestre_laura.html", {
         "ficha": ficha_actual,
@@ -791,6 +827,18 @@ def trimestre_coordinador(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/coordinador/trimestre_coordinador.html", {
         "ficha": ficha_actual,
@@ -945,6 +993,18 @@ def trimestre_general_coordinador(request,):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/coordinador/trimestre_general_coordinador.html", {
         "ficha": ficha_actual,
@@ -965,6 +1025,18 @@ def trimestre_aprendiz_coordinador(request, ):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/coordinador/trimestre_aprendiz_coordinador.html", {
         "ficha": ficha_actual,
@@ -1215,9 +1287,13 @@ def ficha_coordinador(request):
     ficha_id = request.session.get("ficha_actual")
 
     if not ficha_id:
-        return redirect("coordinador")  # si no hay ficha seleccionada
+        return redirect("coordinador")
 
-    ficha = Ficha.objects.select_related("idjornada", "idprograma").get(id=ficha_id)
+    ficha = Ficha.objects.select_related(
+        "idjornada",
+        "idprograma",
+        "nombre_programa"  
+    ).get(id=ficha_id)
 
     return render(request, "paginas/coordinador/ficha_coordinador.html", {
         "ficha": ficha
@@ -1318,6 +1394,18 @@ def equipo_ejecutor(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/instructor/equipo_ejecutor.html", {
         "ficha": ficha_actual,
@@ -1468,42 +1556,144 @@ def coordinador_editar(request, id):
     ficha = get_object_or_404(Ficha, id=id)
     jornadas = Jornada.objects.all()
     programas = Programa.objects.all()
+    nombres_programa = NombrePrograma.objects.all()
 
     if request.method == "POST":
         ficha.numero_ficha = request.POST.get("numero_ficha")
         ficha.idjornada_id = request.POST.get("idjornada")
         ficha.idprograma_id = request.POST.get("idprograma")
-        ficha.save()
+        ficha.nombre_programa_id = request.POST.get("nombre_programa")
+        ficha.estado = request.POST.get("estado")
 
-        return redirect("coordinador")  # regresa al listado
+        ficha.save()
+        return redirect("coordinador")
 
     return render(request, "paginas/coordinador/coordinador_editar.html", {
         "ficha": ficha,
         "jornadas": jornadas,
-        "programas": programas
+        "programas": programas,
+        "nombres_programa": nombres_programa
     })
+
 
 def coordinador_agregar(request):
     jornadas = Jornada.objects.all()
     programas = Programa.objects.all()
+    nombres_programa = NombrePrograma.objects.all()
 
     if request.method == "POST":
         numero = request.POST.get("numero_ficha")
+        aprendices = request.POST.get("numero_aprendices")
+        estado = request.POST.get("estado")
+
         jornada = request.POST.get("idjornada")
         programa = request.POST.get("idprograma")
+        nombre_programa = request.POST.get("nombre_programa")
 
         Ficha.objects.create(
             numero_ficha=numero,
+            estado=estado,
             idjornada_id=jornada,
-            idprograma_id=programa
+            idprograma_id=programa,
+            nombre_programa_id=nombre_programa
         )
 
-        return redirect("coordinador")  # volver al listado
+        return redirect("coordinador")
 
     return render(request, "paginas/coordinador/coordinador_agregar.html", {
         "jornadas": jornadas,
-        "programas": programas
+        "programas": programas,
+        "nombres_programa": nombres_programa
     })
+
+
+def agregar_jornada(request):
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_DATABASE")
+    )
+    cursor = conexion.cursor()
+
+    if request.method == "POST":
+        nombre = request.POST["nombre"].strip().upper()
+
+        # Validar duplicado
+        cursor.execute("SELECT id FROM jornada WHERE nombre = %s", (nombre,))
+        existente = cursor.fetchone()
+
+        if existente:
+            messages.error(request, "❗ Esta jornada ya existe.")
+            return redirect("coordinador_agregar")
+
+        cursor.execute("INSERT INTO jornada (nombre) VALUES (%s)", (nombre,))
+        conexion.commit()
+
+        return redirect("coordinador_agregar")
+
+    return render(request, "paginas/coordinador/agregar_jornada.html")
+
+
+
+def agregar_programa(request):
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_DATABASE")
+    )
+    cursor = conexion.cursor()
+
+    if request.method == "POST":
+        nombre = request.POST["programa"].strip().upper()
+
+        # Validar duplicado
+        cursor.execute("SELECT id FROM programa WHERE programa = %s", (nombre,))
+        existente = cursor.fetchone()
+
+        if existente:
+            messages.error(request, "❗ Este programa ya existe.")
+            return redirect("coordinador_agregar")
+
+        cursor.execute("INSERT INTO programa (programa) VALUES (%s)", (nombre,))
+        conexion.commit()
+
+        return redirect("coordinador_agregar")
+
+    return render(request, "paginas/coordinador/agregar_programa.html")
+
+
+
+def agregar_nombre_programa(request):
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_DATABASE")
+    )
+    cursor = conexion.cursor()
+
+    if request.method == "POST":
+        nombre = request.POST["nombre"].strip().upper()
+
+        # Validar duplicado
+        cursor.execute("SELECT id FROM nombre_programa WHERE nombre = %s", (nombre,))
+        existente = cursor.fetchone()
+
+        if existente:
+            messages.error(request, "❗ Este nombre de programa ya existe.")
+            return redirect("coordinador_agregar")
+
+        cursor.execute("INSERT INTO nombre_programa (nombre) VALUES (%s)", (nombre,))
+        conexion.commit()
+
+        return redirect("coordinador_agregar")
+
+    return render(request, "paginas/coordinador/agregar_nombre_programa.html")
 
 
 def carpetas2_editar(request):
@@ -1771,21 +1961,28 @@ def datos_coor(request, id):
         "aprendiz": aprendiz
     })
 
+
 def ficha_coordinador_editar(request, id):
     ficha = get_object_or_404(Ficha, id=id)
     jornadas = Jornada.objects.all()
     programas = Programa.objects.all()
+    nombres_programa = NombrePrograma.objects.all()
+
     if request.method == "POST":
         ficha.numero_ficha = request.POST.get("numero_ficha")
         ficha.idjornada_id = request.POST.get("idjornada")
         ficha.idprograma_id = request.POST.get("idprograma")
+        ficha.nombre_programa_id = request.POST.get("nombre_programa")
+        ficha.estado = request.POST.get("estado")   # ← Agregado
+
         ficha.save()
-        return redirect("ficha_coordinador")  # regresa al listado
+        return redirect("ficha_coordinador")
 
     return render(request, "paginas/coordinador/ficha_coordinador_editar.html", {
         "ficha": ficha,
         "jornadas": jornadas,
-        "programas": programas
+        "programas": programas,
+        "nombres_programa": nombres_programa
     })
 
 def seleccionar_ficha_observador(request, id_ficha):
@@ -1795,7 +1992,6 @@ def seleccionar_ficha_observador(request, id_ficha):
     return redirect('inicio_observador')
 
 def equipo_ejecutor_coordinador(request):
-
     ficha_id = request.session.get("ficha_actual")
     ficha_actual = None
     trimestres = []
@@ -1809,6 +2005,18 @@ def equipo_ejecutor_coordinador(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/coordinador/equipo_ejecutor_coordinador.html", {
         "ficha": ficha_actual,

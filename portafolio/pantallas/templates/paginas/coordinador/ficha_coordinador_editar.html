@@ -1,4 +1,4 @@
-{% extends "plantillacoor.html" %}
+{% extends "plantillacoor_inicio.html" %}
 {% load static %}
 
 {% block contenido %}
@@ -72,7 +72,17 @@
         justify-content: flex-end;
         margin-top: 30px;
         gap: 10px;
+    
     }
+
+    select option {
+        text-transform: uppercase;
+    }
+
+    select, select option {
+    text-transform: uppercase;
+}
+
 
     @keyframes fadeInUp {
         from { opacity: 0; transform: translateY(20px); }
@@ -119,6 +129,31 @@
             </select>
         </div>
 
+<div class="mb-3">
+    <label>Nombre del Programa</label>
+    <select class="form-select custom-input" name="nombre_programa">
+        {% for np in nombres_programa %}
+            <option value="{{ np.id }}"
+                {% if ficha.nombre_programa_id == np.id %}selected{% endif %}>
+                {{ np.nombre }}
+            </option>
+        {% endfor %}
+    </select>
+</div>
+
+
+        <!-- ESTADO -->
+        <div class="mb-3">
+            <label>Estado de la Ficha</label>
+            <select name="estado" class="form-select custom-input">
+                <option value="Activa" {% if ficha.estado == "Activa" %}selected{% endif %}>Activa</option>
+                <option value="Inactiva" {% if ficha.estado == "Inactiva" %}selected{% endif %}>Inactiva</option>
+                <option value="Finalizada" {% if ficha.estado == "Finalizada" %}selected{% endif %}>Finalizada</option>
+            </select>
+        </div>
+
+
+
         <div class="btn-container">
             <a href="{% url 'ficha_coordinador' %}" class="btn btn-cancelar">Cancelar</a>
             <button type="submit" class="btn btn-success">Guardar Cambios</button>
@@ -127,4 +162,4 @@
 
 </div>
 
-{% endblock %}
+{%endblock%}
