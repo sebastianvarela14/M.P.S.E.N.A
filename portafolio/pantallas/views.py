@@ -8,6 +8,9 @@ from django.http import HttpResponse
 from django.core.files.storage import FileSystemStorage
 from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario, NombreAsignatura, TipoAsignatura
 from .models import *
+from django.conf import settings
+
+
 load_dotenv() 
 
 def plantillains(request):
@@ -66,7 +69,51 @@ def agregar_evidencia(request):
     return render(request, "paginas/instructor/agregar_evidencia.html")
 
 def calificaciones(request):
-    return render(request, "paginas/instructor/calificaciones.html")
+    ficha_id = request.session.get("ficha_actual")
+    if not ficha_id:
+        messages.error(request, "Por favor, selecciona una ficha primero.")
+        return redirect('fichas_ins')
+
+    try:
+        ficha = Ficha.objects.select_related('idprograma').get(id=ficha_id)
+        guias_ficha = EvidenciasInstructor.objects.filter(
+            evidenciasficha__idficha=ficha_id
+        ).order_by('id').distinct()
+
+        aprendices = Usuario.objects.filter(
+            fichausuario__idficha_id=ficha_id,
+            usuariorol__idrol__tipo='aprendiz'
+        ).order_by('apellidos', 'nombres').distinct()
+        
+        aprendices_calificaciones = []
+        for aprendiz in aprendices:
+            calificaciones_aprendiz = []
+            for guia in guias_ficha:
+                entrega = EvidenciasAprendiz.objects.filter(idusuario=aprendiz, idevidencias_instructor=guia).first()
+
+                if entrega and entrega.calificacion:
+                    calificaciones_aprendiz.append({
+                        "texto": entrega.calificacion,
+                        "clase_css": "text-success",
+                        "url": "#" 
+                    })
+                else:
+                    calificaciones_aprendiz.append({
+                        "texto": "Sin calificar",
+                        "clase_css": "text-warning",
+                        "url": "#" 
+                    })
+            
+            aprendices_calificaciones.append({"aprendiz": aprendiz, "calificaciones": calificaciones_aprendiz})
+
+        return render(request, "paginas/instructor/calificaciones.html", {
+            "ficha": ficha,
+            "guias_ficha": guias_ficha,
+            "aprendices_calificaciones": aprendices_calificaciones
+        })
+    except Ficha.DoesNotExist:
+        messages.error(request, "La ficha seleccionada no existe.")
+        return redirect('fichas_ins')
 
 def material(request):
     return render(request, "paginas/instructor/material.html")
@@ -238,27 +285,16 @@ def tareas_2(request):
     return render(request, "paginas/aprendiz/tareas_2.html")
 
 def lista_aprendices(request):
-    conexion = mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
-        )
-    
+    ficha_id = request.session.get("ficha_actual")
 
-    cursor = conexion.cursor(dictionary=True)
+    if not ficha_id:
+        messages.error(request, "Por favor, selecciona una ficha primero.")
+        return redirect('fichas_ins')
 
-    cursor.execute("""
-        SELECT u.id, u.nombres, u.apellidos
-        FROM usuario u
-        WHERE u.id IN (3, 4)
-    """)
-
-    aprendices = cursor.fetchall()
-
-    cursor.close()
-    conexion.close()
-
+    aprendices = Usuario.objects.filter(
+        fichausuario__idficha_id=ficha_id,
+        usuariorol__idrol__tipo='aprendiz'
+    ).order_by('apellidos', 'nombres').distinct()
     return render(request, "paginas/instructor/lista_aprendices.html", {
         "aprendices": aprendices
     })
@@ -483,10 +519,35 @@ def carpetas(request):
     return render(request, "paginas/instructor/carpetas.html")
 
 def material_principal(request):
-    return render(request, "paginas/instructor/material_principal.html")
+    materiales = Material.objects.all().order_by('-id')
+    return render(request, "paginas/instructor/material_principal.html", {
+        "materiales": materiales
+    })
 
-def adentro_material(request):
-    return render(request, "paginas/instructor/adentro_material.html")
+def adentro_material(request, id):
+    # Obtener el material
+    material = get_object_or_404(Material, id=id)
+
+    # PROCESAR ELIMINACIÓN DE ARCHIVO
+    if request.method == "POST" and "eliminar_archivo" in request.POST:
+        # Guardar el nombre del archivo para borrarlo del disco si quieres
+        archivo_path = os.path.join(settings.MEDIA_ROOT, material.archivo) if material.archivo else None
+
+        # Eliminar el archivo de la base de datos
+        material.archivo = ""
+        material.save()
+
+        # Eliminar físicamente el archivo del disco (opcional)
+        if archivo_path and os.path.exists(archivo_path):
+            os.remove(archivo_path)
+
+        messages.success(request, "Archivo eliminado correctamente.")
+        return redirect("adentro_material", id=material.id)
+
+    # Renderizar template
+    return render(request, "paginas/instructor/adentro_material.html", {
+        "material": material
+    })
 
 def lista_aprendices1(request):
     conexion = mysql.connector.connect(
@@ -1331,47 +1392,18 @@ def ficha_instructor(request):
         messages.error(request, "No se ha seleccionado ninguna ficha. Por favor, vuelve a la lista de fichas.")
         return redirect('fichas_ins')
 
-    ficha = None
-    aprendices = []
-
     try:
-        # 2. Conectar a la base de datos para obtener los datos
-        conexion = mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
-        )
-        cursor = conexion.cursor(dictionary=True)
+        ficha = Ficha.objects.select_related('idjornada', 'idprograma').get(id=ficha_id)
 
-        cursor.execute("""
-            SELECT 
-                f.numero_ficha, 
-                j.nombre AS jornada,
-                p.programa AS programa_nombre,
-                'Activa' AS estado
-            FROM ficha f
-            LEFT JOIN jornada j ON f.idjornada = j.id
-            INNER JOIN programa p ON f.idprograma = p.id
-            WHERE f.id = %s
-        """, (ficha_id,))
-        ficha = cursor.fetchone()
+        aprendices = Usuario.objects.filter(
+            fichausuario__idficha_id=ficha_id,
+            usuariorol_idrol_tipo='aprendiz'
+        ).order_by('apellidos', 'nombres').distinct()
 
-        # 4. Consulta para obtener la lista de aprendices de esa ficha y poder contarlos
-        cursor.execute("""
-            SELECT u.id, u.nombres, u.apellidos FROM usuario u
-            INNER JOIN ficha_usuario fu ON u.id = fu.idusuario
-            INNER JOIN usuario_rol ur ON u.id = ur.idusuario
-            WHERE fu.idficha = %s AND ur.idrol = 2
-        """, (ficha_id,))
-        aprendices = cursor.fetchall()
+    except Ficha.DoesNotExist:
+        messages.error(request, "La ficha seleccionada no existe o fue eliminada.")
+        return redirect('fichas_ins')
 
-    finally:
-        if 'conexion' in locals() and conexion.is_connected():
-            cursor.close()
-            conexion.close()
-
-    # 5. Enviar los datos consultados a la plantilla. No se envía ningún nombre de usuario.
     return render(request, "paginas/instructor/ficha_instructor.html", {
         'ficha': ficha, 
         'aprendices': aprendices
@@ -1421,8 +1453,25 @@ def fichas_equipoejecutor_coordinador(request):
 def equipo_coordinador(request):
     return render(request, "paginas/coordinador/equipo_coordinador.html")
 
-def material_editar(request):
-    return render(request, "paginas/instructor/material_editar.html")
+def material_editar(request, id):
+    material = get_object_or_404(Material, id=id)
+
+    if request.method == "POST":
+        material.titulo = request.POST.get("titulo")
+        material.descripcion = request.POST.get("descripcion")
+        material.fecha_entrega = request.POST.get("fecha_entrega")
+
+        archivo = request.FILES.get("archivo")
+        if archivo:
+            material.archivo = archivo
+
+        material.save()
+
+        return redirect("material_principal")
+
+    return render(request, "paginas/instructor/material_editar.html", {
+        "material": material
+    })
 
 def evidencia_guia_editar(request, evidencia_id):
     try:
@@ -2059,3 +2108,21 @@ def opc_equipoejecutor_coordinador(request):
         "data": data,
         "ficha": ficha
     })
+
+
+def crear_material(request):
+    if request.method == "POST":
+        titulo = request.POST.get("titulo")
+        descripcion = request.POST.get("descripcion")
+        archivo = request.FILES.get("archivo")
+
+        nuevo = Material(
+            titulo=titulo,
+            descripcion=descripcion,
+            archivo=archivo
+        )
+        nuevo.save()
+
+        return redirect("material_principal")
+
+    return render(request, "paginas/instructor/crear_material.html")
