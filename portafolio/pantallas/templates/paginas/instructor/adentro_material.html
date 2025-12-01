@@ -29,15 +29,8 @@
 
         <!-- IZQUIERDA: BOTÓN ELIMINAR + ICONO + NOMBRE -->
         <div class="d-flex align-items-center gap-2">
-            <!-- BOTÓN ELIMINAR PEQUEÑO -->
-            <form method="POST" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" name="eliminar_archivo" value="1"
-                        class="btn btn-sm btn-outline-danger p-1"
-                        title="Eliminar archivo">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </form>
+
 
             <!-- ICONO DEL ARCHIVO -->
             <i class="bi bi-file-earmark"></i>
