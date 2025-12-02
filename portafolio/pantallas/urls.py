@@ -40,7 +40,7 @@ urlpatterns = [
     path("carpetas/", views.carpetas, name="carpetas"),
     path("material_principal/", views.material_principal, name="material_principal"),
     path("lista_aprendices/", views.lista_aprendices, name="lista_aprendices"),
-    path("adentro_material/", views.adentro_material, name="adentro_material"),
+    path('material/<int:id>/', views.adentro_material, name='adentro_material'),
     path("lista_aprendices1/", views.lista_aprendices1, name="lista_aprendices1"),
     path("datoslaura/", views.datoslaura, name="datoslaura"),
     path("entrada/<int:asignatura_id>/", views.entrada, name="entrada"),
@@ -129,7 +129,7 @@ urlpatterns = [
     path("opc_equipoejecutor/", views.opc_equipoejecutor, name="opc_equipoejecutor"),
     path("fichas_equipoejecutor_coordinador/", views.fichas_equipoejecutor_coordinador, name="fichas_equipoejecutor_coordinador"),
     path("equipo_coordinador/", views.equipo_coordinador, name="equipo_coordinador"),
-    path("material_editar/", views.material_editar, name="material_editar"),
+    path('material/<int:id>/editar/', views.material_editar, name='material_editar'),
     path("evidencia_guia_editar/<int:evidencia_id>/", views.evidencia_guia_editar, name="evidencia_guia_editar"),
     path("evidencia/eliminar/", views.eliminar_evidencia, name="eliminar_evidencia"),
 
@@ -160,6 +160,4 @@ urlpatterns = [
     path("seleccionar_ficha_observador/<int:id_ficha>/", views.seleccionar_ficha_observador, name="seleccionar_ficha_observador"),    path("opc_equipoejecutor_coordinador/", views.opc_equipoejecutor_coordinador, name="opc_equipoejecutor_coordinador"),
     path("equipo_ejecutor_coordinador/", views.equipo_ejecutor_coordinador, name="equipo_ejecutor_coordinador"),
     path("portafolio_coordinador/", views.portafolio_coordinador, name="portafolio_coordinador"),
-
-
     ]
