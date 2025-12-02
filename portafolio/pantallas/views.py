@@ -8,6 +8,8 @@ from django.http import HttpResponse
 from django.core.files.storage import FileSystemStorage
 from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario, NombreAsignatura, TipoAsignatura
 from .models import *
+from django.conf import settings
+
 load_dotenv() 
 
 def plantillains(request):
@@ -239,29 +241,45 @@ def tareas_2(request):
 
 def lista_aprendices(request):
     conexion = mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
-        )
-    
-
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
     cursor = conexion.cursor(dictionary=True)
 
-    cursor.execute("""
-        SELECT u.id, u.nombres, u.apellidos
-        FROM usuario u
-        WHERE u.id IN (3, 4)
-    """)
+    instructor_id = 1  # Cambia esto por el id del instructor logueado dinámicamente si quieres
 
-    aprendices = cursor.fetchall()
+    try:
+        # Obtener la ficha del instructor
+        cursor.execute("""
+            SELECT idficha 
+            FROM ficha_usuario 
+            WHERE idusuario = %s
+        """, (instructor_id,))
+        fila = cursor.fetchone()
 
-    cursor.close()
-    conexion.close()
+        if fila is None:
+            aprendices = []
+        else:
+            ficha_del_instructor = fila["idficha"]
+
+            cursor.execute("""
+                SELECT u.id, u.nombres, u.apellidos
+                FROM usuario u
+                INNER JOIN ficha_usuario fu ON u.id = fu.idusuario
+                INNER JOIN usuario_rol ur ON u.id = ur.idusuario
+                WHERE fu.idficha = %s AND ur.idrol = 1
+            """, (ficha_del_instructor,))
+            aprendices = cursor.fetchall()
+    finally:
+        cursor.close()
+        conexion.close()
 
     return render(request, "paginas/instructor/lista_aprendices.html", {
         "aprendices": aprendices
     })
+
 
 def datos_aprendiz(request, id):
 
