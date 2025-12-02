@@ -157,8 +157,7 @@ urlpatterns = [
     path('datos_coor/<int:id>/', views.datos_coor, name='datos_coor'),
     path("eliminar_asignatura/<int:asig_id>/<int:ficha_id>/", views.eliminar_asignatura, name="eliminar_asignatura"),
     path('ficha_coordinador_editar/<int:id>/', views.ficha_coordinador_editar, name='ficha_coordinador_editar'),
-    path("seleccionar_ficha_observador/<int:id_ficha>/", views.seleccionar_ficha_observador, name="seleccionar_ficha_observador"),
-    path("opc_equipoejecutor_coordinador/", views.opc_equipoejecutor_coordinador, name="opc_equipoejecutor_coordinador"),
+    path("seleccionar_ficha_observador/<int:id_ficha>/", views.seleccionar_ficha_observador, name="seleccionar_ficha_observador"),    path("opc_equipoejecutor_coordinador/", views.opc_equipoejecutor_coordinador, name="opc_equipoejecutor_coordinador"),
     path("equipo_ejecutor_coordinador/", views.equipo_ejecutor_coordinador, name="equipo_ejecutor_coordinador"),
     path("portafolio_coordinador/", views.portafolio_coordinador, name="portafolio_coordinador"),
     ]
