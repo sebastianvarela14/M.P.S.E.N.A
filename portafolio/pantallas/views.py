@@ -10,7 +10,6 @@ from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario, NombreAsignat
 from .models import *
 from django.conf import settings
 
-
 load_dotenv() 
 
 def plantillains(request):
@@ -285,11 +284,41 @@ def tareas_2(request):
     return render(request, "paginas/aprendiz/tareas_2.html")
 
 def lista_aprendices(request):
-    ficha_id = request.session.get("ficha_actual")
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
 
-    if not ficha_id:
-        messages.error(request, "Por favor, selecciona una ficha primero.")
-        return redirect('fichas_ins')
+    instructor_id = 1  # Cambia esto por el id del instructor logueado dinámicamente si quieres
+
+    try:
+        # Obtener la ficha del instructor
+        cursor.execute("""
+            SELECT idficha 
+            FROM ficha_usuario 
+            WHERE idusuario = %s
+        """, (instructor_id,))
+        fila = cursor.fetchone()
+
+        if fila is None:
+            aprendices = []
+        else:
+            ficha_del_instructor = fila["idficha"]
+
+            cursor.execute("""
+                SELECT u.id, u.nombres, u.apellidos
+                FROM usuario u
+                INNER JOIN ficha_usuario fu ON u.id = fu.idusuario
+                INNER JOIN usuario_rol ur ON u.id = ur.idusuario
+                WHERE fu.idficha = %s AND ur.idrol = 1
+            """, (ficha_del_instructor,))
+            aprendices = cursor.fetchall()
+    finally:
+        cursor.close()
+        conexion.close()
 
     aprendices = Usuario.objects.filter(
         fichausuario__idficha_id=ficha_id,
@@ -298,6 +327,7 @@ def lista_aprendices(request):
     return render(request, "paginas/instructor/lista_aprendices.html", {
         "aprendices": aprendices
     })
+
 
 def datos_aprendiz(request, id):
 
