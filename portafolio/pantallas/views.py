@@ -295,12 +295,21 @@ def datos_aprendiz(request, id):
 
 
 def carpetas2(request):
-    ficha_id = request.GET.get("ficha")  # 1. Recibir ?ficha=xx desde el enlace
+    # 1. Intentar obtener ficha desde la URL ?ficha=xx
+    ficha_id = request.GET.get("ficha")
 
+    # 2. Si viene en el GET, guardarla en sesión
     if ficha_id:
-        request.session["ficha_id"] = ficha_id  # 2. Guardar en sesión
+        request.session["ficha_id"] = ficha_id
+    else:
+        # 3. Si no viene, intentar recuperarla desde la sesión
+        ficha_id = request.session.get("ficha_id")
 
-    return render(request, "paginas/instructor/carpetas2.html")
+    # 4. Enviar ficha_id al template (IMPORTANTE)
+    return render(request, "paginas/instructor/carpetas2.html", {
+        "ficha_id": ficha_id
+    })
+
 
 def portafolio(request, ficha_id):
     ficha = Ficha.objects.get(id=ficha_id)
@@ -461,8 +470,36 @@ def carpetas(request):
 def material_principal(request):
     return render(request, "paginas/instructor/material_principal.html")
 
-def adentro_material(request):
-    return render(request, "paginas/instructor/adentro_material.html")
+def adentro_material(request, id):
+    # Obtener el material
+    material = get_object_or_404(Material, id=id)
+
+    # PROCESAR ELIMINACIÓN DE ARCHIVO
+    if request.method == "POST" and "eliminar_archivo" in request.POST:
+        # Guardar el nombre del archivo para borrarlo del disco si quieres
+        archivo_path = os.path.join(settings.MEDIA_ROOT, material.archivo) if material.archivo else None
+
+        # Eliminar el archivo de la base de datos
+        material.archivo = ""
+        material.save()
+
+        # Eliminar físicamente el archivo del disco (opcional)
+        if archivo_path and os.path.exists(archivo_path):
+            os.remove(archivo_path)
+
+        messages.success(request, "Archivo eliminado correctamente.")
+        return redirect("adentro_material", id=material.id)
+
+    if request.method == "POST" and "eliminar_material" in request.POST:
+        material.delete()
+        messages.success(request, f"El material '{material.titulo}' ha sido eliminado.")
+        return redirect("material_principal")
+
+
+    # Renderizar template
+    return render(request, "paginas/instructor/adentro_material.html", {
+        "material": material
+    })
 
 def lista_aprendices1(request):
     conexion = mysql.connector.connect(
@@ -1082,7 +1119,6 @@ def configuracion_observador(request):
 
 def configuracion_observador_2(request):
     return render(request, "paginas/observador/configuracion_observador_2.html")
-
 def configuracion_coordinador(request):
 
     # 1. Recuperar ficha desde sesión
@@ -1096,32 +1132,40 @@ def configuracion_coordinador(request):
 
     # ========= INSTRUCTORES =========
     instructores = Usuario.objects.filter(
-        usuariorol__idrol__tipo="instructor"
+        usuariorol_idrol_tipo="instructor"
     ).distinct()
 
     instructores_asignados = Usuario.objects.filter(
         fichausuario__idficha_id=ficha_id,
-        usuariorol__idrol__tipo="instructor"
+        usuariorol_idrol_tipo="instructor"
     ).distinct()
 
     ids_instructores_asignados = [i.id for i in instructores_asignados]
 
     # ========= APRENDICES =========
     aprendices = Usuario.objects.filter(
-        usuariorol__idrol__tipo="aprendiz"
+        usuariorol_idrol_tipo="aprendiz"
     ).distinct()
 
     aprendices_asignados = Usuario.objects.filter(
         fichausuario__idficha_id=ficha_id,
-        usuariorol__idrol__tipo="aprendiz"
+        usuariorol_idrol_tipo="aprendiz"
     ).distinct()
 
     ids_aprendices_asignados = [a.id for a in aprendices_asignados]
 
     # ========= ASIGNATURAS =========
     todas_asignaturas = NombreAsignatura.objects.all()
-    asignaturas_ficha = NombreAsignatura.objects.filter(idficha_id=ficha_id)
-    ids_asignaturas_ficha = [a.id for a in asignaturas_ficha]
+
+    # Asignaturas reales en la ficha
+    asignaturas_ficha = FichaAsignatura.objects.filter(
+        idficha_id=ficha_id
+    ).select_related("idasignatura")
+
+    # IDs asignados (para marcar checkboxes)
+    asignadas_ids = list(
+        asignaturas_ficha.values_list("idasignatura_id", flat=True)
+    )
 
     # ========= GUARDAR =========
     if request.method == "POST":
@@ -1132,7 +1176,7 @@ def configuracion_coordinador(request):
 
             FichaUsuario.objects.filter(
                 idficha_id=ficha_id,
-                idusuario__usuariorol__idrol__tipo="instructor"
+                idusuario_usuariorolidrol_tipo="instructor"
             ).delete()
 
             for ins_id in seleccionados:
@@ -1149,7 +1193,7 @@ def configuracion_coordinador(request):
 
             FichaUsuario.objects.filter(
                 idficha_id=ficha_id,
-                idusuario__usuariorol__idrol__tipo="aprendiz"
+                idusuario_usuariorolidrol_tipo="aprendiz"
             ).delete()
 
             for apr_id in seleccionados:
@@ -1162,22 +1206,21 @@ def configuracion_coordinador(request):
 
         # ---------- Guardar Asignaturas ----------
         if "asignaturas" in request.POST:
-            seleccionados = request.POST.getlist("asignaturas")
+            seleccionadas = request.POST.getlist("asignaturas")
+            seleccionadas = [int(x) for x in seleccionadas]
 
-            # Eliminar asignaturas previas de la ficha
-            NombreAsignatura.objects.filter(idficha_id=ficha_id).delete()
+            # Borrar asignaciones antiguas
+            FichaAsignatura.objects.filter(idficha_id=ficha_id).exclude(idasignatura_id__in=seleccionadas).delete()
 
-            # Volver a agregarlas
-            for asig_id in seleccionados:
-                base = NombreAsignatura.objects.get(id=asig_id)
-
-                NombreAsignatura.objects.create(
+            # Crear nuevas asignaciones
+            for asig_id in seleccionadas:
+                FichaAsignatura.objects.get_or_create(
                     idficha_id=ficha_id,
-                    nombre=base.nombre,
-                    idtipo_asignatura=base.idtipo_asignatura
+                    idasignatura_id=asig_id
                 )
 
-            messages.success(request, "¡Asignaturas guardadas correctamente!")
+            messages.success(request, "Asignaturas guardadas correctamente!")
+
 
         return redirect("configuracion_coordinador")
 
@@ -1199,7 +1242,7 @@ def configuracion_coordinador(request):
         # Asignaturas
         "todas_asignaturas": todas_asignaturas,
         "asignaturas_ficha": asignaturas_ficha,
-        "ids_asignaturas_ficha": ids_asignaturas_ficha,
+        "asignadas_ids": asignadas_ids,
     })
 
 def evidencia_calificada(request):
@@ -1337,29 +1380,81 @@ def material_editar(request):
     return render(request, "paginas/instructor/material_editar.html")
 
 def evidencia_guia_editar(request, evidencia_id):
-    try:
-        conexion = mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
-        )
-        cursor = conexion.cursor(dictionary=True)
 
-        cursor.execute("SELECT * FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
-        evidencia = cursor.fetchone()
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
 
-        if not evidencia:
-            messages.error(request, "La evidencia no existe.")
-            return redirect("evidencias")
+    # Obtener la evidencia
+    cursor.execute("SELECT * FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
+    evidencia = cursor.fetchone()
 
-    finally:
+    if not evidencia:
+        messages.error(request, "La evidencia no existe.")
+        return redirect("evidencia_guia", evidencia_id)
+
+    # Si envían POST → actualizar
+    if request.method == "POST":
+        nuevo_titulo = request.POST.get("titulo")
+        nuevas_instrucciones = request.POST.get("instrucciones")
+
+        archivo = request.FILES.get("archivo")
+
+        # Si suben un archivo nuevo → reemplazar
+        if archivo:
+            nombre_archivo = archivo.name
+
+            # Guardar archivo físico
+            ruta = f"media/evidencias/{nombre_archivo}"
+            with open(ruta, "wb+") as destino:
+                for chunk in archivo.chunks():
+                    destino.write(chunk)
+
+            cursor.execute("""
+                UPDATE evidencias_instructor
+                SET titulo = %s, instrucciones = %s, archivo = %s
+                WHERE id = %s
+            """, (nuevo_titulo, nuevas_instrucciones, nombre_archivo, evidencia_id))
+
+        else:
+            cursor.execute("""
+                UPDATE evidencias_instructor
+                SET titulo = %s, instrucciones = %s
+                WHERE id = %s
+            """, (nuevo_titulo, nuevas_instrucciones, evidencia_id))
+
+        conexion.commit()
         cursor.close()
         conexion.close()
+
+        messages.success(request, "La evidencia fue actualizada correctamente.")
+        return redirect("evidencia_guia", evidencia_id)
+
+    cursor.close()
+    conexion.close()
 
     return render(request, "paginas/instructor/evidencia_guia_editar.html", {
         "evidencia": evidencia
     })
+
+def eliminar_archivo_evidencia(request, evidencia_id):
+    evidencia = get_object_or_404(EvidenciasInstructor, id=evidencia_id)
+
+    if evidencia.archivo:
+        archivo_path = evidencia.archivo.path
+        
+        # Validar que el archivo realmente exista
+        if os.path.exists(archivo_path):
+            os.remove(archivo_path)
+
+        evidencia.archivo = None
+        evidencia.save()
+
+    return redirect("evidencia_guia_editar", evidencia_id)
 
 
 def carpetasins_editar(request, carpeta_id):
@@ -1663,27 +1758,40 @@ def eliminar_aprendiz(request, aprendiz_id, ficha_id):
 
 def configuracion_asignaturas(request):
     ficha_id = request.session.get("ficha_actual")
-
     if not ficha_id:
         messages.error(request, "Primero debes seleccionar una ficha.")
         return redirect("inicio_coordinador")
 
     ficha = Ficha.objects.get(id=ficha_id)
 
-    # 1. Todas las asignaturas existentes
-    todas_asignaturas = NombreAsignatura.objects.filter(idficha__isnull=True)
+    # Todas las asignaturas
+    todas_asignaturas = NombreAsignatura.objects.all()
 
-    # 2. Asignaturas asignadas a la ficha
-    asignaturas_ficha = NombreAsignatura.objects.filter(idficha=ficha)
+    # Asignaciones (traer la asignatura relacionada para evitar N+1 y para comprobar nombre)
+    asignaturas_ficha = FichaAsignatura.objects.filter(idficha=ficha).select_related('idasignatura')
+
+    # IDs ya asignados (como ints)
+    asignadas_ids = list(asignaturas_ficha.values_list("idasignatura_id", flat=True))
+    # diagnóstico en consola
+    print("DEBUG asignadas_ids:", asignadas_ids)
+    print("DEBUG asignaturas_ficha count:", asignaturas_ficha.count())
+    # muestra primeros 5 tuplas (ida, nombre) para verificar
+    for fa in asignaturas_ficha[:5]:
+        print("DEBUG fa:", fa.id, "idasignatura_id=", getattr(fa, "idasignatura_id", None),
+              "nombre_rel=", getattr(fa.idasignatura, "nombre", None))
 
     if request.method == "POST":
-        seleccionadas = request.POST.getlist("asignaturas")
+        seleccionadas = request.POST.getlist("asignaturas")  # vienen como strings
+        print("DEBUG seleccionadas raw:", seleccionadas)
+        seleccionadas = [int(x) for x in seleccionadas]  # normalizamos a ints
+        print("DEBUG seleccionadas ints:", seleccionadas)
 
-        # Desasignar asignaturas que ya no estén seleccionadas
-        NombreAsignatura.objects.filter(idficha=ficha).exclude(id__in=seleccionadas).update(idficha=None)
+        # Eliminar asignaciones no seleccionadas
+        FichaAsignatura.objects.filter(idficha=ficha).exclude(idasignatura_id__in=seleccionadas).delete()
 
-        # Asignar nuevas asignaturas
-        NombreAsignatura.objects.filter(id__in=seleccionadas).update(idficha=ficha)
+        # Crear/garantizar nuevas asignaciones
+        for asig_id in seleccionadas:
+            FichaAsignatura.objects.get_or_create(idficha=ficha, idasignatura_id=asig_id)
 
         messages.success(request, "Asignaturas actualizadas correctamente.")
         return redirect("configuracion_asignaturas")
@@ -1691,56 +1799,46 @@ def configuracion_asignaturas(request):
     return render(request, "paginas/coordinador/configuracion_asignaturas.html", {
         "ficha": ficha,
         "todas_asignaturas": todas_asignaturas,
+        "asignadas_ids": asignadas_ids,
         "asignaturas_ficha": asignaturas_ficha,
+        "ficha_id": ficha_id,
     })
+def eliminar_asignatura(request, ficha_id, asig_id):
+    try:
+        FichaAsignatura.objects.filter(
+            idficha_id=ficha_id,
+            idasignatura_id=asig_id
+        ).delete()
 
-def eliminar_asignatura(request, id_asignatura):
-    ficha_id = request.session.get("ficha_actual")
-    if ficha_id:
-        NombreAsignatura.objects.filter(id=id_asignatura, idficha_id=ficha_id).delete()
-        messages.success(request, "Asignatura eliminada correctamente.")
+        messages.success(request, "Asignatura eliminada de la ficha.")
+    except Exception as e:
+        messages.error(request, f"Error: {e}")
+
     return redirect("configuracion_coordinador")
 
 def eliminar_evidencia(request, evidencia_id):
-    try:
-        conexion = mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
-        )
-        cursor = conexion.cursor(dictionary=True)
 
-        # Obtener archivo antes de borrar
-        cursor.execute("SELECT archivo FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
-        registro = cursor.fetchone()
+    # 1. Buscar la evidencia de instructor
+    evidencia = EvidenciasInstructor.objects.get(id=evidencia_id)
 
-        if not registro:
-            messages.error(request, "La evidencia no existe.")
-            return redirect("evidencias")
+    # 2. Buscar relación en EvidenciasFicha
+    evidencia_ficha = EvidenciasFicha.objects.filter(
+        idevidencias_instructor=evidencia
+    ).first()
 
-        archivo = registro["archivo"]
+    # 4. Primero eliminar la relación (evita el IntegrityError)
+    if evidencia_ficha:
+        evidencia_ficha.delete()
 
-        # Eliminar evidencia
-        cursor.execute("DELETE FROM evidencias_instructor WHERE id = %s", (evidencia_id,))
-        conexion.commit()
+    # 5. Ahora sí eliminar la evidencia sin violar la FK
+    evidencia.delete()
 
-        # Eliminar archivo si existe
-        if archivo and archivo != "No subido":
-            ruta = os.path.join("media", "evidencias", archivo)
-            if os.path.exists(ruta):
-                os.remove(ruta)
+    messages.success(request, "La evidencia fue eliminada correctamente.")
 
-        messages.success(request, "La evidencia fue eliminada correctamente.")
-
-    except Exception as e:
-        messages.error(request, f"Error al eliminar evidencia: {e}")
-
-    finally:
-        if cursor: cursor.close()
-        if conexion and conexion.is_connected(): conexion.close()
-
+    # 6. Redirigir SIEMPRE a la lista de evidencias
     return redirect("evidencias")
+
+
 
 
 def datos_coor(request, id):
@@ -1853,4 +1951,18 @@ def opc_equipoejecutor_coordinador(request):
     })
 
 def crear_material(request):
+    if request.method == "POST":
+        titulo = request.POST.get("titulo")
+        descripcion = request.POST.get("descripcion")
+        archivo = request.FILES.get("archivo")
+
+        nuevo = Material(
+            titulo=titulo,
+            descripcion=descripcion,
+            archivo=archivo 
+        )
+        nuevo.save()
+
+        return redirect("material_principal")
+
     return render(request, "paginas/instructor/crear_material.html")

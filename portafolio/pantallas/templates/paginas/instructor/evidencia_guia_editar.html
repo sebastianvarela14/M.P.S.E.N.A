@@ -3,76 +3,70 @@
 {% block contenido %}
 
 <div class="container mt-4 mb-5">
-    <!-- Título -->
     <h4 class="fw-bold mb-4 text-start">EDITAR EVIDENCIA</h4>
 
-    <!-- Card con estilo unificado -->
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body p-4">
+<!-- FORMULARIO PRINCIPAL -->
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
 
-            <form>
-                <!-- Editar Título -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Título de la Evidencia</label>
-                    <input type="text" class="form-control input-anim" value="Evidencia Guía Lógica">
-                </div>
-
-                <!-- Editar Instrucciones -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Instrucciones</label>
-                    <textarea class="form-control input-anim" rows="4">De acuerdo con las instrucciones dadas en el PDF y lo visto en clase, se debe aplicar la estructura condicional if, elif, else para resolver el problema planteado, analizando cada condición de manera ordenada y mostrando el resultado correspondiente según la opción que cumpla la condición establecida.</textarea>
-                </div>
-
-                <!-- Archivos actuales -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Archivos adjuntos actuales</label>
-                    <ul class="list-group">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="bi bi-file-earmark-pdf text-danger"></i> Guía de estructuras con HTML
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="bi bi-file-earmark-image text-warning"></i> Ejemplos prácticos
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Subir nuevo archivo -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Agregar nuevos archivos</label>
-                    <input class="form-control input-anim" type="file" multiple>
-                </div>
-
-                <!-- Botones -->
-                <div class="text-end mt-4">
-                    <button type="button" class="btn btn-secondary btn-anim me-2">Cancelar</button>
-                    <button type="submit" class="btn btn-success btn-anim">
-                        <i class="bi bi-check-circle me-2"></i>Guardar Cambios
-                    </button>
-                </div>
-            </form>
-        </div>
+    <!-- Título -->
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Título de la Evidencia</label>
+        <input type="text" name="titulo" class="form-control input-anim"
+               value="{{ evidencia.titulo }}">
     </div>
-</div>
 
-<!-- Estilos iguales al formulario anterior -->
+    <!-- Instrucciones -->
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Instrucciones</label>
+        <textarea name="instrucciones" class="form-control input-anim" rows="4">{{ evidencia.instrucciones }}</textarea>
+    </div>
+
+    <!-- Archivo actual -->
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Archivo actual</label>
+
+        {% if evidencia.archivo %}
+            <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                <span>
+                    <i class="bi bi-file-earmark"></i> {{ evidencia.archivo }}
+                </span>
+
+                <!-- BOTÓN DE ELIMINAR (sin form aquí) -->
+                <button type="button" class="btn btn-sm btn-danger"
+                        onclick="document.getElementById('form-delete-file').submit();">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        {% else %}
+            <p class="text-muted">No hay archivo cargado.</p>
+        {% endif %}
+    </div>
+
+    <!-- Subir nuevo archivo -->
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Subir nuevo archivo</label>
+        <input class="form-control input-anim" type="file" name="archivo">
+    </div>
+
+    <!-- Botones -->
+    <div class="text-end mt-4">
+        <a href="{% url 'evidencia_guia' evidencia.id %}" class="btn btn-secondary btn-anim me-2">Cancelar</a>
+        <button type="submit" class="btn btn-success btn-anim">
+            <i class="bi bi-check-circle me-2"></i> Guardar Cambios
+        </button>
+    </div>
+
+</form>
+
+<!-- FORM independiente para eliminar archivo -->
+<form id="form-delete-file" method="POST" action="{% url 'eliminar_archivo_evidencia' evidencia.id %}">
+    {% csrf_token %}
+</form>
+
+
 <style>
 .input-anim {
     transition: all 0.3s ease;

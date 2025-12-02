@@ -337,13 +337,11 @@
 
             <!-- Lista de asignaturas disponibles -->
             <div id="listaAsignaturas">
-                {% for asig in todas_asignaturas %}
+                {% for a in todas_asignaturas %}
                     <div class="opcion">
-                        <input type="checkbox"
-                            name="asignaturas"
-                            value="{{ asig.id }}"
-                            {% if asig.id in ids_asignaturas_ficha %}checked{% endif %}>
-                        {{ asig.nombre }}
+                        <input type="checkbox" name="asignaturas" value="{{ a.id }}"
+                           {% if a.id in asignadas_ids %}checked{% endif %}>
+                        {{ a.nombre }}
                     </div>
                 {% endfor %}
             </div>
@@ -376,7 +374,7 @@
                     <span>{{ fa.idasignatura.nombre }}</span>
 
                     <!-- eliminar fichaasignatura -->
-                    <form method="POST" action="{% url 'eliminar_asignatura' fa.id ficha_id %}" style="display:inline;">
+                    <form method="POST" action="{% url 'eliminar_asignatura' ficha_id=fa.idficha.id asig_id=fa.idasignatura.id %}" style="display:inline;">
                         {% csrf_token %}
                         <button class="btn-eliminar">Eliminar</button>
                     </form>

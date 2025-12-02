@@ -63,17 +63,24 @@ class EvidenciasFicha(models.Model):
         managed = False
         db_table = 'evidencias_ficha'
 
-
 class EvidenciasInstructor(models.Model):
     titulo = models.CharField(max_length=70, db_comment='titulo de la evidencia que el instructor crea')
     instrucciones = models.CharField(max_length=200, blank=True, null=True, db_comment='instrucciones detalladas de la evidencia a entregar')
     calificacion = models.CharField(max_length=20, db_comment='nota maxima o calificacion asignada a la evidencia')
     fecha_de_entrega = models.DateField(blank=True, null=True, db_comment='fecha limite en la que el aprendiz debe entregar la evidencia')
-    archivo = models.CharField(max_length=100, db_comment='nombre o ruta del archivo adjunto correspondiente a la evidencia')
+    
+    
+    archivo = models.FileField(
+        upload_to="evidencias/",
+        blank=True,
+        null=True,
+        db_comment='archivo adjunto correspondiente a la evidencia'
+    )
 
     class Meta:
         managed = False
         db_table = 'evidencias_instructor'
+
 
 
 class Ficha(models.Model):
@@ -115,8 +122,12 @@ class Jornada(models.Model):
 class Material(models.Model):
     titulo = models.CharField(max_length=100, db_comment='titulo del material')
     descripcion = models.CharField(max_length=500, blank=True, null=True, db_comment='instrucciones o descripcion del material de apoyo')
-    archivo = models.CharField(max_length=255, blank=True, null=True, db_comment='nombre o ruta del archivo de apoyo adjunto por el instructor')
-
+    archivo = models.FileField(
+        upload_to="material/",
+        blank=True,
+        null=True,
+        db_comment='archivo adjunto correspondiente a la evidencia'
+    )
     class Meta:
         managed = False
         db_table = 'material'
