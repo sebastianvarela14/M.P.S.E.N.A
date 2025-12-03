@@ -1,68 +1,75 @@
 {% extends "plantillaobservador.html" %}
+{% load static %}
 
-{% block contenido %} 
+{% block contenido %}
 
+<div class="container mt-5">
+    
+    <a href="{% url 'evidencias_observador' ficha_id %}"
+    class="text-success"
+    style="font-size: 0.85rem; text-decoration: none;">
+        <i class="bi bi-arrow-left-circle"></i> Volver a evidencias
+    </a>
 
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-    <meta charset="UTF-8">
-    <title>Apoyo Guía Uno</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    </head>
-    <body class="bg-light">
-
-    <div class="container mt-5">
     <div class="card shadow-lg border-0 rounded-3">
         <div class="card-body p-4">
-        <!-- Título -->
-        <h3 class="fw-bold text-success mb-3">
-            <i class="bi bi-journal-text"></i> Evidencia Guia Logica
-        </h3>
+            <!-- Título -->
+            <h3 class="fw-bold text-success mb-3">
+                <i class="bi bi-journal-text"></i> {{ evidencia.titulo }}
+            </h3>
 
-        <!-- Descripción -->
-        <p class="text-muted mb-4">
-            De acuerdo con las instrucciones dadas en el PDF y lo visto en clase, se debe aplicar la estructura condicional if , elif , else para resolver el problema planteado, analizando cada condición de manera ordenada y mostrando el resultado correspondiente según la opción que cumpla la condición establecida.
-        </p>
+            <!-- Descripción -->
+            <p class="text-muted mb-4">
+                {{ evidencia.instrucciones }}
+            </p>
 
-        <!-- Archivos adjuntos -->
-        <h5 class="fw-semibold mb-3">
-            <i class="bi bi-paperclip"></i> Archivos adjuntos
-        </h5>
-        <ul class="list-group">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <i class="bi bi-file-earmark-pdf text-danger"></i> Guía de estructuras con HTML
-            </div>
-            <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-            </a>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega
-            </div>
-            <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-            </a>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <i class="bi bi-file-earmark-image text-warning"></i> Ejemplos prácticos
-            </div>
-            <a href="#" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-download"></i> Descargar
-            </a>
-            </li>
-        </ul>
+            <!-- Archivos -->
+            <h5 class="fw-semibold mb-3">
+                <i class="bi bi-paperclip"></i> Archivos adjuntos
+            </h5>
+
+            {% if evidencia.archivo and evidencia.archivo != 'No subido' %}
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        {{ evidencia.archivo }}
+                    </span>
+
+                    <a href="/media/evidencias/{{ evidencia.archivo }}" 
+                       class="btn btn-sm btn-outline-success" download>
+                        <i class="bi bi-download"></i> Descargar
+                    </a>
+                </li>
+            </ul>
+            {% else %}
+            <p class="text-muted">
+                No hay archivos adjuntos.
+            </p>
+            {% endif %}
         </div>
     </div>
-    </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
-    </html>
+<!-- BOTONES FLOTANTES -->
+<style>
+    .fab-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        gap: 0.75rem;
+        z-index: 999;
+    }
+    .btn-edit {
+        border-radius: 50%;
+        width: 55px;
+        height: 55px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+</style>
 
 
 {% endblock %}
