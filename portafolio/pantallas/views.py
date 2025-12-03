@@ -9,6 +9,8 @@ from django.core.files.storage import FileSystemStorage
 from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario, NombreAsignatura, TipoAsignatura
 from .models import *
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+import re
 
 load_dotenv() 
 
@@ -432,30 +434,25 @@ def datos_aprendiz(request, id):
     })
 
 
-
 def carpetas2(request):
-    # 1. Intentar obtener ficha desde la URL ?ficha=xx
     ficha_id = request.GET.get("ficha")
 
-    # 2. Si viene en el GET, guardarla en sesión
     if ficha_id:
-        request.session["ficha_id"] = ficha_id
+        request.session["ficha_actual"] = ficha_id
     else:
-        # 3. Si no viene, intentar recuperarla desde la sesión
-        ficha_id = request.session.get("ficha_id")
-
-    # 4. Enviar ficha_id al template (IMPORTANTE)
+        ficha_id = request.session.get("ficha_actual")
     return render(request, "paginas/instructor/carpetas2.html", {
         "ficha_id": ficha_id
     })
-
 
 def portafolio(request, ficha_id):
     ficha = Ficha.objects.get(id=ficha_id)
 
     return render(request, "paginas/instructor/portafolio.html", {
-        "ficha": ficha
+        "ficha": ficha,
+        "ficha_id": ficha_id  # <-- Esto es lo que faltaba
     })
+
 
 def taller(request):
     return render(request, "paginas/instructor/taller.html")
@@ -482,39 +479,129 @@ def normalizar(texto):
     )
     return texto.strip()
 
+def carpetasins(request, ficha_id, trimestre):
 
-def carpetasins(request):
-    # Orden personalizado normalizado
-    orden = [
-        "plan concertado",
-        "guias de aprendizaje",
-        "evidencias de aprendizaje",
-        "planes de accion de mejora",
-        "formato diligenciado de planeacion, seguimiento y evaluacion etapa productiva."
-    ]
+    ficha = get_object_or_404(Ficha, id=ficha_id)
 
-    orden_normalizado = [normalizar(o) for o in orden]
+    carpetas_ficha = FichaCarpetas.objects.filter(
+        idficha=ficha_id
+    ).select_related("idcarpetas")
 
-    # Obtener carpetas desde BD
-    carpetas = Carpetas.objects.all()
+    # ⚠️ Si no existen carpetas asignadas, se crean objetos temporales
+    if not carpetas_ficha.exists():
+        carpetas_list = Carpetas.objects.all()
+        carpetas_ficha = []
+        for c in carpetas_list:
+            class _CF: pass
+            cf = _CF()
+            cf.idcarpetas = c
+            carpetas_ficha.append(cf)
 
-    # Ordenarlas según el orden definido
-    carpetas = sorted(
-        carpetas,
-        key=lambda c: (
-            orden_normalizado.index(normalizar(c.nombre))
-            if normalizar(c.nombre) in orden_normalizado
-            else 999
-        )
+    # ⬇️⬇️⬇️ **AQUÍ VA EL ORDENAMIENTO** ⬇️⬇️⬇️
+    import re
+    def extraer_numero(texto):
+        match = re.search(r'(\d+)', texto)
+        return int(match.group(1)) if match else 9999
+
+    carpetas_ficha = sorted(
+        carpetas_ficha,
+        key=lambda c: extraer_numero(c.idcarpetas.nombre)
     )
+    # ⬆️⬆️⬆️ **AQUÍ, JUSTO DESPUÉS DE TENER CARPETAS_FICHA DEFINIDO** ⬆️⬆️⬆️
 
-    # Agregar archivos a cada carpeta
-    for carpeta in carpetas:
-        carpeta.archivos = Archivos.objects.filter(idcarpetas=carpeta.id)
+    instructor_id = request.session.get("idusuario")  # id del instructor logueado
+
+    # Asignar archivos
+    for cf in carpetas_ficha:
+        carpeta_obj = cf.idcarpetas
+
+        cf.archivos_generales = Archivos.objects.filter(
+            idcarpetas=carpeta_obj.id
+        )
+
+        cf.archivos_instructor = PortafolioInstructor.objects.filter(
+            ficha=ficha,
+            carpeta=carpeta_obj,
+            trimestre=trimestre,
+            idinstructor_id=instructor_id
+        ).order_by('-fecha_subida')
 
     return render(request, "paginas/instructor/carpetasins.html", {
-        "carpetas": carpetas
+        "ficha": ficha,
+        "trimestre": trimestre,
+        "carpetas_ficha": carpetas_ficha
     })
+
+
+def subir_archivo_portafolio(request):
+    if request.method == "POST":
+        titulo = request.POST.get("titulo_archivo")
+        archivo = request.FILES.get("archivo")
+        ficha_id = request.POST.get("ficha")
+        carpeta_id = request.POST.get("carpeta")
+        trimestre = request.POST.get("trimestre")
+
+        ficha = get_object_or_404(Ficha, id=ficha_id)
+        carpeta = get_object_or_404(Carpetas, id=carpeta_id) 
+
+        nuevo = PortafolioInstructor(
+            titulo_archivo=titulo,
+            archivo=archivo,
+            ficha=ficha,
+            carpeta=carpeta,
+            trimestre=trimestre,
+        )
+        nuevo.save()
+
+        messages.success(request, "Archivo subido con éxito.")
+        return redirect(request.META.get("HTTP_REFERER", "/"))
+
+    messages.error(request, "Error al subir archivo.")
+    return redirect("/")
+
+
+def eliminar_archivo_portafolio(request, id):
+    archivo = get_object_or_404(PortafolioInstructor, id=id)
+    archivo.delete()
+    messages.success(request, "Archivo eliminado correctamente.")
+    return redirect(request.META.get("HTTP_REFERER", "/"))
+
+def editar_carpeta(request, id, ficha_id, trimestre):
+    carpeta = get_object_or_404(Carpetas, id=id)
+
+    if request.method == "POST":
+        carpeta.nombre = request.POST.get("nombre")
+        carpeta.descripcion = request.POST.get("descripcion")
+        carpeta.save()
+
+        return redirect('carpetasins', ficha_id=ficha_id, trimestre=trimestre)
+
+    return render(request, 'paginas/instructor/editar_carpeta.html', {
+        'carpeta': carpeta,
+        'ficha_id': ficha_id,
+        'trimestre': trimestre,
+    })
+
+def crear_carpeta(request, id, ficha_id, trimestre):
+
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+
+        if not nombre:
+            messages.error(request, "El nombre de la carpeta es obligatorio.")
+            return redirect("crear_carpeta", id=id, ficha_id=ficha_id, trimestre=trimestre)
+
+        Carpetas.objects.create(nombre=nombre)
+        messages.success(request, "Carpeta creada exitosamente.")
+
+        return redirect('carpetasins', ficha_id=ficha_id, trimestre=trimestre)
+
+    return render(request, "paginas/instructor/crear_carpeta.html", {
+        "ficha_id": ficha_id,
+        "trimestre": trimestre
+    })
+
+
 
 
 def archivo_agregar(request, carpeta_id):
@@ -1321,7 +1408,6 @@ def evidencia_calificar_coordinador(request):
 def sesion(request):
     usuario_ingresado = ""
 
-    # Limpiar mensajes antiguos
     if request.method == "GET":
         storage = messages.get_messages(request)
         storage.used = True
@@ -1350,12 +1436,10 @@ def sesion(request):
             messages.error(request, "Contraseña incorrecta.")
             return redirect('sesion')
 
-        # Guardamos datos base del usuario
-        request.session['id_usuario'] = usuario['id']
+        request.session['usuario_id'] = usuario['id']
         request.session['usuario'] = usuario['usuario']
         request.session['nombre_usuario'] = f"{usuario['nombres']} {usuario['apellidos']}".upper()
 
-        # Obtener ROL del usuario
         cursor.execute("""
             SELECT r.tipo
             FROM rol r
@@ -1364,7 +1448,6 @@ def sesion(request):
         """, (usuario['id'],))
         rol = cursor.fetchone()
 
-        # 🔹 OBTENER FICHA DEL USUARIO Y GUARDARLA EN SESIÓN
         cursor.execute("""
             SELECT idficha 
             FROM ficha_usuario
@@ -1374,7 +1457,6 @@ def sesion(request):
         ficha = cursor.fetchone()
         request.session['ficha_id'] = ficha['idficha'] if ficha else None
 
-        # Redirección según el rol
         if rol:
             tipo_rol = rol['tipo'].lower()
 
@@ -1420,8 +1502,8 @@ def configuracion_observador(request):
 
 def configuracion_observador_2(request):
     return render(request, "paginas/observador/configuracion_observador_2.html")
-def configuracion_coordinador(request):
 
+def configuracion_coordinador(request):
     # 1. Recuperar ficha desde sesión
     ficha_id = request.session.get("ficha_actual")
     if not ficha_id:
@@ -1432,38 +1514,39 @@ def configuracion_coordinador(request):
     ficha = Ficha.objects.get(id=ficha_id)
 
     # ========= INSTRUCTORES =========
-    instructores = Usuario.objects.filter(
-        usuariorol_idrol_tipo="instructor"
-    ).distinct()
+    # IDs de usuarios con rol instructor
+    ids_instructores = UsuarioRol.objects.filter(idrol__tipo="instructor").values_list("idusuario_id", flat=True)
 
-    instructores_asignados = Usuario.objects.filter(
-        fichausuario__idficha_id=ficha_id,
-        usuariorol_idrol_tipo="instructor"
-    ).distinct()
+    # Todos los instructores
+    instructores = Usuario.objects.filter(id__in=ids_instructores).distinct()
 
-    ids_instructores_asignados = [i.id for i in instructores_asignados]
+    # Instructores asignados a la ficha
+    ids_instructores_asignados = FichaUsuario.objects.filter(
+        idficha_id=ficha_id,
+        idusuario_id__in=ids_instructores
+    ).values_list("idusuario_id", flat=True)
+
+    instructores_asignados = Usuario.objects.filter(id__in=ids_instructores_asignados)
 
     # ========= APRENDICES =========
-    aprendices = Usuario.objects.filter(
-        usuariorol_idrol_tipo="aprendiz"
-    ).distinct()
+    ids_aprendices = UsuarioRol.objects.filter(idrol__tipo="aprendiz").values_list("idusuario_id", flat=True)
 
-    aprendices_asignados = Usuario.objects.filter(
-        fichausuario__idficha_id=ficha_id,
-        usuariorol_idrol_tipo="aprendiz"
-    ).distinct()
+    aprendices = Usuario.objects.filter(id__in=ids_aprendices).distinct()
 
-    ids_aprendices_asignados = [a.id for a in aprendices_asignados]
+    ids_aprendices_asignados = FichaUsuario.objects.filter(
+        idficha_id=ficha_id,
+        idusuario_id__in=ids_aprendices
+    ).values_list("idusuario_id", flat=True)
+
+    aprendices_asignados = Usuario.objects.filter(id__in=ids_aprendices_asignados)
 
     # ========= ASIGNATURAS =========
     todas_asignaturas = NombreAsignatura.objects.all()
 
-    # Asignaturas reales en la ficha
     asignaturas_ficha = FichaAsignatura.objects.filter(
         idficha_id=ficha_id
     ).select_related("idasignatura")
 
-    # IDs asignados (para marcar checkboxes)
     asignadas_ids = list(
         asignaturas_ficha.values_list("idasignatura_id", flat=True)
     )
@@ -1475,11 +1558,13 @@ def configuracion_coordinador(request):
         if "instructores" in request.POST:
             seleccionados = request.POST.getlist("instructores")
 
+            # Borrar asignaciones anteriores
             FichaUsuario.objects.filter(
                 idficha_id=ficha_id,
-                idusuario_usuariorolidrol_tipo="instructor"
+                idusuario_id__in=ids_instructores
             ).delete()
 
+            # Crear nuevas asignaciones
             for ins_id in seleccionados:
                 FichaUsuario.objects.create(
                     idficha_id=ficha_id,
@@ -1492,11 +1577,13 @@ def configuracion_coordinador(request):
         if "aprendices" in request.POST:
             seleccionados = request.POST.getlist("aprendices")
 
+            # Borrar asignaciones anteriores
             FichaUsuario.objects.filter(
                 idficha_id=ficha_id,
-                idusuario_usuariorolidrol_tipo="aprendiz"
+                idusuario_id__in=ids_aprendices
             ).delete()
 
+            # Crear nuevas asignaciones
             for apr_id in seleccionados:
                 FichaUsuario.objects.create(
                     idficha_id=ficha_id,
@@ -1522,7 +1609,6 @@ def configuracion_coordinador(request):
 
             messages.success(request, "Asignaturas guardadas correctamente!")
 
-
         return redirect("configuracion_coordinador")
 
     # ========= RENDER =========
@@ -1545,6 +1631,7 @@ def configuracion_coordinador(request):
         "asignaturas_ficha": asignaturas_ficha,
         "asignadas_ids": asignadas_ids,
     })
+
 
 def evidencia_calificada(request):
     return render(request, "paginas/instructor/evidencia_calificada.html")
@@ -1607,7 +1694,7 @@ def ficha_instructor(request):
         ficha = Ficha.objects.select_related('idjornada', 'idprograma').get(id=ficha_id)
 
         aprendices = Usuario.objects.filter(
-            fichausuario__idficha_id=ficha_id,
+            fichausuario__idficha=ficha,
             usuariorol_idrol_tipo='aprendiz'
         ).order_by('apellidos', 'nombres').distinct()
 
@@ -2141,15 +2228,13 @@ def actualizar_contrasena(request):
         nueva = request.POST.get("nueva")
         confirmar = request.POST.get("confirmar")
 
-        # Obtener ID del usuario en sesión
-        id_usuario = request.session.get("id_usuario")
+        id_usuario = request.session.get("usuario_id")
 
         if not id_usuario:
             messages.error(request, "No se encontró el usuario en la sesión.")
             return redirect("configuracion_instructor")
 
         try:
-            # Conexión a la BD
             conexion = mysql.connector.connect(
                 host=os.getenv("DB_HOST"),
                 user=os.getenv("DB_USER"),
@@ -2158,7 +2243,6 @@ def actualizar_contrasena(request):
             )
             cursor = conexion.cursor(dictionary=True)
 
-            # Obtener la contraseña actual
             cursor.execute("SELECT contrasena FROM usuario WHERE id = %s", (id_usuario,))
             usuario = cursor.fetchone()
 
@@ -2166,17 +2250,14 @@ def actualizar_contrasena(request):
                 messages.error(request, "Usuario no encontrado.")
                 return redirect("configuracion_instructor")
 
-            # Validar contraseña actual
             if usuario["contrasena"] != contrasena_actual:
                 messages.error(request, "La contraseña actual es incorrecta.")
                 return redirect("configuracion_instructor")
 
-            # Validar coincidencia
             if nueva != confirmar:
                 messages.error(request, "Las contraseñas nuevas no coinciden.")
                 return redirect("configuracion_instructor")
 
-            # Actualizar contraseña
             cursor.execute(
                 "UPDATE usuario SET contrasena = %s WHERE id = %s",
                 (nueva, id_usuario)

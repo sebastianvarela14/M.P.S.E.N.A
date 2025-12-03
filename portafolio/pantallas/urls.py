@@ -33,7 +33,14 @@ urlpatterns = [
     path("taller/", views.taller, name="taller"),
     path("tareas/", views.tareas, name="tareas"),
 
-    path("carpetasins/", views.carpetasins, name="carpetasins"),
+    path('carpetasins/<int:ficha_id>/<int:trimestre>/', views.carpetasins, name='carpetasins'),
+    path("subir_archivo_portafolio/", views.subir_archivo_portafolio, name="subir_archivo_portafolio"),
+    path("eliminar_archivo_portafolio/<int:id>/", views.eliminar_archivo_portafolio, name="eliminar_archivo_portafolio"),
+    path('carpetas/editar/<int:id>/<int:ficha_id>/<int:trimestre>/',views.editar_carpeta,name='editar_carpeta'),
+
+    path("carpeta/crear/<int:id>/<int:ficha_id>/<int:trimestre>/", views.crear_carpeta, name="crear_carpeta"),
+
+
     path("trimestre/", views.trimestre, name="trimestre"),
     path("carpetas_aprendiz/", views.carpetas_aprendiz, name="carpetas_aprendiz"),
     path("trimestre_aprendiz/", views.trimestre_aprendiz, name="trimestre_aprendiz"),
