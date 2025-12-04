@@ -1,0 +1,28 @@
+{% extends "plantillains.html" %}
+{% load static %}
+
+{% block contenido %}
+
+<div class="container mt-4">
+
+    <h3 class="mb-4">Crear nueva carpeta</h3>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">Nombre de la carpeta</label>
+            <input type="text" name="nombre" class="form-control" placeholder="Ej: Carpeta 1" required>
+        </div>
+
+        <button class="btn btn-success">Crear carpeta</button>
+                        <div class="d-flex justify-content-between mt-4">
+                    <a href="javascript:history.back()" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+
+    </form>
+
+</div>
+
+{% endblock %}
