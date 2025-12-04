@@ -87,67 +87,47 @@
   </style>
 </head>
 <body>
-<div class="container">
+  {% if ficha %}
+  <div class="container">
+    <h2 id="tituloFicha">INFORMACIÓN DE LA FICHA</h2>
 
-  <h2 id="tituloFicha">INFORMACIÓN DE LA FICHA</h2>
-
-  <!-- Número de ficha -->
-  <div class="row">
-    <div class="label">Número de Ficha:</div>
-    <div class="value" id="numFicha">
-      {{ ficha.numero_ficha }}
+    <div class="row">
+      <div class="label">Número de Ficha:</div>
+      <div class="value" id="numFicha">{{ ficha.numero_ficha }}</div>
     </div>
-  </div>
 
-  <!-- Jornada -->
-  <div class="row">
-    <div class="label">Jornada:</div>
-    <div class="value" id="jornada">
-      {% if ficha.idjornada %}
-        {{ ficha.idjornada.nombre }}
-      {% else %}
-        No registrada
-      {% endif %}
+    <div class="row">
+      <div class="label">Jornada:</div>
+      <div class="value" id="jornada">{{ ficha.idjornada.nombre|capfirst }}</div>
     </div>
-  </div>
 
-  <!-- Programa -->
-  <div class="row">
-    <div class="label">Programa:</div>
-    <div class="value" id="programa">
-      {% if ficha.idprograma %}
-        {{ ficha.idprograma.programa }}
-      {% else %}
-        No registrado
-      {% endif %}
+    <div class="row">
+      <div class="label">Programa:</div>
+      <div class="value" id="programa">{{ ficha.idprograma.programa|capfirst }}</div>
     </div>
-  </div>
 
-  <!-- Número de Aprendices (NO existe en BD → valor HTML) -->
-  <div class="row-inline">
-    <div style="flex:1; display:flex; align-items:center;">
-      <div class="label">Número de Aprendices:</div>
-      <div class="value" id="numAprendices">
-        20
+    <!-- MISMA FILA: Número de Aprendices y Estado de la Ficha -->
+    <div class="row-inline">
+      <div style="flex:1; display:flex; align-items:center;">
+        <div class="label">Número de Aprendices:</div>
+        <div class="value" id="numAprendices">{{ aprendices_count }}</div>
+      </div>
+      <div style="flex:1; display:flex; align-items:center;">
+        <div class="label">Estado de la Ficha:</div>
+        <div class="value" id="estadoFicha">{{ ficha.estado|capfirst }}</div>
       </div>
     </div>
 
-    <!-- Estado de la Ficha (NO existe en BD → valor HTML) -->
-    <div style="flex:1; display:flex; align-items:center;">
-      <div class="label">Estado de la Ficha:</div>
-      <div class="value" id="estadoFicha">
-        Activa
-      </div>
+    <div class="row">
+      <div class="label">Instructor Responsable:</div>
+      <div class="value" id="instructorResp">{{ instructor_responsable|title }}</div>
     </div>
   </div>
-
-  <!-- Instructor Responsable (NO existe en BD → valor HTML) -->
-  <div class="row">
-    <div class="label">Instructor Responsable:</div>
-    <div class="value" id="instructorResp">
-      José Omar Calderón
+  {% else %}
+    <div class="container text-center">
+        <h2 id="tituloFicha">SIN INFORMACIÓN</h2>
+        <p class="text-muted">No estás asignado a ninguna ficha. Por favor, contacta a un coordinador.</p>
     </div>
-  </div>
+  {% endif %}
 
-</div>
 {% endblock %}
