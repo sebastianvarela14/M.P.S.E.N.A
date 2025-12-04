@@ -96,17 +96,23 @@
         <input type="text" class="form-control" value="Omar Calderon" readonly>
     </div>
 
-    <!-- Total aprendices -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold text-success">APRENDICES</h4>
-        <span id="total-aprendices" class="text-muted">Total de Aprendices: 6</span>
+<!-- Total aprendices -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold text-success">APRENDICES</h4>
+    <span class="text-muted">Total de Aprendices: {{ total }}</span>
+</div>
+
+<!-- Buscador -->
+<form method="GET" class="input-group mb-3" style="max-width: 350px;">
+    <input type="text" name="q" class="form-control" value="{{ q }}" placeholder="Buscar aprendiz...">
+    <button class="btn btn-success" type="submit">
+        <i class="bi bi-search"></i>
+    </button>
+</form>
+
+
     </div>
 
-    <!-- Buscador -->
-    <div class="input-group mb-3" style="max-width: 350px;">
-        <input type="text" id="buscar" class="form-control" placeholder="Buscar aprendiz...">
-        <button class="btn btn-success" id="btnBuscar"><i class="bi bi-search"></i></button>
-    </div>
 
         <!-- Lista de aprendices -->
         <div id="lista" class="list-group shadow-sm">

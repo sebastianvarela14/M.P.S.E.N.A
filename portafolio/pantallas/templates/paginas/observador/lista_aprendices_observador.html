@@ -42,7 +42,7 @@
         <!-- Total aprendices -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold text-success">APRENDICES</h4>
-            <span id="total-aprendices" class="text-muted">Total de Aprendices: 6</span>
+            <span id="total-aprendices" class="text-muted">Total de Aprendices: {{ total }}</span>
         </div>
 
         <!-- Buscador -->
@@ -53,11 +53,13 @@
 
         <!-- Lista de aprendices -->
         <div id="lista" class="list-group shadow-sm">
-            <a href="{% url 'datos' %}" class="list-group-item list-group-item-action">
-            <i class="bi bi-person-circle"></i> Laura Camila Castañeda Rojas
-            </a>
-        </div>
-    </div>
+    {% for a in aprendices %}
+        <a href="{% url 'datos_coor' a.id %}" class="list-group-item list-group-item-action">
+            <i class="bi bi-person-circle"></i> {{ a.nombres }} {{ a.apellidos }}
+        </a>
+    {% empty %}
+        <div class="list-group-item">No hay aprendices para mostrar.</div>
+    {% endfor %}
 
 <script>
     const buscarInput = document.getElementById("buscar");
