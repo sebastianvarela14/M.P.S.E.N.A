@@ -265,4 +265,18 @@ class NombrePrograma(models.Model):
     def __str__(self):
         return self.nombre
 
+class PortafolioInstructor(models.Model):
+    ficha = models.ForeignKey('Ficha', models.DO_NOTHING, db_column='idficha')
+    carpeta = models.ForeignKey('Carpetas', models.DO_NOTHING, db_column='idcarpeta')
+    trimestre = models.IntegerField(db_comment='trimestre asignado (1-7)')
+    
+    titulo_archivo = models.CharField(max_length=150, db_comment='nombre visible del archivo')
+    archivo = models.FileField(upload_to="portafolio_instructor/", null=True, blank=True)
+    
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+    idinstructor = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='idinstructor')
+
+    class Meta:
+        managed = False
+        db_table = 'portafolio_instructor'
 
