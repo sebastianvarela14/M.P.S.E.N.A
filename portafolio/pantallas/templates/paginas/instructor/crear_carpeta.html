@@ -3,25 +3,91 @@
 
 {% block contenido %}
 
+<style>
+    .titulo-linea {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin-bottom: 1.8rem;
+    }
+
+    .titulo-linea span {
+        font-weight: bold;
+        font-size: 1.3rem;
+        color: #198754;
+        margin-right: 10px;
+    }
+
+    .titulo-linea div {
+        height: 2px;
+        background: #198754;
+        flex-grow: 1;
+        border-radius: 5px;
+    }
+
+    .card-custom {
+        border: none !important;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+    }
+
+    .form-control {
+        border-radius: 10px;
+    }
+
+    textarea.form-control {
+        resize: none;
+    }
+
+    .btn-success, .btn-secondary {
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .btn-success i, .btn-secondary i {
+        margin-right: 5px;
+    }
+</style>
+
 <div class="container mt-4">
 
-    <h3 class="mb-4">Crear nueva carpeta</h3>
+    <!-- TÍTULO -->
+    <div class="titulo-linea">
+        <span>CREAR CARPETA</span>
+        <div></div>
+    </div>
 
-    <form method="POST">
-        {% csrf_token %}
+    <div class="card card-custom mb-3">
+        <div class="card-body">
 
-        <div class="mb-3">
-            <label class="form-label">Nombre de la carpeta</label>
-            <input type="text" name="nombre" class="form-control" placeholder="Ej: Carpeta 1" required>
-        </div>
+            <form method="POST">
+                {% csrf_token %}
 
-        <button class="btn btn-success">Crear carpeta</button>
-                        <div class="d-flex justify-content-between mt-4">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre de la carpeta</label>
+                    <input type="text" name="nombre" class="form-control" placeholder="Ej: Carpeta 1" required>
+                </div>
+
+                                <div class="mb-3">
+                    <label class="form-label fw-bold">Descripción</label>
+                    <textarea name="descripcion" rows="3" class="form-control"></textarea>
+                </div>
+
+                <div class="text-end mt-4 d-flex justify-content-between">
                     <a href="javascript:history.back()" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Volver
                     </a>
 
-    </form>
+                    <button class="btn btn-success">
+                        <i class="bi bi-check-lg"></i> Crear carpeta
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
 
 </div>
 

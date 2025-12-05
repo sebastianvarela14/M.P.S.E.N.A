@@ -568,10 +568,17 @@ def subir_archivo_portafolio(request):
     messages.error(request, "Método no permitido.")
     return redirect("/")
 
-# --- Vista para eliminar archivos (eliminar_archivo_portafolio) (SIN CAMBIOS) ---
+# --- Vista para eliminar archivos (eliminar_archivo_portafolio) ---
 def eliminar_archivo_portafolio(request, id):
     archivo = get_object_or_404(PortafolioInstructor, id=id)
+
+    # 🔥 1. Eliminar archivo físico si existe
+    if archivo.archivo and archivo.archivo.storage.exists(archivo.archivo.name):
+        archivo.archivo.delete(save=False)
+
+    # 🔥 2. Eliminar registro de la base de datos
     archivo.delete()
+
     messages.success(request, "Archivo eliminado correctamente.")
     return redirect(request.META.get("HTTP_REFERER", "/"))
 
@@ -1024,11 +1031,19 @@ def trimestre_aprendiz_observador(request):
 def trimestre_observador(request):
     return render(request, "paginas/observador/trimestre_observador.html")
 
-def adentro_material_observador(request):
-    return render(request, "paginas/observador/adentro_material_observador.html")
+
+def adentro_material_observador(request, id):
+    material = Material.objects.get(id=id)
+    return render(request, "paginas/observador/adentro_material_observador.html", {
+        "material": material
+    })
+
 
 def material_principal_observador(request):
-    return render(request, "paginas/observador/material_principal_observador.html")
+    materiales = Material.objects.all().order_by('-id')
+    return render(request, "paginas/observador/material_principal_observador.html", {
+        "materiales": materiales
+    })
 
 def evidencia_guia_observador(request, evidencia_id):
     try:
@@ -1172,7 +1187,7 @@ def lista_aprendices_coordinador(request):
         password=os.getenv("DB_PASSWORD"),
         database=os.getenv("DB_NAME")
     )
-   
+    
     cursor = conexion.cursor(dictionary=True)
 
     try:
@@ -1212,7 +1227,11 @@ def lista_aprendices_coordinador(request):
     })
 
 def material_principal_coordinador(request):
-    return render(request, "paginas/coordinador/material_principal_coordinador.html")
+    materiales = Material.objects.all().order_by('-id')
+    return render(request, "paginas/coordinador/material_principal_coordinador.html", {
+        "materiales": materiales
+    })
+
 
 def portafolio_aprendices_coordinador(request):
     ficha_id = request.session.get("ficha_actual")
@@ -1842,7 +1861,8 @@ def opc_equipoejecutor(request, trimestre):
 
     carpetas = CarpetaEquipo.objects.filter(
         ficha=ficha,
-        trimestre=trimestre
+        trimestre=trimestre,
+        parent__isnull=True   # SOLO CARPETAS PRINCIPALES
     ).order_by("nombre")
 
     return render(request, "paginas/instructor/opc_equipoejecutor.html", {
@@ -1850,6 +1870,7 @@ def opc_equipoejecutor(request, trimestre):
         "trimestre": trimestre,
         "carpetas": carpetas
     })
+
 
 def crear_carpeta_equipo(request, trimestre):
     ficha_id = request.session.get("ficha_actual")
@@ -1872,6 +1893,32 @@ def crear_carpeta_equipo(request, trimestre):
     return render(request, "paginas/instructor/crear_carpeta_equipo.html", {
         "trimestre": trimestre
     })
+
+def crear_subcarpeta_equipo(request, carpeta_id):
+    parent_carpeta = get_object_or_404(CarpetaEquipo, id=carpeta_id)
+    ficha = parent_carpeta.ficha
+    trimestre = parent_carpeta.trimestre
+
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        descripcion = request.POST.get("descripcion")
+
+        CarpetaEquipo.objects.create(
+            ficha=ficha,
+            trimestre=trimestre,
+            nombre=nombre,
+            descripcion=descripcion,
+            parent=parent_carpeta   
+        )
+
+        messages.success(request, "Subcarpeta creada correctamente.")
+        return redirect("opc_equipoejecutor", trimestre=trimestre)
+
+    return render(request, "paginas/instructor/crear_subcarpeta_equipo.html", {
+        "carpeta": parent_carpeta,
+        "trimestre": trimestre
+    })
+
 
 def editar_carpeta_equipo(request, carpeta_id):
     carpeta = get_object_or_404(CarpetaEquipo, id=carpeta_id)
@@ -1898,23 +1945,47 @@ def subir_archivo_equipo(request, carpeta_id):
     carpeta = get_object_or_404(CarpetaEquipo, id=carpeta_id)
 
     if request.method == "POST":
-        archivo = request.FILES["archivo"]
+
+        archivo = request.FILES.get("archivo")
+        nombre_editable = request.POST.get("nombre_editable")
+
+        if archivo is None:
+            messages.error(request, "Debes seleccionar un archivo.")
+            return redirect("opc_equipoejecutor", trimestre=carpeta.trimestre)
 
         ArchivoEquipo.objects.create(
             carpeta=carpeta,
             archivo=archivo,
-            nombre_editable=archivo.name,
-            subido_por=request.user
+            nombre_editable=nombre_editable
         )
 
-    return redirect("opc_equipoejecutor", trimestre=carpeta.trimestre)
+        messages.success(request, "Archivo subido correctamente.")
+        return redirect("opc_equipoejecutor", trimestre=carpeta.trimestre)
+
 
 def eliminar_archivo_equipo(request, archivo_id):
+    # usar el mismo nombre que en la URL: archivo_id
     archivo = get_object_or_404(ArchivoEquipo, id=archivo_id)
-    carpeta = archivo.carpeta
+
+    # 1) eliminar fichero físico si existe
+    try:
+        if archivo.archivo and archivo.archivo.name:
+            # exist check (seguro para cualquier storage)
+            storage = archivo.archivo.storage
+            if storage.exists(archivo.archivo.name):
+                archivo.archivo.delete(save=False)
+    except Exception as e:
+        # opcional: loguear el error, pero no impedir la eliminación del registro
+        # import logging; logging.exception(e)
+        pass
+
+    # 2) eliminar registro de la BD
+    carpeta = archivo.carpeta  # lo guardamos para la redirección
     archivo.delete()
 
+    messages.success(request, "Archivo eliminado correctamente.")
     return redirect("opc_equipoejecutor", trimestre=carpeta.trimestre)
+
 
 
 def fichas_equipoejecutor_coordinador(request):
@@ -1947,6 +2018,69 @@ def material_editar(request, id):
         return redirect("material_principal")
 
     return render(request, "paginas/instructor/material_editar.html", {
+        "material": material
+    })
+
+def material_editar_observador(request, id):
+    material = get_object_or_404(Material, id=id)
+
+    if request.method == "POST":
+        material.titulo = request.POST.get("titulo")
+        material.descripcion = request.POST.get("descripcion")
+        archivo = request.FILES.get("archivo")
+        if archivo:
+            material.archivo = archivo
+        material.save()
+        messages.success(request, "Material actualizado correctamente.")
+        return redirect("adentro_material_observador", id=id)
+
+    return render(request, "paginas/observador/material_editar_observador.html", {
+        "material": material
+    })
+
+def material_editar_coordinador(request, id):
+    material = get_object_or_404(Material, id=id)
+
+    if request.method == "POST":
+        if "eliminar_archivo" in request.POST:
+            if material.archivo:
+                material.archivo.delete()
+            messages.success(request, "Archivo adjunto eliminado.")
+            return redirect("material_editar_coordinador", id=id)
+
+        material.titulo = request.POST.get("titulo")
+        material.descripcion = request.POST.get("descripcion")
+        material.fecha_entrega = request.POST.get("fecha_entrega")
+
+        archivo = request.FILES.get("archivo")
+        if archivo:
+            material.archivo = archivo
+
+        material.save()
+
+        return redirect("material_principal_coordinador")
+
+    return render(request, "paginas/coordinador/material_editar_coordinador.html", {
+        "material": material
+    })
+
+def material_eliminar_coordinador(request, id):
+    material = get_object_or_404(Material, id=id)
+    if request.method == "POST":
+        material.delete()
+        messages.success(request, "Material eliminado correctamente.")
+        return redirect("material_principal_coordinador")
+    return render(request, "paginas/coordinador/material_confirmar_eliminar.html", {
+        "material": material
+    })
+
+def material_eliminar_observador(request, id):
+    material = get_object_or_404(Material, id=id)
+    if request.method == "POST":
+        material.delete()
+        messages.success(request, "Material eliminado correctamente.")
+        return redirect("material_principal_observador")
+    return render(request, "paginas/observador/material_eliminar_confirmar.html", {
         "material": material
     })
 

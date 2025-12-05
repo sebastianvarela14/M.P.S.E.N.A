@@ -84,11 +84,11 @@ urlpatterns = [
     path("portafolio_observador/", views.portafolio_observador, name="portafolio_observador"),
     path("trimestre_aprendiz_observador/", views.trimestre_aprendiz_observador, name="trimestre_aprendiz_observador"),
     path("trimestre_observador/", views.trimestre_observador, name="trimestre_observador"),
-    path("adentro_material_observador/", views.adentro_material_observador, name="adentro_material_observador"),
-    path("material_principal_observador/", views.material_principal_observador, name="material_principal_observador"),
+    path('adentro_material_observador/<int:id>/', views.adentro_material_observador, name='adentro_material_observador'),   
+    path('material_principal_observador/', views.material_principal_observador, name='material_principal_observador'),
     path("evidencia_guia_observador/<int:evidencia_id>/", views.evidencia_guia_observador, name="evidencia_guia_observador"),
     path('evidencias_observador/<int:ficha_id>/', views.evidencias_observador, name='evidencias_observador'),
-    path("adentro_material_coordinador/", views.adentro_material_coordinador, name="adentro_material_coordinador"),
+    path('adentro_material_coordinador/<int:id>/', views.adentro_material_coordinador, name='adentro_material_coordinador'),
     path("carpetas_coordinador/", views.carpetas_coordinador, name="carpetas_coordinador"),
     path("evidencia_guia_coordinador/<int:evidencia_id>/", views.evidencia_guia_coordinador, name="evidencia_guia_coordinador"),
     path("evidencias_coordinador/<int:ficha_id>/", views.evidencias_coordinador, name="evidencias_coordinador"),
@@ -134,6 +134,8 @@ urlpatterns = [
     path("ficha_instructor/", views.ficha_instructor, name="ficha_instructor"),
     path("ficha_observador/", views.ficha_observador, name="ficha_observador"),
     path("equipo_ejecutor/", views.equipo_ejecutor, name="equipo_ejecutor"),
+    path("equipo/subcarpeta/<int:carpeta_id>/", views.crear_subcarpeta_equipo, name="crear_subcarpeta_equipo"),
+
 
     # Vista por trimestre
     path("equipo_ejecutor/<int:trimestre>/", views.opc_equipoejecutor, name="opc_equipoejecutor"),
@@ -150,6 +152,8 @@ urlpatterns = [
     path("fichas_equipoejecutor_coordinador/", views.fichas_equipoejecutor_coordinador, name="fichas_equipoejecutor_coordinador"),
     path("equipo_coordinador/", views.equipo_coordinador, name="equipo_coordinador"),
     path('material/<int:id>/editar/', views.material_editar, name='material_editar'),
+    path('material_coordinador/<int:id>/editar/', views.material_editar_coordinador, name='material_editar_coordinador'),
+    path('material_coordinador/<int:id>/eliminar/', views.material_eliminar_coordinador, name='material_eliminar_coordinador'),
     path("evidencia_guia_editar/<int:evidencia_id>/", views.evidencia_guia_editar, name="evidencia_guia_editar"),
     path("evidencia_guia_editar_coordinador/<int:evidencia_id>/",views.evidencia_guia_editar_coordinador,name="evidencia_guia_editar_coordinador"),
 
