@@ -3,11 +3,11 @@
     {% block contenido %}
 
     <div class="container">
-            <h2 id="tituloDatos">DATOS PERSONALES DE {{ usuario.nombres }} {{ usuario.apellidos }}</h2>
+            <h2 id="tituloDatos">DATOS PERSONALES DE {{ usuario.nombres|title }} {{ usuario.apellidos|title }}</h2>
 
             <div class="row">
                 <div class="label">Nombre Completo:</div>
-                <div class="value" id="nombre">{{ usuario.nombres }} {{ usuario.apellidos }}</div>
+                <div class="value" id="nombre">{{ usuario.nombres|title }} {{ usuario.apellidos|title }}</div>
             </div>
 
             <div class="row">
@@ -23,7 +23,7 @@
             <div class="row-double">
                 <div class="field">
                     <div class="label">Tipo de documento:</div>
-                    <div class="value" id="tipoDoc">{{ usuario.tipo_documento }}</div>
+                    <div class="value" id="tipoDoc">{{ usuario.tipo_documento|capfirst }}</div>
                 </div>
                 <div class="field">
                     <div class="label">Número de documento:</div>
