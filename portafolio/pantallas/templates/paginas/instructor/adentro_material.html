@@ -27,22 +27,20 @@
 <ul class="list-group">
     <li class="list-group-item d-flex justify-content-between align-items-center">
 
-        <!-- IZQUIERDA: BOTÓN ELIMINAR + ICONO + NOMBRE -->
+        <!-- IZQUIERDA: ICONO + NOMBRE -->
         <div class="d-flex align-items-center gap-2">
-                {% csrf_token %}
-
-
             <!-- ICONO DEL ARCHIVO -->
-            <i class="bi bi-file-earmark"></i>
+            <i class="bi bi-file-earmark-text fs-5 text-secondary"></i>
 
             <!-- NOMBRE DEL ARCHIVO -->
-            <span class="text-truncate" style="max-width: 200px;">
-                {{ material.archivo }}
+            <span class="text-truncate" style="max-width: 400px;">
+                {# Muestra solo el nombre del archivo, no la ruta completa #}
+                {{ material.archivo.name|cut:"material/" }}
             </span>
         </div>
 
         <!-- DERECHA: BOTÓN DESCARGAR -->
-        <a href="/media/{{ material.archivo }}" download
+        <a href="{{ material.archivo.url }}" download
         class="btn btn-sm btn-outline-success">
             <i class="bi bi-download"></i> Descargar
         </a>
@@ -52,58 +50,6 @@
 {% else %}
 <p class="text-muted">Este material no tiene archivos adjuntos.</p>
 {% endif %}
-
-
-
-{% if material.archivo %}
-<ul class="list-group">
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-            {{ material.archivo }}
-        </div>
-
-        <a href="/media/{{ material.archivo }}" download
-        class="btn btn-sm btn-outline-success">
-            <i class="bi bi-download"></i> Descargar
-        </a>
-    </li>
-</ul>
-{% else %}
-<p class="text-muted">Este material no tiene archivos adjuntos.</p>
-{% endif %}
-
-
-            {% if material.archivo %}
-            <ul class="list-group">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-            
-                    <!-- IZQUIERDA: BOTÓN ELIMINAR + ICONO + NOMBRE -->
-                    <div class="d-flex align-items-center gap-2">
-                        <!-- BOTÓN ELIMINAR PEQUEÑO -->
-                        <form method="POST" style="margin:0;" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este archivo?');">
-                            {% csrf_token %}
-                        </form>
-            
-                        <!-- ICONO DEL ARCHIVO -->
-                        <i class="bi bi-file-earmark"></i>
-            
-                        <!-- NOMBRE DEL ARCHIVO -->
-                        <span class="text-truncate" style="max-width: 200px;">
-                            {{ material.nombre_corto_archivo }}
-                        </span>
-                    </div>
-            
-                    <!-- DERECHA: BOTÓN DESCARGAR -->
-                    <a href="{{ material.archivo.url }}" download
-                    class="btn btn-sm btn-outline-success">
-                        <i class="bi bi-download"></i> Descargar
-                    </a>
-            
-                </li>
-            </ul>
-            {% else %}
-            <p class="text-muted">Este material no tiene archivos adjuntos.</p>
-            {% endif %}
 
         </div>
     </div>
