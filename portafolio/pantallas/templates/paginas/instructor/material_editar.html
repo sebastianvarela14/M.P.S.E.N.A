@@ -18,7 +18,7 @@
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Título</label>
                     <input type="text" name="titulo" class="form-control"
-                           value="{{ material.titulo }}" required>
+                        value="{{ material.titulo }}" required>
                 </div>
 
                 <!-- DESCRIPCIÓN -->
@@ -27,34 +27,20 @@
                     <textarea name="descripcion" class="form-control" rows="4" required>{{ material.descripcion }}</textarea>
                 </div>
 
-                <!-- FECHA DE ENTREGA -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Fecha de entrega</label>
-                    <input type="date" name="fecha_entrega" class="form-control"
-                           value="{{ material.fecha_entrega|date:'Y-m-d' }}">
-                </div>
-
 <!-- ARCHIVO ACTUAL -->
 {% if material.archivo %}
 <div class="mb-3">
     <label class="form-label fw-semibold">Archivo actual</label>
 
-    <div class="d-flex justify-content-between align-items-center list-group-item">
+    <div class="d-flex justify-content-between align-items-center list-group-item p-2">
         <span>
-            <i class="bi bi-file-earmark"></i>
-            {{ material.archivo }}
+            <i class="bi bi-file-earmark-text me-2"></i>
+            {{ material.archivo.name|cut:"material/" }}
         </span>
 
-        <div>
-            <a href="/media/{{ material.archivo }}" download class="btn btn-sm btn-outline-success me-2">
-                <i class="bi bi-download"></i> Descargar
-            </a>
-
-            <button type="submit" name="eliminar_archivo" value="1" 
-                    class="btn btn-sm btn-outline-danger">
-                <i class="bi bi-x-circle"></i> Eliminar archivo
-            </button>
-        </div>
+        <button type="submit" name="eliminar_archivo" value="1" class="btn btn-danger btn-sm" title="Eliminar archivo">
+            <i class="bi bi-trash"></i>
+        </button>
     </div>
 </div>
 {% endif %}

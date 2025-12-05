@@ -148,7 +148,51 @@ def agregar_evidencia_coor(request):
 
 
 def calificaciones(request):
-    return render(request, "paginas/instructor/calificaciones.html")
+    ficha_id = request.session.get("ficha_actual")
+    if not ficha_id:
+        messages.error(request, "Por favor, selecciona una ficha primero.")
+        return redirect('fichas_ins')
+
+    try:
+        ficha = Ficha.objects.select_related('idprograma').get(id=ficha_id)
+        guias_ficha = EvidenciasInstructor.objects.filter(
+            evidenciasficha__idficha=ficha_id
+        ).order_by('id').distinct()
+
+        aprendices = Usuario.objects.filter(
+            fichausuario__idficha_id=ficha_id,
+            usuariorol__idrol__tipo='aprendiz'
+        ).order_by('apellidos', 'nombres').distinct()
+        
+        aprendices_calificaciones = []
+        for aprendiz in aprendices:
+            calificaciones_aprendiz = []
+            for guia in guias_ficha:
+                entrega = EvidenciasAprendiz.objects.filter(idusuario=aprendiz, idevidencias_instructor=guia).first()
+
+                if entrega and entrega.calificacion:
+                    calificaciones_aprendiz.append({
+                        "texto": entrega.calificacion,
+                        "clase_css": "text-success",
+                        "url": "#" 
+                    })
+                else:
+                    calificaciones_aprendiz.append({
+                        "texto": "Sin calificar",
+                        "clase_css": "text-warning",
+                        "url": "#" 
+                    })
+            
+            aprendices_calificaciones.append({"aprendiz": aprendiz, "calificaciones": calificaciones_aprendiz})
+
+        return render(request, "paginas/instructor/calificaciones.html", {
+            "ficha": ficha,
+            "guias_ficha": guias_ficha,
+            "aprendices_calificaciones": aprendices_calificaciones
+        })
+    except Ficha.DoesNotExist:
+        messages.error(request, "La ficha seleccionada no existe.")
+        return redirect('fichas_ins')
 
 def material(request):
     return render(request, "paginas/instructor/material.html")
@@ -318,6 +362,7 @@ def tareas(request):
 
 def tareas_2(request):
     return render(request, "paginas/aprendiz/tareas_2.html")
+
 def lista_aprendices(request):
     conexion = mysql.connector.connect(
         host=os.getenv("DB_HOST"),
@@ -415,14 +460,6 @@ def taller(request):
 
 import unicodedata
 
-def normalizar(texto):
-    if not texto:
-        return ""
-    texto = texto.lower()
-    texto = ''.join(c for c in unicodedata.normalize('NFD', texto)
-                    if unicodedata.category(c) != 'Mn')
-    return texto.strip()
-
 
 def normalizar(texto):
     """Convierte texto a minúsculas y elimina tildes para comparar correctamente."""
@@ -435,8 +472,8 @@ def normalizar(texto):
     )
     return texto.strip()
 
-def carpetasins(request, ficha_id, trimestre):
 
+def carpetasins(request, ficha_id, trimestre):
     ficha = get_object_or_404(Ficha, id=ficha_id)
 
     carpetas_ficha = FichaCarpetas.objects.filter(
@@ -454,7 +491,6 @@ def carpetasins(request, ficha_id, trimestre):
             carpetas_ficha.append(cf)
 
     # ⬇️⬇️⬇️ **AQUÍ VA EL ORDENAMIENTO** ⬇️⬇️⬇️
-    import re
     def extraer_numero(texto):
         match = re.search(r'(\d+)', texto)
         return int(match.group(1)) if match else 9999
@@ -465,7 +501,8 @@ def carpetasins(request, ficha_id, trimestre):
     )
     # ⬆️⬆️⬆️ **AQUÍ, JUSTO DESPUÉS DE TENER CARPETAS_FICHA DEFINIDO** ⬆️⬆️⬆️
 
-    instructor_id = request.session.get("idusuario")  # id del instructor logueado
+    # 🔑 CORRECCIÓN: Leer 'usuario_id'
+    instructor_id = request.session.get("usuario_id")  # id del instructor logueado
 
     # Asignar archivos
     for cf in carpetas_ficha:
@@ -475,11 +512,12 @@ def carpetasins(request, ficha_id, trimestre):
             idcarpetas=carpeta_obj.id
         )
 
+        # Filtrar archivos por FICHA, CARPETA, TRIMESTRE e INSTRUCTOR
         cf.archivos_instructor = PortafolioInstructor.objects.filter(
             ficha=ficha,
             carpeta=carpeta_obj,
             trimestre=trimestre,
-            idinstructor_id=instructor_id
+            idinstructor_id=instructor_id # Se usa el ID de sesión para filtrar
         ).order_by('-fecha_subida')
 
     return render(request, "paginas/instructor/carpetasins.html", {
@@ -488,40 +526,56 @@ def carpetasins(request, ficha_id, trimestre):
         "carpetas_ficha": carpetas_ficha
     })
 
-
+# --- Vista para subir archivos (subir_archivo_portafolio) (CORREGIDA) ---
 def subir_archivo_portafolio(request):
     if request.method == "POST":
+        
+        # 🔑 CORRECCIÓN: OBTENER EL ID DEL INSTRUCTOR USANDO 'usuario_id'
+        instructor_id = request.session.get("usuario_id")
+        
+        if instructor_id is None:
+            # Si no hay ID de instructor, no puede guardar (IntegrityError)
+            messages.error(request, "Error de sesión: No se pudo identificar al instructor. Por favor, inicie sesión de nuevo.")
+            return redirect(request.META.get("HTTP_REFERER", "/"))
+
+        # Obtener datos del formulario
         titulo = request.POST.get("titulo_archivo")
         archivo = request.FILES.get("archivo")
         ficha_id = request.POST.get("ficha")
         carpeta_id = request.POST.get("carpeta")
         trimestre = request.POST.get("trimestre")
 
+        # Obtener objetos Foreign Key
         ficha = get_object_or_404(Ficha, id=ficha_id)
         carpeta = get_object_or_404(Carpetas, id=carpeta_id) 
 
+        # Crear y guardar el nuevo registro en PortafolioInstructor
         nuevo = PortafolioInstructor(
             titulo_archivo=titulo,
             archivo=archivo,
             ficha=ficha,
             carpeta=carpeta,
             trimestre=trimestre,
+            # ASIGNAR EL ID DEL INSTRUCTOR (ya obtenido de la sesión)
+            idinstructor_id=instructor_id 
         )
         nuevo.save()
 
         messages.success(request, "Archivo subido con éxito.")
+        # Redirigir a la misma página
         return redirect(request.META.get("HTTP_REFERER", "/"))
 
-    messages.error(request, "Error al subir archivo.")
+    messages.error(request, "Método no permitido.")
     return redirect("/")
 
-
+# --- Vista para eliminar archivos (eliminar_archivo_portafolio) (SIN CAMBIOS) ---
 def eliminar_archivo_portafolio(request, id):
     archivo = get_object_or_404(PortafolioInstructor, id=id)
     archivo.delete()
     messages.success(request, "Archivo eliminado correctamente.")
     return redirect(request.META.get("HTTP_REFERER", "/"))
 
+# --- Vista para editar carpeta (editar_carpeta) (SIN CAMBIOS) ---
 def editar_carpeta(request, id, ficha_id, trimestre):
     carpeta = get_object_or_404(Carpetas, id=id)
 
@@ -538,18 +592,26 @@ def editar_carpeta(request, id, ficha_id, trimestre):
         'trimestre': trimestre,
     })
 
+
 def crear_carpeta(request, id, ficha_id, trimestre):
+
 
     if request.method == "POST":
         nombre = request.POST.get("nombre")
+        # 🔑 CAMBIO: Obtener la descripción del formulario
+        descripcion = request.POST.get("descripcion")
 
         if not nombre:
             messages.error(request, "El nombre de la carpeta es obligatorio.")
             return redirect("crear_carpeta", id=id, ficha_id=ficha_id, trimestre=trimestre)
 
-        Carpetas.objects.create(nombre=nombre)
+        Carpetas.objects.create(
+            nombre=nombre,
+            descripcion=descripcion 
+        )
         messages.success(request, "Carpeta creada exitosamente.")
 
+        
         return redirect('carpetasins', ficha_id=ficha_id, trimestre=trimestre)
 
     return render(request, "paginas/instructor/crear_carpeta.html", {
@@ -557,6 +619,18 @@ def crear_carpeta(request, id, ficha_id, trimestre):
         "trimestre": trimestre
     })
 
+def eliminar_carpeta(request, id, ficha_id, trimestre):
+    carpeta = get_object_or_404(Carpetas, id=id)
+    nombre_carpeta = carpeta.nombre
+
+
+    try:
+        carpeta.delete()
+        messages.success(request, f"La carpeta '{nombre_carpeta}' y sus archivos asociados han sido eliminados correctamente.")
+    except Exception as e:
+        messages.error(request, f"Error al intentar eliminar la carpeta: {e}")
+
+    return redirect('carpetasins', ficha_id=ficha_id, trimestre=trimestre)
 
 
 
@@ -613,6 +687,18 @@ def trimestre(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/instructor/trimestre.html", {
         "ficha": ficha_actual,
@@ -637,6 +723,18 @@ def trimestre_aprendiz(request):
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
 
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
     return render(request, "paginas/instructor/trimestre_aprendiz.html", {
         "ficha": ficha_actual,
         "trimestres": trimestres
@@ -650,7 +748,10 @@ def carpetas(request):
     return render(request, "paginas/instructor/carpetas.html")
 
 def material_principal(request):
-    return render(request, "paginas/instructor/material_principal.html")
+    materiales = Material.objects.all().order_by('-id')
+    return render(request, "paginas/instructor/material_principal.html", {
+        "materiales": materiales
+    })
 
 def adentro_material(request, id):
     # Obtener el material
@@ -825,6 +926,18 @@ def trimestre_laura(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/aprendiz/trimestre_laura.html", {
         "ficha": ficha_actual,
@@ -856,7 +969,24 @@ def inicio_observador(request):
     return render(request, "paginas/observador/inicio_observador.html")
 
 def lista_aprendices_observador(request):
-    return render(request, "paginas/observador/lista_aprendices_observador.html")
+
+    id_ficha = 1  # ficha actual
+
+    # Usuarios asignados a esta ficha
+    relaciones = FichaUsuario.objects.filter(idficha=id_ficha).values_list('idusuario', flat=True)
+
+    # Filtrar SOLO aprendices (idrol = 1) en esta ficha
+    aprendices = Usuario.objects.filter(
+        id__in=relaciones,
+        usuariorol__idrol=1       # <-- nombre correcto del campo
+    ).distinct()
+
+    context = {
+        "aprendices": aprendices,
+        "total": aprendices.count()
+    }
+
+    return render(request, "paginas/observador/lista_aprendices_observador.html", context)
 
 def observador(request):
     ficha_id = request.GET.get("ficha")
@@ -1029,29 +1159,56 @@ def inicio_coordinador(request):
 
 
 def lista_aprendices_coordinador(request):
-        conexion = mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
-        )
-    
 
-        cursor = conexion.cursor(dictionary=True)
+    # Aquí deberías obtener el id de la ficha seleccionada por el coordinador
+    idficha = 1  # <-- cámbialo luego por dinámico
 
-        cursor.execute("""
-            SELECT u.id, u.nombres, u.apellidos
-            FROM usuario u
-            WHERE u.id IN (3, 4)
-        """)
+    # Capturar el texto buscado (si existe)
+    q = request.GET.get("q", "").strip()
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+   
+    cursor = conexion.cursor(dictionary=True)
+
+    try:
+        if q:  
+            # FILTRAR POR BUSQUEDA (nombre o apellido)
+            cursor.execute("""
+                SELECT u.id, u.nombres, u.apellidos
+                FROM usuario u
+                INNER JOIN ficha_usuario fu ON fu.idusuario = u.id
+                INNER JOIN usuario_rol ur ON ur.idusuario = u.id
+                WHERE fu.idficha = %s
+                AND ur.idrol = 1
+                AND (u.nombres LIKE %s OR u.apellidos LIKE %s)
+            """, (idficha, f"%{q}%", f"%{q}%"))
+        else:
+            # MOSTRAR TODOS SIN FILTRO
+            cursor.execute("""
+                SELECT u.id, u.nombres, u.apellidos
+                FROM usuario u
+                INNER JOIN ficha_usuario fu ON fu.idusuario = u.id
+                INNER JOIN usuario_rol ur ON ur.idusuario = u.id
+                WHERE fu.idficha = %s AND ur.idrol = 1
+            """, (idficha,))
 
         aprendices = cursor.fetchall()
 
+    finally:
         cursor.close()
         conexion.close()
 
-        return render(request, "paginas/coordinador/lista_aprendices_coordinador.html", {
-            "aprendices": aprendices
+    total = len(aprendices)  # TOTAL FILTRADO
+
+    return render(request, "paginas/coordinador/lista_aprendices_coordinador.html", {
+        "aprendices": aprendices,
+        "total": total,
+        "q": q,
     })
 
 def material_principal_coordinador(request):
@@ -1097,6 +1254,18 @@ def trimestre_coordinador(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/coordinador/trimestre_coordinador.html", {
         "ficha": ficha_actual,
@@ -1251,6 +1420,18 @@ def trimestre_general_coordinador(request,):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/coordinador/trimestre_general_coordinador.html", {
         "ficha": ficha_actual,
@@ -1271,6 +1452,18 @@ def trimestre_aprendiz_coordinador(request, ):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/coordinador/trimestre_aprendiz_coordinador.html", {
         "ficha": ficha_actual,
@@ -1383,6 +1576,7 @@ def configuracion_observador(request):
 
 def configuracion_observador_2(request):
     return render(request, "paginas/observador/configuracion_observador_2.html")
+
 
 def configuracion_coordinador(request):
     # 1. Recuperar ficha desde sesión
@@ -1527,9 +1721,13 @@ def ficha_coordinador(request):
     ficha_id = request.session.get("ficha_actual")
 
     if not ficha_id:
-        return redirect("coordinador")  # si no hay ficha seleccionada
+        return redirect("coordinador")
 
-    ficha = Ficha.objects.select_related("idjornada", "idprograma").get(id=ficha_id)
+    ficha = Ficha.objects.select_related(
+        "idjornada",
+        "idprograma",
+        "nombre_programa"  
+    ).get(id=ficha_id)
 
     return render(request, "paginas/coordinador/ficha_coordinador.html", {
         "ficha": ficha
@@ -1538,24 +1736,39 @@ def ficha_coordinador(request):
 def ficha_aprendiz(request):
     usuario_id = request.session.get("id_usuario")
 
-    ficha_info = None
+    contexto = {
+        "ficha": None,
+        "aprendices_count": 0,
+        "instructor_responsable": "No asignado"
+    }
 
     if usuario_id:
         try:
             # 1. Buscar la relación entre el aprendiz y la ficha
-            relacion = FichaUsuario.objects.get(idusuario_id=usuario_id)
+            relacion = FichaUsuario.objects.select_related('idficha').get(idusuario_id=usuario_id)
+            ficha = relacion.idficha
 
-            # 2. Obtener la información completa de la ficha
-            ficha_info = Ficha.objects.get(id=relacion.idficha_id)
+            # 2. Contar aprendices en la ficha
+            aprendices_count = Usuario.objects.filter(
+                fichausuario__idficha=ficha,
+                usuariorol__idrol__tipo='aprendiz'
+            ).count()
+
+            # 3. Encontrar un instructor para la ficha
+            instructor = Usuario.objects.filter(
+                fichausuario__idficha=ficha,
+                usuariorol__idrol__tipo='instructor'
+            ).first()
+
+            contexto['ficha'] = ficha
+            contexto['aprendices_count'] = aprendices_count
+            if instructor:
+                contexto['instructor_responsable'] = f"{instructor.nombres} {instructor.apellidos}"
 
         except FichaUsuario.DoesNotExist:
-            ficha_info = None
-        except Ficha.DoesNotExist:
-            ficha_info = None
+            messages.error(request, "No estás asignado a ninguna ficha.")
 
-    return render(request, "paginas/aprendiz/ficha_aprendiz.html", {
-        "ficha": ficha_info
-    })
+    return render(request, "paginas/aprendiz/ficha_aprendiz.html", contexto)
 
 def ficha_aprendiz_2(request):
     return render(request, "paginas/aprendiz/ficha_aprendiz_2.html")
@@ -1567,41 +1780,25 @@ def ficha_instructor(request):
         messages.error(request, "No se ha seleccionado ninguna ficha. Por favor, vuelve a la lista de fichas.")
         return redirect('fichas_ins')
 
-    ficha = None
-    aprendices = []
-
     try:
-        # 2. Conectar a la base de datos para obtener los datos
-        conexion = mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
-        )
-        cursor = conexion.cursor(dictionary=True)
+        ficha = Ficha.objects.select_related('idjornada', 'idprograma').get(id=ficha_id)
 
         aprendices = Usuario.objects.filter(
             fichausuario__idficha=ficha,
-            usuariorol_idrol_tipo='aprendiz'
+            usuariorol__idrol__tipo='aprendiz'
         ).order_by('apellidos', 'nombres').distinct()
 
-        # 4. Consulta para obtener la lista de aprendices de esa ficha y poder contarlos
-        cursor.execute("""
-            SELECT u.id, u.nombres, u.apellidos FROM usuario u
-            INNER JOIN ficha_usuario fu ON u.id = fu.idusuario
-            INNER JOIN usuario_rol ur ON u.id = ur.idusuario
-            WHERE fu.idficha = %s AND ur.idrol = 2
-        """, (ficha_id,))
-        aprendices = cursor.fetchall()
+    except Ficha.DoesNotExist:
+        messages.error(request, "La ficha seleccionada no existe o fue eliminada.")
+        return redirect('fichas_ins')
 
-    finally:
-        if 'conexion' in locals() and conexion.is_connected():
-            cursor.close()
-            conexion.close()
+    # Obtener el nombre del instructor desde la sesión para mostrarlo en la plantilla
+    usuario_nombre = request.session.get('nombre_usuario', 'No identificado')
 
     return render(request, "paginas/instructor/ficha_instructor.html", {
         'ficha': ficha, 
-        'aprendices': aprendices
+        'aprendices': aprendices,
+        'usuario_nombre': usuario_nombre
     })
 
 def ficha_observador(request):
@@ -1621,14 +1818,104 @@ def equipo_ejecutor(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/instructor/equipo_ejecutor.html", {
         "ficha": ficha_actual,
         "trimestres": trimestres
     })
 
-def opc_equipoejecutor(request):
-    return render(request, "paginas/instructor/opc_equipoejecutor.html")
+def opc_equipoejecutor(request, trimestre):
+    ficha_id = request.session.get("ficha_actual")
+    ficha = get_object_or_404(Ficha, id=ficha_id)
+
+    carpetas = CarpetaEquipo.objects.filter(
+        ficha=ficha,
+        trimestre=trimestre
+    ).order_by("nombre")
+
+    return render(request, "paginas/instructor/opc_equipoejecutor.html", {
+        "ficha": ficha,
+        "trimestre": trimestre,
+        "carpetas": carpetas
+    })
+
+def crear_carpeta_equipo(request, trimestre):
+    ficha_id = request.session.get("ficha_actual")
+    ficha = get_object_or_404(Ficha, id=ficha_id)
+
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        descripcion = request.POST.get("descripcion")
+
+        CarpetaEquipo.objects.create(
+            ficha=ficha,
+            trimestre=trimestre,
+            nombre=nombre,
+            descripcion=descripcion
+        )
+
+        messages.success(request, "Carpeta creada correctamente.")
+        return redirect("opc_equipoejecutor", trimestre=trimestre)
+
+    return render(request, "paginas/instructor/crear_carpeta_equipo.html", {
+        "trimestre": trimestre
+    })
+
+def editar_carpeta_equipo(request, carpeta_id):
+    carpeta = get_object_or_404(CarpetaEquipo, id=carpeta_id)
+
+    if request.method == "POST":
+        carpeta.nombre = request.POST.get("nombre")
+        carpeta.descripcion = request.POST.get("descripcion")
+        carpeta.save()
+
+        return redirect("opc_equipoejecutor", trimestre=carpeta.trimestre)
+
+    return render(request, "paginas/instructor/editar_carpeta_equipo.html", {
+        "carpeta": carpeta
+    })
+
+def eliminar_carpeta_equipo(request, carpeta_id):
+    carpeta = get_object_or_404(CarpetaEquipo, id=carpeta_id)
+    trimestre = carpeta.trimestre
+    carpeta.delete()
+
+    return redirect("opc_equipoejecutor", trimestre=trimestre)
+
+def subir_archivo_equipo(request, carpeta_id):
+    carpeta = get_object_or_404(CarpetaEquipo, id=carpeta_id)
+
+    if request.method == "POST":
+        archivo = request.FILES["archivo"]
+
+        ArchivoEquipo.objects.create(
+            carpeta=carpeta,
+            archivo=archivo,
+            nombre_editable=archivo.name,
+            subido_por=request.user
+        )
+
+    return redirect("opc_equipoejecutor", trimestre=carpeta.trimestre)
+
+def eliminar_archivo_equipo(request, archivo_id):
+    archivo = get_object_or_404(ArchivoEquipo, id=archivo_id)
+    carpeta = archivo.carpeta
+    archivo.delete()
+
+    return redirect("opc_equipoejecutor", trimestre=carpeta.trimestre)
+
 
 def fichas_equipoejecutor_coordinador(request):
     return render(request, "paginas/coordinador/fichas_equipoejecutor_coordinador.html")
@@ -1636,8 +1923,32 @@ def fichas_equipoejecutor_coordinador(request):
 def equipo_coordinador(request):
     return render(request, "paginas/coordinador/equipo_coordinador.html")
 
-def material_editar(request):
-    return render(request, "paginas/instructor/material_editar.html")
+def material_editar(request, id):
+    material = get_object_or_404(Material, id=id)
+
+    if request.method == "POST":
+        # --- Lógica para eliminar el archivo adjunto ---
+        if "eliminar_archivo" in request.POST:
+            if material.archivo:
+                material.archivo.delete() # Borra el archivo del sistema y del modelo
+            messages.success(request, "Archivo adjunto eliminado.")
+            return redirect("material_editar", id=id)
+
+        material.titulo = request.POST.get("titulo")
+        material.descripcion = request.POST.get("descripcion")
+        material.fecha_entrega = request.POST.get("fecha_entrega")
+
+        archivo = request.FILES.get("archivo")
+        if archivo:
+            material.archivo = archivo
+
+        material.save()
+
+        return redirect("material_principal")
+
+    return render(request, "paginas/instructor/material_editar.html", {
+        "material": material
+    })
 
 def evidencia_guia_editar(request, evidencia_id):
 
@@ -1779,22 +2090,6 @@ def eliminar_archivo_evidencia(request, evidencia_id):
     return redirect("evidencia_guia_editar", evidencia_id)
 
 
-def carpetasins_editar(request, carpeta_id):
-    carpeta = get_object_or_404(Carpetas, id=carpeta_id)
-
-    if request.method == "POST":
-        carpeta.nombre = request.POST.get("nombre")
-        carpeta.descripcion = request.POST.get("descripcion")
-        carpeta.save()
-        return redirect("carpetasins")
-
-    return render(request, "paginas/instructor/carpetasins_editar.html", {
-        "carpeta": carpeta,
-    })
-
-
-def carpetasins_crear(request):
-    return render(request, "paginas/instructor/carpetasins_crear.html")
 
 def carpetas_aprendiz_crear(request):
     return render(request, "paginas/instructor/carpetas_aprendiz_crear.html")
@@ -1885,42 +2180,144 @@ def coordinador_editar(request, id):
     ficha = get_object_or_404(Ficha, id=id)
     jornadas = Jornada.objects.all()
     programas = Programa.objects.all()
+    nombres_programa = NombrePrograma.objects.all()
 
     if request.method == "POST":
         ficha.numero_ficha = request.POST.get("numero_ficha")
         ficha.idjornada_id = request.POST.get("idjornada")
         ficha.idprograma_id = request.POST.get("idprograma")
-        ficha.save()
+        ficha.nombre_programa_id = request.POST.get("nombre_programa")
+        ficha.estado = request.POST.get("estado")
 
-        return redirect("coordinador")  # regresa al listado
+        ficha.save()
+        return redirect("coordinador")
 
     return render(request, "paginas/coordinador/coordinador_editar.html", {
         "ficha": ficha,
         "jornadas": jornadas,
-        "programas": programas
+        "programas": programas,
+        "nombres_programa": nombres_programa
     })
+
 
 def coordinador_agregar(request):
     jornadas = Jornada.objects.all()
     programas = Programa.objects.all()
+    nombres_programa = NombrePrograma.objects.all()
 
     if request.method == "POST":
         numero = request.POST.get("numero_ficha")
+        aprendices = request.POST.get("numero_aprendices")
+        estado = request.POST.get("estado")
+
         jornada = request.POST.get("idjornada")
         programa = request.POST.get("idprograma")
+        nombre_programa = request.POST.get("nombre_programa")
 
         Ficha.objects.create(
             numero_ficha=numero,
+            estado=estado,
             idjornada_id=jornada,
-            idprograma_id=programa
+            idprograma_id=programa,
+            nombre_programa_id=nombre_programa
         )
 
-        return redirect("coordinador")  # volver al listado
+        return redirect("coordinador")
 
     return render(request, "paginas/coordinador/coordinador_agregar.html", {
         "jornadas": jornadas,
-        "programas": programas
+        "programas": programas,
+        "nombres_programa": nombres_programa
     })
+
+
+def agregar_jornada(request):
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_DATABASE")
+    )
+    cursor = conexion.cursor()
+
+    if request.method == "POST":
+        nombre = request.POST["nombre"].strip().upper()
+
+        # Validar duplicado
+        cursor.execute("SELECT id FROM jornada WHERE nombre = %s", (nombre,))
+        existente = cursor.fetchone()
+
+        if existente:
+            messages.error(request, "❗ Esta jornada ya existe.")
+            return redirect("coordinador_agregar")
+
+        cursor.execute("INSERT INTO jornada (nombre) VALUES (%s)", (nombre,))
+        conexion.commit()
+
+        return redirect("coordinador_agregar")
+
+    return render(request, "paginas/coordinador/agregar_jornada.html")
+
+
+
+def agregar_programa(request):
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_DATABASE")
+    )
+    cursor = conexion.cursor()
+
+    if request.method == "POST":
+        nombre = request.POST["programa"].strip().upper()
+
+        # Validar duplicado
+        cursor.execute("SELECT id FROM programa WHERE programa = %s", (nombre,))
+        existente = cursor.fetchone()
+
+        if existente:
+            messages.error(request, "❗ Este programa ya existe.")
+            return redirect("coordinador_agregar")
+
+        cursor.execute("INSERT INTO programa (programa) VALUES (%s)", (nombre,))
+        conexion.commit()
+
+        return redirect("coordinador_agregar")
+
+    return render(request, "paginas/coordinador/agregar_programa.html")
+
+
+
+def agregar_nombre_programa(request):
+
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_DATABASE")
+    )
+    cursor = conexion.cursor()
+
+    if request.method == "POST":
+        nombre = request.POST["nombre"].strip().upper()
+
+        # Validar duplicado
+        cursor.execute("SELECT id FROM nombre_programa WHERE nombre = %s", (nombre,))
+        existente = cursor.fetchone()
+
+        if existente:
+            messages.error(request, "❗ Este nombre de programa ya existe.")
+            return redirect("coordinador_agregar")
+
+        cursor.execute("INSERT INTO nombre_programa (nombre) VALUES (%s)", (nombre,))
+        conexion.commit()
+
+        return redirect("coordinador_agregar")
+
+    return render(request, "paginas/coordinador/agregar_nombre_programa.html")
 
 
 def carpetas2_editar(request):
@@ -2080,32 +2477,25 @@ def configuracion_asignaturas(request):
 
     ficha = Ficha.objects.get(id=ficha_id)
 
-    # Todas las asignaturas
     todas_asignaturas = NombreAsignatura.objects.all()
 
-    # Asignaciones (traer la asignatura relacionada para evitar N+1 y para comprobar nombre)
     asignaturas_ficha = FichaAsignatura.objects.filter(idficha=ficha).select_related('idasignatura')
 
-    # IDs ya asignados (como ints)
     asignadas_ids = list(asignaturas_ficha.values_list("idasignatura_id", flat=True))
-    # diagnóstico en consola
     print("DEBUG asignadas_ids:", asignadas_ids)
     print("DEBUG asignaturas_ficha count:", asignaturas_ficha.count())
-    # muestra primeros 5 tuplas (ida, nombre) para verificar
     for fa in asignaturas_ficha[:5]:
         print("DEBUG fa:", fa.id, "idasignatura_id=", getattr(fa, "idasignatura_id", None),
-              "nombre_rel=", getattr(fa.idasignatura, "nombre", None))
+            "nombre_rel=", getattr(fa.idasignatura, "nombre", None))
 
     if request.method == "POST":
-        seleccionadas = request.POST.getlist("asignaturas")  # vienen como strings
+        seleccionadas = request.POST.getlist("asignaturas")  
         print("DEBUG seleccionadas raw:", seleccionadas)
-        seleccionadas = [int(x) for x in seleccionadas]  # normalizamos a ints
+        seleccionadas = [int(x) for x in seleccionadas]  
         print("DEBUG seleccionadas ints:", seleccionadas)
 
-        # Eliminar asignaciones no seleccionadas
         FichaAsignatura.objects.filter(idficha=ficha).exclude(idasignatura_id__in=seleccionadas).delete()
 
-        # Crear/garantizar nuevas asignaciones
         for asig_id in seleccionadas:
             FichaAsignatura.objects.get_or_create(idficha=ficha, idasignatura_id=asig_id)
 
@@ -2119,6 +2509,7 @@ def configuracion_asignaturas(request):
         "asignaturas_ficha": asignaturas_ficha,
         "ficha_id": ficha_id,
     })
+
 def eliminar_asignatura(request, ficha_id, asig_id):
     try:
         FichaAsignatura.objects.filter(
@@ -2205,21 +2596,28 @@ def datos_coor(request, id):
         "aprendiz": aprendiz
     })
 
+
 def ficha_coordinador_editar(request, id):
     ficha = get_object_or_404(Ficha, id=id)
     jornadas = Jornada.objects.all()
     programas = Programa.objects.all()
+    nombres_programa = NombrePrograma.objects.all()
+
     if request.method == "POST":
         ficha.numero_ficha = request.POST.get("numero_ficha")
         ficha.idjornada_id = request.POST.get("idjornada")
         ficha.idprograma_id = request.POST.get("idprograma")
+        ficha.nombre_programa_id = request.POST.get("nombre_programa")
+        ficha.estado = request.POST.get("estado")   # ← Agregado
+
         ficha.save()
-        return redirect("ficha_coordinador")  # regresa al listado
+        return redirect("ficha_coordinador")
 
     return render(request, "paginas/coordinador/ficha_coordinador_editar.html", {
         "ficha": ficha,
         "jornadas": jornadas,
-        "programas": programas
+        "programas": programas,
+        "nombres_programa": nombres_programa
     })
 
 def seleccionar_ficha_observador(request, id_ficha):
@@ -2229,7 +2627,6 @@ def seleccionar_ficha_observador(request, id_ficha):
     return redirect('inicio_observador')
 
 def equipo_ejecutor_coordinador(request):
-
     ficha_id = request.session.get("ficha_actual")
     ficha_actual = None
     trimestres = []
@@ -2243,6 +2640,18 @@ def equipo_ejecutor_coordinador(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/coordinador/equipo_ejecutor_coordinador.html", {
         "ficha": ficha_actual,

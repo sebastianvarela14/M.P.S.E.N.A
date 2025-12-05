@@ -1,0 +1,46 @@
+{% extends "plantillains.html" %}
+{% load static %}
+
+{% block contenido %}
+
+<div class="container mt-4">
+
+    <!-- TÍTULO -->
+    <div class="d-flex align-items-center mb-3">
+        <span class="fw-bold text-primary me-3">EDITAR CARPETA</span>
+        <div style="height: 2px; background: #0d6efd; flex-grow: 1;"></div>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body">
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre de la carpeta</label>
+                    <input type="text" name="nombre" class="form-control" value="{{ carpeta.nombre }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Descripción</label>
+                    <textarea name="descripcion" rows="3" class="form-control">{{ carpeta.descripcion }}</textarea>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="text-end">
+            <a href="{% url 'opc_equipoejecutor' carpeta.trimestre %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+
+            <button class="btn btn-primary">
+                <i class="bi bi-save"></i> Guardar cambios
+            </button>
+        </div>
+
+    </form>
+</div>
+
+{% endblock %}

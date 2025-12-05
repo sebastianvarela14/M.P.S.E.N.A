@@ -27,22 +27,20 @@
 <ul class="list-group">
     <li class="list-group-item d-flex justify-content-between align-items-center">
 
-        <!-- IZQUIERDA: BOTÓN ELIMINAR + ICONO + NOMBRE -->
+        <!-- IZQUIERDA: ICONO + NOMBRE -->
         <div class="d-flex align-items-center gap-2">
-                {% csrf_token %}
-
-
             <!-- ICONO DEL ARCHIVO -->
-            <i class="bi bi-file-earmark"></i>
+            <i class="bi bi-file-earmark-text fs-5 text-secondary"></i>
 
             <!-- NOMBRE DEL ARCHIVO -->
-            <span class="text-truncate" style="max-width: 200px;">
-                {{ material.archivo }}
+            <span class="text-truncate" style="max-width: 400px;">
+                {# Muestra solo el nombre del archivo, no la ruta completa #}
+                {{ material.archivo.name|cut:"material/" }}
             </span>
         </div>
 
         <!-- DERECHA: BOTÓN DESCARGAR -->
-        <a href="/media/{{ material.archivo }}" download
+        <a href="{{ material.archivo.url }}" download
         class="btn btn-sm btn-outline-success">
             <i class="bi bi-download"></i> Descargar
         </a>
@@ -52,58 +50,70 @@
 {% else %}
 <p class="text-muted">Este material no tiene archivos adjuntos.</p>
 {% endif %}
-
-
-
-{% if material.archivo %}
-<ul class="list-group">
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-            {{ material.archivo }}
-        </div>
-
-        <a href="/media/{{ material.archivo }}" download
-        class="btn btn-sm btn-outline-success">
-            <i class="bi bi-download"></i> Descargar
-        </a>
-    </li>
-</ul>
-{% else %}
-<p class="text-muted">Este material no tiene archivos adjuntos.</p>
-{% endif %}
-
-
-            {% if material.archivo %}
-            <ul class="list-group">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="bi bi-file-earmark"></i>
-                        {{ material.archivo }}   <!-- muestra el nombre tal cual haya sido guardado -->
-
-                    </div>
-
-                    <a href="/media/{{ material.archivo }}" download
-                    class="btn btn-sm btn-outline-success">
-                        <i class="bi bi-download"></i> Descargar
-                    </a>
-                </li>
-            </ul>
-            {% else %}
-            <p class="text-muted">Este material no tiene archivos adjuntos.</p>
-            {% endif %}
 
         </div>
     </div>
 </div>
 
-<!-- BOTÓN EDITAR -->
-<a href="{% url 'material_editar' material.id %}"
-class="btn btn-success"
-style="position: fixed; bottom: 20px; right: 20px; border-radius: 50%;
-        width: 55px; height: 55px; display: flex; align-items: center;
-        justify-content: center; font-size: 1.5rem; z-index: 999;">
-    <i class="bi bi-pencil-square"></i>
-</a>
+<!-- BOTONES FLOTANTES -->
+<style>
+    .fab-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        gap: 0.75rem;
+        z-index: 999;
+    }
+    .btn-fab {
+        border-radius: 50%;
+        width: 55px;
+        height: 55px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+</style>
 
+<div class="fab-container">
+    <!-- BOTÓN ELIMINAR (ahora abre el modal) -->
+    <button type="button" class="btn btn-danger btn-fab" title="Eliminar Material" data-bs-toggle="modal" data-bs-target="#confirmarEliminarModal">
+        <i class="bi bi-trash"></i>
+    </button>
+
+    <!-- BOTÓN EDITAR -->
+    <a href="{% url 'material_editar' material.id %}" class="btn btn-success btn-fab" title="Editar Material">
+        <i class="bi bi-pencil-square"></i>
+    </a>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold" id="modalLabel">
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar el material <strong>"{{ material.titulo }}"</strong> por completo?</p>
+                <p class="text-muted small">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                
+                <!-- El formulario de eliminación ahora está aquí -->
+                <form method="POST" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" name="eliminar_material" value="1" class="btn btn-danger">Sí, eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

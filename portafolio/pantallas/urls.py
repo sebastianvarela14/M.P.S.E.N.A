@@ -37,7 +37,7 @@ urlpatterns = [
     path("subir_archivo_portafolio/", views.subir_archivo_portafolio, name="subir_archivo_portafolio"),
     path("eliminar_archivo_portafolio/<int:id>/", views.eliminar_archivo_portafolio, name="eliminar_archivo_portafolio"),
     path('carpetas/editar/<int:id>/<int:ficha_id>/<int:trimestre>/',views.editar_carpeta,name='editar_carpeta'),
-
+    path('eliminar_carpeta/<int:id>/<int:ficha_id>/<str:trimestre>/', views.eliminar_carpeta, name='eliminar_carpeta'),
     path("carpeta/crear/<int:id>/<int:ficha_id>/<int:trimestre>/", views.crear_carpeta, name="crear_carpeta"),
 
 
@@ -134,7 +134,19 @@ urlpatterns = [
     path("ficha_instructor/", views.ficha_instructor, name="ficha_instructor"),
     path("ficha_observador/", views.ficha_observador, name="ficha_observador"),
     path("equipo_ejecutor/", views.equipo_ejecutor, name="equipo_ejecutor"),
-    path("opc_equipoejecutor/", views.opc_equipoejecutor, name="opc_equipoejecutor"),
+
+    # Vista por trimestre
+    path("equipo_ejecutor/<int:trimestre>/", views.opc_equipoejecutor, name="opc_equipoejecutor"),
+
+    # CRUD Carpetas
+    path("equipo_ejecutor/<int:trimestre>/crear/", views.crear_carpeta_equipo, name="crear_carpeta_equipo"),
+    path("equipo_ejecutor/editar/<int:carpeta_id>/", views.editar_carpeta_equipo, name="editar_carpeta_equipo"),
+    path("equipo_ejecutor/eliminar/<int:carpeta_id>/", views.eliminar_carpeta_equipo, name="eliminar_carpeta_equipo"),
+
+    # Archivos
+    path("equipo_ejecutor/subir/<int:carpeta_id>/", views.subir_archivo_equipo, name="subir_archivo_equipo"),
+    path("equipo_ejecutor/eliminar_archivo/<int:archivo_id>/", views.eliminar_archivo_equipo, name="eliminar_archivo_equipo"),
+
     path("fichas_equipoejecutor_coordinador/", views.fichas_equipoejecutor_coordinador, name="fichas_equipoejecutor_coordinador"),
     path("equipo_coordinador/", views.equipo_coordinador, name="equipo_coordinador"),
     path("material_editar/", views.material_editar, name="material_editar"),
@@ -145,10 +157,7 @@ urlpatterns = [
     path("evidencia/eliminar_coordinador/<int:evidencia_id>/", views.eliminar_evidencia_coordinador,name="eliminar_evidencia_coordinador"),
 
 
-    path('carpetasins_editar/<int:carpeta_id>/', views.carpetasins_editar, name='carpetasins_editar'),
-
     path("evidencia/eliminar/<int:evidencia_id>/", views.eliminar_evidencia, name="eliminar_evidencia"),
-    path("carpetasins_crear/", views.carpetasins_crear, name="carpetasins_crear"),
     path("carpetas_aprendiz_crear/", views.carpetas_aprendiz_crear, name="carpetas_aprendiz_crear"),
     path("carpetas_aprendiz_editar/", views.carpetas_aprendiz_editar, name="carpetas_aprendiz_editar"),
     path("datos_ins_editar/", views.datos_ins_editar, name="datos_ins_editar"),
