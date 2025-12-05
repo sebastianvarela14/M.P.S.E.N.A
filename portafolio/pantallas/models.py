@@ -280,3 +280,34 @@ class PortafolioInstructor(models.Model):
         managed = False
         db_table = 'portafolio_instructor'
 
+from django.db import models
+from django.contrib.auth.models import User
+
+class CarpetaEquipo(models.Model):
+    ficha = models.ForeignKey('Ficha', on_delete=models.CASCADE)
+    trimestre = models.IntegerField()
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.nombre} (T{self.trimestre}) - Ficha {self.ficha.id}"
+
+    class Meta:
+        managed = False
+        db_table = 'carpeta_equipo'
+
+
+class ArchivoEquipo(models.Model):
+    carpeta = models.ForeignKey(CarpetaEquipo, on_delete=models.CASCADE, related_name="archivos")
+    archivo = models.FileField(upload_to="equipo_ejecutor/")
+    nombre_editable = models.CharField(max_length=255)
+    subido_por = models.ForeignKey('Usuario', on_delete=models.SET_NULL, null=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.nombre_editable
+
+    class Meta:
+        managed = False
+        db_table = 'archivo_equipo'
+
