@@ -31,15 +31,30 @@ class Carpetas(models.Model):
 
 
 class Documento(models.Model):
-    tipo = models.CharField(max_length=20, db_comment='que tipo de documento tiene el usuario cedula, tarjeta de identidad, etc')
-    numero = models.BigIntegerField(blank=True, null=True, db_comment='es el numero de identificacion')
+    tipo = models.CharField(
+        max_length=50, 
+        db_comment='Nombre completo del tipo de documento (Cédula de Ciudadanía, Tarjeta de Identidad...)'
+    )
+    sigla = models.CharField(
+        max_length=10,
+        db_comment='Diminutivo o sigla del documento (CC, TI, CE, PPT...)',
+        blank=True,
+        null=True
+    )
+    numero = models.BigIntegerField(
+        blank=True, 
+        null=True, 
+        db_comment='Número de identificación'
+    )
 
     def __str__(self):
-        return f"{self.tipo}"
+        # Para mostrar solo la sigla (CC, TI, CE...)
+        return self.sigla if self.sigla else self.tipo
 
     class Meta:
         managed = False
         db_table = 'documento'
+
 
 
 

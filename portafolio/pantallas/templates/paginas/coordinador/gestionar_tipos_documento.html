@@ -1,0 +1,132 @@
+{% extends "plantillacoor_inicio.html" %}
+
+{% block contenido %}
+
+<style>
+    .container-box {
+        background: #ffffff;
+        padding: 35px;
+        border-radius: 14px;
+        max-width: 600px;
+        margin: 35px auto;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e8e8e8;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .title {
+        font-size: 22px;
+        font-weight: 600;
+        color: #2e7d32;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+    .list-group-item {
+        border-radius: 8px !important;
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        border: 1px solid #ddd;
+    }
+
+    .btn-warning.btn-sm {
+        border-radius: 8px;
+        padding: 5px 12px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    label {
+        font-weight: 500;
+        color: #444;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        margin-top: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        border-color: #2e7d32;
+        box-shadow: 0 0 5px rgba(46,125,50,0.3);
+    }
+
+    .btn-guardar {
+        background: #2e7d32;
+        color: #fff;
+        font-weight: 500;
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: none;
+        width: 100%;
+        transition: background 0.2s ease;
+    }
+
+    .btn-guardar:hover {
+        background: #256428;
+    }
+
+    .btn-cancelar {
+        background: #f0f0f0;
+        color: #333;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 500;
+        transition: background 0.2s ease;
+    }
+
+    .btn-cancelar:hover {
+        background: #e0e0e0;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="container-box">
+
+    <div class="title">Gestionar Tipos de Documento</div>
+
+    <!-- LISTA -->
+    <ul class="list-group mb-4">
+        {% for t in tipos %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+
+            <!-- 👇 Aquí muestra SIGLA + NOMBRE COMPLETO -->
+            <span><strong>{{ t.sigla }}</strong> - {{ t.tipo }}</span>
+
+            <a href="{% url 'editar_tipo_documento' t.id %}" class="btn btn-warning btn-sm">
+                Editar
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <!-- AGREGAR NUEVO -->
+    <form method="POST">
+        {% csrf_token %}
+
+        <label>Sigla</label>
+        <input type="text" name="sigla" class="form-control" required placeholder="Ej: CC, TI, CE">
+
+        <label>Nombre completo</label>
+        <input type="text" name="tipo" class="form-control" required placeholder="Ej: Cédula de Ciudadanía">
+
+        <button class="btn btn-guardar mt-3">Agregar</button>
+    </form>
+
+    <div class="mt-4 text-center">
+        <a href="{% url 'administrar_usuario' %}" class="btn btn-cancelar">
+            Volver
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

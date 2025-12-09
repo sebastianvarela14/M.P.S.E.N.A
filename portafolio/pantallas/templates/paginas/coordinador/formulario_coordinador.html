@@ -100,8 +100,18 @@
         <div class="row-double">
             <div class="field">
                 <label>Tipo Documento</label>
-                {{ formulario.tipo_documento }}
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    {{ formulario.tipo_documento }}
+
+                    <a href="{% url 'gestionar_tipos_documento' %}" 
+                    class="btn btn-cancelar" 
+                    style="height: 42px; margin-top: 15px;">
+                    Otro
+                    </a>
+                </div>
             </div>
+
 
             <div class="field">
                 <label>Número Documento</label>
