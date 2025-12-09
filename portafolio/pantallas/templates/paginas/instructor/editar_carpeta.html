@@ -5,22 +5,68 @@
 
 {% block contenido %}
 
+<style>
+    .titulo-linea {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.8rem;
+    }
+
+    .titulo-linea div {
+        width: 60px;
+        height: 3px;
+        background: #198754;
+        border-radius: 5px;
+    }
+
+    .titulo-linea h3 {
+        margin: 0 15px;
+        font-weight: bold;
+        color: #198754;
+    }
+
+    .card-custom {
+        border: none !important;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+    }
+
+    .form-control {
+        border-radius: 10px;
+    }
+
+    textarea.form-control {
+        resize: none;
+    }
+
+    .btn-success, .btn-secondary {
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .btn-success i, .btn-secondary i {
+        margin-right: 5px;
+    }
+</style>
+
 <div class="container mt-4">
 
-    <div class="d-flex align-items-center mb-4">
-        <div style="width: 60px; height: 3px; background: #198754; border-radius: 5px;"></div>
-        <h3 class="fw-bold text-center mx-3">EDITAR CARPETA</h3>
-        <div style="width: 60px; height: 3px; background: #198754; border-radius: 5px;"></div>
+    <!-- TÍTULO CENTRADO CON BARRAS -->
+    <div class="titulo-linea">
+        <div></div>
+        <h3>EDITAR CARPETA</h3>
+        <div></div>
     </div>
 
-    <div class="card shadow-sm border-0">
+    <div class="card card-custom">
         <div class="card-body">
 
-           
             <form method="POST" action="{% url 'editar_carpeta' carpeta.id ficha_id trimestre %}">
                 {% csrf_token %}
 
-                <!-- 🔥 Inputs ocultos que la vista necesita -->
+                <!-- Inputs ocultos necesarios -->
                 <input type="hidden" name="ficha_id" value="{{ ficha_id }}">
                 <input type="hidden" name="trimestre" value="{{ trimestre }}">
 

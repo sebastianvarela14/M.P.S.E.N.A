@@ -1,0 +1,38 @@
+{% extends "plantillains.html" %}
+{% load static %}
+
+{% block contenido %}
+
+<div class="container mt-5">
+
+    <div class="card shadow">
+        <div class="card-body">
+
+            <h4 class="fw-bold text-success mb-3">
+                <i class="bi bi-folder-plus"></i> Crear Subcarpeta dentro de "{{ carpeta.nombre }}"
+            </h4>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <label class="fw-semibold">Nombre de la subcarpeta:</label>
+                <input type="text" name="nombre" class="form-control mb-3" required>
+
+                <label class="fw-semibold">Descripción:</label>
+                <textarea name="descripcion" class="form-control mb-3" rows="3"></textarea>
+
+                <button class="btn btn-success">Crear</button>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="javascript:history.back()" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </a>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

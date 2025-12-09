@@ -286,8 +286,17 @@ from django.contrib.auth.models import User
 class CarpetaEquipo(models.Model):
     ficha = models.ForeignKey('Ficha', on_delete=models.CASCADE)
     trimestre = models.IntegerField()
+
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, null=True)
+
+    # 👇 ESTE CAMPO NUEVO PERMITE SUBCARPETAS
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='subcarpetas'
+    )
 
     def __str__(self):
         return f"{self.nombre} (T{self.trimestre}) - Ficha {self.ficha.id}"

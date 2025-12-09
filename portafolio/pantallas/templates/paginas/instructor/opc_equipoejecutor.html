@@ -93,11 +93,19 @@
                  data-bs-parent="#accordionFolders">
                 <div class="accordion-body">
 
-                    <!-- Botones carpeta -->
+                    <!-- BOTONES CARPETA MADRE -->
                     <div class="d-flex justify-content-end mb-3">
-                        <a href="{% url 'editar_carpeta_equipo' carpeta.id %}" class="btn btn-outline-success btn-sm me-2">
+
+                        <a href="{% url 'crear_subcarpeta_equipo' carpeta.id %}"
+                           class="btn btn-outline-primary btn-sm me-2">
+                            <i class="bi bi-folder-plus"></i>
+                        </a>
+
+                        <a href="{% url 'editar_carpeta_equipo' carpeta.id %}"
+                           class="btn btn-outline-success btn-sm me-2">
                             <i class="bi bi-pencil-square"></i>
                         </a>
+
                         <a href="{% url 'eliminar_carpeta_equipo' carpeta.id %}"
                            class="btn btn-outline-danger btn-sm"
                            onclick="return confirm('¿Eliminar carpeta?');">
@@ -105,12 +113,12 @@
                         </a>
                     </div>
 
-                    <!-- Descripción -->
+                    <!-- DESCRIPCIÓN -->
                     <div class="descripcion-box">
                         {{ carpeta.descripcion }}
                     </div>
 
-                    <!-- Archivos -->
+                    <!-- 🔥 ARCHIVOS DE LA CARPETA MADRE -->
                     {% if carpeta.archivos.all %}
                         {% for archivo in carpeta.archivos.all %}
                         <div class="file-item">
@@ -136,28 +144,140 @@
                         <p class="text-muted">No hay archivos en esta carpeta.</p>
                     {% endif %}
 
+                    <!-- 📌 FORMULARIO SUBIDA AUTOMÁTICA (CARPETA PRINCIPAL) -->
                     <hr>
 
-                    <!-- SUBIR ARCHIVO -->
-                    <form id="f{{ forloop.counter }}" method="POST" enctype="multipart/form-data"
+                    <form id="form_upload_madre_{{ carpeta.id }}"
+                          method="POST" enctype="multipart/form-data"
                           action="{% url 'subir_archivo_equipo' carpeta.id %}">
                         {% csrf_token %}
 
-                        <input type="file" class="d-none"
-                               id="file{{ forloop.counter }}" name="archivo" required>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold">Título del archivo</label>
+                            <input class="form-control" name="nombre_editable" required>
+                        </div>
 
-                        <input type="text" class="form-control mb-2"
-                               placeholder="Nombre del archivo..." name="nombre_editable" required>
+                        <input type="file" id="file_madre_{{ carpeta.id }}" name="archivo" class="d-none" required>
 
                         <button type="button" class="btn btn-outline-success btn-sm"
-                                onclick="document.getElementById('file{{ forloop.counter }}').click()">
-                            <i class="bi bi-upload"></i> Seleccionar archivo
-                        </button>
-
-                        <button type="submit" class="btn btn-success btn-sm">
-                            Guardar
+                                onclick="document.getElementById('file_madre_{{ carpeta.id }}').click()">
+                            <i class="bi bi-upload"></i> Añadir archivo
                         </button>
                     </form>
+
+                    <script>
+                    document.addEventListener("DOMContentLoaded", () => {
+                        const inputFile = document.getElementById("file_madre_{{ carpeta.id }}");
+                        inputFile.addEventListener("change", () => {
+                            document.getElementById("form_upload_madre_{{ carpeta.id }}").submit();
+                        });
+                    });
+                    </script>
+
+                    <hr>
+
+                    <!-- 🔥 SUBCARPETAS -->
+                    {% if carpeta.subcarpetas.all %}
+                        <div class="accordion mt-3" id="subA{{ carpeta.id }}">
+                            {% for sub in carpeta.subcarpetas.all %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="sh{{ sub.id }}">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#sc{{ sub.id }}">
+                                        <i class="bi bi-folder2-open me-2"></i> {{ sub.nombre }}
+                                    </button>
+                                </h2>
+
+                                <div id="sc{{ sub.id }}" class="accordion-collapse collapse"
+                                     data-bs-parent="#subA{{ carpeta.id }}">
+                                    <div class="accordion-body">
+
+                                        <!-- BOTONES SUBCARPETA -->
+                                        <div class="d-flex justify-content-end mb-3">
+
+                                            <a href="{% url 'editar_carpeta_equipo' sub.id %}"
+                                               class="btn btn-outline-success btn-sm me-2">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+
+                                            <a href="{% url 'eliminar_carpeta_equipo' sub.id %}"
+                                               class="btn btn-outline-danger btn-sm"
+                                               onclick="return confirm('¿Eliminar subcarpeta?');">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+
+                                        <!-- DESCRIPCIÓN SUB -->
+                                        <div class="descripcion-box">
+                                            {{ sub.descripcion }}
+                                        </div>
+
+                                        <!-- ARCHIVOS SUB -->
+                                        {% if sub.archivos.all %}
+                                            {% for archivo in sub.archivos.all %}
+                                            <div class="file-item">
+                                                <div>
+                                                    <i class="bi bi-file-earmark-text-fill"></i>
+                                                    <span class="file-name">{{ archivo.nombre_editable }}</span>
+                                                </div>
+
+                                                <div>
+                                                    <a href="{{ archivo.archivo.url }}" class="text-success fw-semibold me-3" download>
+                                                        Descargar
+                                                    </a>
+
+                                                    <a href="{% url 'eliminar_archivo_equipo' archivo.id %}"
+                                                       class="text-danger fw-semibold"
+                                                       onclick="return confirm('¿Eliminar archivo?');">
+                                                        Eliminar
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <p class="text-muted">No hay archivos en esta subcarpeta.</p>
+                                        {% endif %}
+
+                                        <!-- 📌 FORMULARIO SUBIDA AUTOMÁTICA SUBCARPETA -->
+                                        <hr>
+
+                                        <form id="form_upload_sub_{{ sub.id }}"
+                                              method="POST" enctype="multipart/form-data"
+                                              action="{% url 'subir_archivo_equipo' sub.id %}">
+                                            {% csrf_token %}
+
+                                            <div class="mb-2">
+                                                <label class="form-label fw-semibold">Título del archivo</label>
+                                                <input class="form-control" name="nombre_editable" required>
+                                            </div>
+
+                                            <input type="file" id="file_sub_{{ sub.id }}" name="archivo" class="d-none" required>
+
+                                            <button type="button" class="btn btn-outline-success btn-sm"
+                                                    onclick="document.getElementById('file_sub_{{ sub.id }}').click()">
+                                                <i class="bi bi-upload"></i> Añadir archivo
+                                            </button>
+
+                                        </form>
+
+                                        <script>
+                                        document.addEventListener("DOMContentLoaded", () => {
+                                            const inputFile = document.getElementById("file_sub_{{ sub.id }}");
+                                            inputFile.addEventListener("change", () => {
+                                                document.getElementById("form_upload_sub_{{ sub.id }}").submit();
+                                            });
+                                        });
+                                        </script>
+
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No hay subcarpetas.</p>
+                    {% endif %}
 
                 </div>
             </div>
@@ -166,11 +286,12 @@
     </div>
 </div>
 
-<!-- BOTÓN FLOTANTE: CREAR CARPETA -->
+<!-- BOTÓN FLOTANTE CREAR CARPETA -->
 <div class="floating-buttons">
     <a class="btn btn-success" href="{% url 'crear_carpeta_equipo' trimestre %}">
         <i class="bi bi-plus-lg"></i>
     </a>
 </div>
+
 
 {% endblock %}
