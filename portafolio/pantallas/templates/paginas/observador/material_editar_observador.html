@@ -1,0 +1,65 @@
+{% extends "plantillaobservador.html" %}
+
+{% block contenido %} 
+
+<div class="container mt-4 mb-5">
+    <h4 class="fw-bold text-dark">EDITAR MATERIAL</h4>
+
+    <div class="card mt-3" style="border-radius:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">✏️ Editar Material</h5>
+        </div>
+
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- TÍTULO -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Título</label>
+                    <input type="text" name="titulo" class="form-control"
+                        value="{{ material.titulo }}" required>
+                </div>
+
+                <!-- DESCRIPCIÓN -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Descripción</label>
+                    <textarea name="descripcion" class="form-control" rows="4" required>{{ material.descripcion }}</textarea>
+                </div>
+
+                <!-- ARCHIVO ACTUAL -->
+                {% if material.archivo %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Archivo actual</label>
+
+                    <div class="d-flex justify-content-between align-items-center list-group-item p-2">
+                        <span>
+                            <i class="bi bi-file-earmark-text me-2"></i>
+                            {{ material.archivo.name|cut:"material/" }}
+                        </span>
+
+                        <button type="submit" name="eliminar_archivo" value="1" class="btn btn-danger btn-sm" title="Eliminar archivo">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- SUBIR NUEVO ARCHIVO -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Subir nuevo archivo (opcional)</label>
+                    <input type="file" name="archivo" class="form-control">
+                </div>
+
+                <!-- BOTONES -->
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'adentro_material_coordinador' material.id %}" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
