@@ -87,41 +87,47 @@
   </style>
 </head>
 <body>
+  {% if ficha %}
   <div class="container">
     <h2 id="tituloFicha">INFORMACIÓN DE LA FICHA</h2>
 
     <div class="row">
       <div class="label">Número de Ficha:</div>
-      <div class="value" id="numFicha">3175010</div>
+      <div class="value" id="numFicha">{{ ficha.numero_ficha }}</div>
     </div>
 
     <div class="row">
       <div class="label">Jornada:</div>
-      <div class="value" id="jornada">Diurna</div>
+      <div class="value" id="jornada">{{ ficha.idjornada.nombre|capfirst }}</div>
     </div>
 
     <div class="row">
       <div class="label">Programa:</div>
-      <div class="value" id="programa">Técnico en Programación de Software</div>
+      <div class="value" id="programa">{{ ficha.idprograma.programa|capfirst }}</div>
     </div>
 
     <!-- MISMA FILA: Número de Aprendices y Estado de la Ficha -->
     <div class="row-inline">
       <div style="flex:1; display:flex; align-items:center;">
         <div class="label">Número de Aprendices:</div>
-        <div class="value" id="numAprendices">20</div>
+        <div class="value" id="numAprendices">{{ aprendices_count }}</div>
       </div>
       <div style="flex:1; display:flex; align-items:center;">
         <div class="label">Estado de la Ficha:</div>
-        <div class="value" id="estadoFicha">Activa</div>
+        <div class="value" id="estadoFicha">{{ ficha.estado|capfirst }}</div>
       </div>
     </div>
 
     <div class="row">
       <div class="label">Instructor Responsable:</div>
-      <div class="value" id="instructorResp">José Omar Calderón</div>
+      <div class="value" id="instructorResp">{{ instructor_responsable|title }}</div>
     </div>
   </div>
-
+  {% else %}
+    <div class="container text-center">
+        <h2 id="tituloFicha">SIN INFORMACIÓN</h2>
+        <p class="text-muted">No estás asignado a ninguna ficha. Por favor, contacta a un coordinador.</p>
+    </div>
+  {% endif %}
 
 {% endblock %}

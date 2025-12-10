@@ -10,7 +10,6 @@ urlpatterns = [
     path("agregar_evidencia/", views.agregar_evidencia, name="agregar_evidencia"),
     path("agregar_evidencia_coor/", views.agregar_evidencia_coor, name="agregar_evidencia_coor"),
 
-    path("material/", views.material, name="material"),
     path("material_coordinador/", views.material_coordinador, name="material_coordinador"),
 
     path("portafolio_aprendices/<int:ficha_id>/", views.portafolio_aprendices, name="portafolio_aprendices"),
@@ -154,15 +153,13 @@ urlpatterns = [
     path("equipo_coordinador/", views.equipo_coordinador, name="equipo_coordinador"),
     path('material/<int:id>/editar/', views.material_editar, name='material_editar'),
     path('material_coordinador/<int:id>/editar/', views.material_editar_coordinador, name='material_editar_coordinador'),
-    path('material_coordinador/<int:id>/eliminar/', views.material_eliminar_coordinador, name='material_eliminar_coordinador'),
     path("evidencia_guia_editar/<int:evidencia_id>/", views.evidencia_guia_editar, name="evidencia_guia_editar"),
     path("evidencia_guia_editar_coordinador/<int:evidencia_id>/",views.evidencia_guia_editar_coordinador,name="evidencia_guia_editar_coordinador"),
 
-    path("evidencia/eliminar/", views.eliminar_evidencia, name="eliminar_evidencia"),
-    path("evidencia/eliminar_coordinador/<int:evidencia_id>/", views.eliminar_evidencia_coordinador,name="eliminar_evidencia_coordinador"),
 
 
     path("evidencia/eliminar/<int:evidencia_id>/", views.eliminar_evidencia, name="eliminar_evidencia"),
+    path("evidencia_coordinador/eliminar/<int:evidencia_id>/", views.eliminar_evidencia_coordinador, name="eliminar_evidencia_coordinador"),
     path("carpetas_aprendiz_crear/", views.carpetas_aprendiz_crear, name="carpetas_aprendiz_crear"),
     path("carpetas_aprendiz_editar/", views.carpetas_aprendiz_editar, name="carpetas_aprendiz_editar"),
     path("datos_ins_editar/", views.datos_ins_editar, name="datos_ins_editar"),
@@ -192,7 +189,12 @@ urlpatterns = [
     path("usuarios/descargar-plantilla/", views.descargar_plantilla_usuarios, name="descargar_plantilla_usuarios"),
     path("usuarios/tipos-documento/", views.gestionar_tipos_documento, name="gestionar_tipos_documento"),
     path("usuarios/tipos-documento/editar/<int:id>/", views.editar_tipo_documento, name="editar_tipo_documento"),
+    path("eliminar_material/<int:material_id>/", views.eliminar_material, name="eliminar_material"),
 
+    path("agregar_jornada/", views.agregar_jornada, name="agregar_jornada"),
+    path("agregar_programa/", views.agregar_programa, name="agregar_programa"),
+    path("agregar_nombre_programa/", views.agregar_nombre_programa, name="agregar_nombre_programa"),
+    path("material/eliminar_coordinador/<int:material_id>/", views.eliminar_material_coordinador, name="eliminar_material_coordinador"),
 
 
 

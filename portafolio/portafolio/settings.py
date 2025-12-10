@@ -13,6 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
+RECAPTCHA_SECRET_KEY = os.getenv('6Ld-jycsAAAAAJmh0eMf3d0Sqkgsa0Ju9VKgRUsL')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!

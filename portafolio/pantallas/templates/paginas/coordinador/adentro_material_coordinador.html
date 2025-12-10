@@ -82,30 +82,8 @@
 </a>
 
 <!-- Botón Eliminar -->
-<button class="btn btn-fixed btn-delete" id="btnEliminar" title="Eliminar">
+<a href="{% url 'eliminar_material_coordinador' material.id %}" class="btn btn-fixed btn-delete" title="Eliminar">
     <i class="bi bi-trash3"></i>
-</button>
-
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-document.getElementById('btnEliminar').addEventListener('click', function() {
-    Swal.fire({
-        title: 'Confirmar Eliminación',
-        html: `¿Estás seguro de que quieres eliminar el material "<strong>{{ material.titulo }}</strong>" por completo?<br><br>
-                Esta acción no se puede deshacer.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = "{% url 'material_eliminar_coordinador' material.id %}";
-        }
-    })
-});
-</script>
+</a>
 
 {% endblock %}

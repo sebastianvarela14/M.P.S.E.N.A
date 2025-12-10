@@ -78,10 +78,13 @@
 </style>
 
 <div class="fab-container">
-    <!-- BOTÓN ELIMINAR (ahora abre el modal) -->
-    <button type="button" class="btn btn-danger btn-fab" title="Eliminar Material" data-bs-toggle="modal" data-bs-target="#confirmarEliminarModal">
-        <i class="bi bi-trash"></i>
-    </button>
+    <form method="POST" action="{% url 'eliminar_material' material.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger btn-fab" title="Eliminar Material">
+            <i class="bi bi-trash"></i>
+        </button>
+    </form>
+
 
     <!-- BOTÓN EDITAR -->
     <a href="{% url 'material_editar' material.id %}" class="btn btn-success btn-fab" title="Editar Material">
@@ -89,31 +92,5 @@
     </a>
 </div>
 
-<!-- Modal de Confirmación de Eliminación -->
-<div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header border-bottom-0">
-                <h5 class="modal-title fw-bold" id="modalLabel">
-                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Confirmar Eliminación
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>¿Estás seguro de que quieres eliminar el material <strong>"{{ material.titulo }}"</strong> por completo?</p>
-                <p class="text-muted small">Esta acción no se puede deshacer.</p>
-            </div>
-            <div class="modal-footer border-top-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                
-                <!-- El formulario de eliminación ahora está aquí -->
-                <form method="POST" style="margin: 0;">
-                    {% csrf_token %}
-                    <button type="submit" name="eliminar_material" value="1" class="btn btn-danger">Sí, eliminar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 {% endblock %}

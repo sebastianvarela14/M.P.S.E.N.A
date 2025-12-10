@@ -305,16 +305,14 @@ class CarpetaEquipo(models.Model):
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, null=True)
 
-    # 👇 ESTE CAMPO NUEVO PERMITE SUBCARPETAS
     parent = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
-        null=True, blank=True,
+        null=True,
+        blank=True,
+        db_column='carpeta_padre_id',  # 👈 FIX
         related_name='subcarpetas'
     )
-
-    def __str__(self):
-        return f"{self.nombre} (T{self.trimestre}) - Ficha {self.ficha.id}"
 
     class Meta:
         managed = False

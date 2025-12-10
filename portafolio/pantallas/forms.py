@@ -2,9 +2,8 @@ from django import forms
 from .models import Usuario, Documento, Rol, UsuarioRol
 
 class UsuarioForm(forms.ModelForm):
-
     tipo_documento = forms.ModelChoiceField(
-        queryset=Documento.objects.all(),
+        queryset=Documento.objects.all(),  # Mostrar todos los documentos
         label="Tipo Documento",
         required=True
     )
@@ -29,32 +28,32 @@ class UsuarioForm(forms.ModelForm):
             "telefono",
             "usuario",
             "contrasena",
-            "numero_documento",
-            "tipo_documento",
-            "rol",
         ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # 👉 Aquí definimos cómo se ve cada opción en el <select>
-        self.fields['tipo_documento'].label_from_instance = lambda obj: obj.tipo
+        # Mostrar sigla si existe, sino tipo
+        self.fields['tipo_documento'].label_from_instance = lambda obj: obj.sigla if obj.sigla else obj.tipo
 
     def save(self, commit=True):
         usuario = super().save(commit=False)
 
-        # Guardar tipo documento
-        usuario.iddocumento = self.cleaned_data["tipo_documento"]
+        tipo_documento_obj = self.cleaned_data["tipo_documento"]
+        numero_documento_str = self.cleaned_data["numero_documento"]
 
-        # Guardar número documento
-        usuario.numero_documento = self.cleaned_data["numero_documento"]
+        # Crear o obtener un Documento único por tipo, sigla y numero
+        documento_obj, created = Documento.objects.get_or_create(
+            tipo=tipo_documento_obj.tipo,
+            sigla=tipo_documento_obj.sigla,
+            numero=numero_documento_str
+        )
+
+        usuario.iddocumento = documento_obj
 
         if commit:
             usuario.save()
 
-            # Guardar rol en tabla intermedia
             rol = self.cleaned_data["rol"]
-
             UsuarioRol.objects.update_or_create(
                 idusuario=usuario,
                 defaults={"idrol": rol}
