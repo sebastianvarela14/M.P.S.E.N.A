@@ -205,6 +205,9 @@ def calificaciones(request):
 def material(request):
     return render(request, "paginas/instructor/material.html")
 
+def material_coordinador(request):
+    return render(request, "paginas/coordinador/material_coordinador.html")
+
 def portafolio_aprendices(request, ficha_id):
 
     # Guardar ficha para otras vistas si la necesitas
@@ -1110,6 +1113,7 @@ def evidencias_observador(request, ficha_id):
     return render(request, "paginas/observador/evidencias_observador.html", {"evidencias": evidencias})
 
 
+
 def adentro_material_coordinador(request, id):
     material = Material.objects.get(id=id)
     return render(
@@ -1117,6 +1121,8 @@ def adentro_material_coordinador(request, id):
         "paginas/coordinador/adentro_material_coordinador.html",
         {"material": material}
     )
+
+
 
 def carpetas_coordinador(request):
     return render(request, "paginas/coordinador/carpetas_coordinador.html")

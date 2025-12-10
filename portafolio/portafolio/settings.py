@@ -58,6 +58,7 @@ TEMPLATES = [
                 'django.template.context_processors.debug',
                 'pantallas.context_processors.usuario_instructor',
                 'pantallas.context_processors.ficha_context',
+                'pantallas.context_processors.datos_coordinador',
             ],
         },
     },
@@ -134,4 +135,5 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 # Archivos subidos por usuarios (MEDIA)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 

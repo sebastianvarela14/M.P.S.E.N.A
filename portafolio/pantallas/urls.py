@@ -11,6 +11,7 @@ urlpatterns = [
     path("agregar_evidencia_coor/", views.agregar_evidencia_coor, name="agregar_evidencia_coor"),
 
     path("material/", views.material, name="material"),
+    path("material_coordinador/", views.material_coordinador, name="material_coordinador"),
 
     path("portafolio_aprendices/<int:ficha_id>/", views.portafolio_aprendices, name="portafolio_aprendices"),
 
