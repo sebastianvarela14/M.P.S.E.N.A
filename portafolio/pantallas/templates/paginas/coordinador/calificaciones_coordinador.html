@@ -103,30 +103,37 @@
     </head>
 <body>
     <div class="title-container" style="text-align:center;">
-        <h2>Calificaciones</h2>
+        <h2>Calificaciones de la Ficha {{ ficha.numero_ficha }}</h2>
+        <p style="margin-top: -20px; color: #555;">{{ ficha.idprograma.programa|title }}</p>
     </div>
 
+    <table>
         <thead>
         <tr>
-            <th scope="col">Aprendiz</th>
-            <th scope="col">Guía Logica</th>
-            <th scope="col">Proyecto Final</th>
+            <th scope="col" style="width: 25%;">Aprendiz</th>
+            {% for guia in guias_ficha %}
+                <th scope="col">{{ guia.titulo }}</th>
+            {% endfor %}
         </tr>
         </thead>
         <tbody>
-        <tr>
-            <th scope="row">Julia Andrea Quiroga</th>
-            <td>Sin calificar <br><a href="{% url 'evidencia_calificar' %}">ver</a></td>
-            <td>100/100 <br><a href="">ver</a></td>
-        </tr>
-        <tr>
-            <th scope="row">Santiago Andres Padilla Ortiz</th>
-            <td>100/100 <br><a href="{% url 'evidencia_calificada' %}">ver</a></td>
-            <td>Sin calificar <br><a href="#">ver</a></td>
-        </tr>
+            {% for item in aprendices_calificaciones %}
+            <tr>
+                <th scope="row">{{ item.aprendiz.nombres|title }} {{ item.aprendiz.apellidos|title }}</th>
+                {% for calificacion in item.calificaciones %}
+                <td>
+                    <span class="{{ calificacion.clase_css }}">{{ calificacion.texto }}</span>
+                    {% if calificacion.url %}
+                        <br><a href="{{ calificacion.url }}">Ver</a>
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
         </tbody>
     </table>
 </body>
+
     </html>
 
 

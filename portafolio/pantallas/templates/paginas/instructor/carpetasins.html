@@ -172,11 +172,12 @@
                             <i class="bi bi-pencil-square"></i>
                         </a>
                         
-                        <a href="{% url 'eliminar_carpeta' carpeta.id ficha.id trimestre %}"
-                            class="btn btn-outline-danger btn-sm"
-                            onclick="return confirm('⚠️ ¿Está seguro que desea eliminar la carpeta {{ carpeta.nombre }}? Esto eliminará todos los archivos asociados. Esta acción no se puede deshacer.');">
+                            <a href="{% url 'eliminar_carpeta' carpeta.id ficha.id trimestre %}"
+                            class="btn btn-outline-danger btn-sm">
                             <i class="bi bi-trash"></i>
-                        </a>
+                            </a>
+
+
                     </div>
 
                     <!-- DESCRIPCIÓN BONITA -->
@@ -201,11 +202,11 @@
                 <i class="bi bi-download"></i> Descargar
             </a>
 
-            <a href="{% url 'eliminar_archivo_portafolio' a.id %}"
-               class="text-danger fw-semibold"
-               onclick="return confirm('¿Eliminar archivo?');">
+                <a href="{% url 'eliminar_archivo_portafolio' a.id %}"
+                class="text-danger fw-semibold">
                 <i class="bi bi-trash"></i> Eliminar
-            </a>
+                </a>
+
         </span>
 
     </li>

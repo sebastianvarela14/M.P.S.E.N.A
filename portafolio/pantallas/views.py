@@ -2,6 +2,7 @@ import mysql.connector
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 import os
+import shutil
 from dotenv import load_dotenv
 from .forms import UsuarioForm
 from django.http import HttpResponse
@@ -12,12 +13,12 @@ from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 import re
 from django.http import FileResponse, Http404
-import os
 from django.conf import settings
 from django.contrib import messages
 from pantallas.models import Usuario, Documento, Rol, UsuarioRol
 import pandas as pd
 from django.db import IntegrityError
+import requests 
 
 
 load_dotenv() 
@@ -33,7 +34,7 @@ def agregar_evidencia(request):
         fecha_entrega = request.POST.get('fecha_de_entrega')
         archivo = request.FILES.get('archivo')
 
-        nombre_archivo = archivo.name if archivo else "No subido"
+        nombre_archivo = archivo.name if archivo else None
 
         try:
             conexion = mysql.connector.connect(
@@ -44,7 +45,14 @@ def agregar_evidencia(request):
             )
             cursor = conexion.cursor()
 
-            # ⿡ INSERT en evidencias_instructor
+            # 🔹 1. Guardar archivo en media/evidencias/
+            ruta_origen = None
+            if archivo:
+                fs = FileSystemStorage(location='media/evidencias/')
+                filename = fs.save(archivo.name, archivo)
+                ruta_origen = fs.path(filename)   # ruta física
+
+            # 🔹 2. Insertar en evidencias_instructor
             cursor.execute("""
                 INSERT INTO evidencias_instructor 
                 (titulo, instrucciones, calificacion, fecha_de_entrega, archivo)
@@ -52,39 +60,29 @@ def agregar_evidencia(request):
             """, (titulo, instrucciones, calificacion, fecha_entrega, nombre_archivo))
             conexion.commit()
 
-            # ⿢ Obtener el id de la evidencia recién creada
             id_evidencia = cursor.lastrowid
 
-            # ⿣ Obtener la ficha actual desde la sesión
+            # 🔹 3. Obtener ficha actual
             id_ficha = request.session.get("ficha_id")
 
-            # ⿤ Registrar la evidencia en evidencias_ficha
+            # 🔹 4. Registrar vínculo en evidencias_ficha
             cursor.execute("""
                 INSERT INTO evidencias_ficha (idficha, idevidencias_instructor)
                 VALUES (%s, %s)
             """, (id_ficha, id_evidencia))
             conexion.commit()
 
-            # 🚀 NUEVO: Copiar archivo a carpetas de cada aprendiz de la ficha
-            if archivo:
-                import shutil
-                import os
-
-                # Obtener aprendices de la ficha
+            # 🔹 5. Copiar archivo a cada aprendiz
+            if archivo and ruta_origen:
                 cursor.execute("SELECT idusuario FROM ficha_usuario WHERE idficha = %s", (id_ficha,))
                 aprendices = cursor.fetchall()
-
-                # Ruta donde ya quedó guardado el archivo del instructor
-                ruta_origen = f"media/evidencias/{archivo.name}"
 
                 for apr in aprendices:
                     idusuario = apr[0]
 
-                    # Carpeta destino del aprendiz
                     carpeta_destino = f"media/evidencias_aprendiz/{idusuario}/"
                     os.makedirs(carpeta_destino, exist_ok=True)
 
-                    # Copiar archivo al aprendiz
                     shutil.copy(ruta_origen, carpeta_destino)
 
             messages.success(request, "Evidencia agregada, vinculada y copiada a los aprendices.")
@@ -92,14 +90,17 @@ def agregar_evidencia(request):
         except mysql.connector.Error as err:
             messages.error(request, f"Error al agregar la evidencia: {err}")
 
+        except Exception as e:
+            messages.error(request, f"Error inesperado: {e}")
+
         finally:
             if 'conexion' in locals() and conexion.is_connected():
                 cursor.close()
                 conexion.close()
+
         return redirect('evidencias')
 
     return render(request, "paginas/instructor/agregar_evidencia.html")
-
 
 
 def agregar_evidencia_coor(request):
@@ -110,7 +111,7 @@ def agregar_evidencia_coor(request):
         fecha_entrega = request.POST.get('fecha_de_entrega')
         archivo = request.FILES.get('archivo')
 
-        nombre_archivo = archivo.name if archivo else "No subido"
+        nombre_archivo = archivo.name if archivo else None
 
         try:
             conexion = mysql.connector.connect(
@@ -121,7 +122,14 @@ def agregar_evidencia_coor(request):
             )
             cursor = conexion.cursor()
 
-            # ⿡ INSERT en evidencias_instructor
+            # 🔹 1. Guardar archivo en media/evidencias/
+            ruta_origen = None
+            if archivo:
+                fs = FileSystemStorage(location='media/evidencias/')
+                filename = fs.save(archivo.name, archivo)
+                ruta_origen = fs.path(filename)  # ruta física real
+
+            # 🔹 2. Insertar en evidencias_instructor
             cursor.execute("""
                 INSERT INTO evidencias_instructor 
                 (titulo, instrucciones, calificacion, fecha_de_entrega, archivo)
@@ -129,29 +137,33 @@ def agregar_evidencia_coor(request):
             """, (titulo, instrucciones, calificacion, fecha_entrega, nombre_archivo))
             conexion.commit()
 
-            # ⿢ Obtener el id de la evidencia recién creada
             id_evidencia = cursor.lastrowid
 
-            # ⿣ Obtener la ficha actual desde la sesión
+            # 🔹 3. Obtener ficha seleccionada por coordinador
             id_ficha = request.session.get("ficha_id")
 
-            # ⿤ Registrar la evidencia en evidencias_ficha
+            # 🔹 4. Crear vínculo en evidencias_ficha
             cursor.execute("""
                 INSERT INTO evidencias_ficha (idficha, idevidencias_instructor)
                 VALUES (%s, %s)
             """, (id_ficha, id_evidencia))
             conexion.commit()
 
-            messages.success(request, "Evidencia agregada y vinculada a la ficha.")
+            messages.success(request, "Evidencia agregada y vinculada correctamente.")
 
         except mysql.connector.Error as err:
             messages.error(request, f"Error al agregar la evidencia: {err}")
+
+        except Exception as e:
+            messages.error(request, f"Error inesperado: {e}")
 
         finally:
             if 'conexion' in locals() and conexion.is_connected():
                 cursor.close()
                 conexion.close()
-        return redirect('evidencias_coordinador')
+
+        return redirect('evidencias_coordinador', ficha_id=id_ficha)
+
     return render(request, "paginas/coordinador/agregar_evidencia_coor.html")
 
 
@@ -202,11 +214,30 @@ def calificaciones(request):
         messages.error(request, "La ficha seleccionada no existe.")
         return redirect('fichas_ins')
 
-def material(request):
-    return render(request, "paginas/instructor/material.html")
 
 def material_coordinador(request):
-    return render(request, "paginas/coordinador/material_coordinador.html")
+    if request.method == "POST":
+        titulo = request.POST.get("titulo")
+        descripcion = request.POST.get("descripcion")
+        archivo = request.FILES.get("archivo")
+
+        nuevo = Material(
+            titulo=titulo,
+            descripcion=descripcion,
+            archivo=archivo  # Django lo almacena automáticamente en media/material/
+        )
+        nuevo.save()
+
+        messages.success(request, "Material creado correctamente.")
+        return redirect("material_principal_coordinador")
+
+    # Cargar lista de materiales para mostrarlos en la tabla
+    materiales = Material.objects.all().order_by("-id")
+
+    return render(request, "paginas/coordinador/material_coordinador.html", {
+        "materiales": materiales
+    })
+
 
 def portafolio_aprendices(request, ficha_id):
 
@@ -1508,10 +1539,72 @@ def carpetas_aprendiz_coordinador(request):
     return render(request, "paginas/coordinador/carpetas_aprendiz_coordinador.html")
 
 def calificaciones_coordinador(request):
-    return render(request, "paginas/coordinador/calificaciones_coordinador.html")
+    ficha_id = request.session.get("ficha_actual")
+    if not ficha_id:
+        messages.error(request, "Por favor, selecciona una ficha primero.")
+        return redirect('fichas_coordinador')
+
+    try:
+        # ✔ Obtener ficha
+        ficha = Ficha.objects.select_related('idprograma').get(id=ficha_id)
+
+        # ✔ Obtener guías vinculadas a la ficha
+        guias_ficha = EvidenciasInstructor.objects.filter(
+            evidenciasficha__idficha=ficha_id
+        ).order_by('id').distinct()
+
+        # ✔ Obtener aprendices de la ficha
+        aprendices = Usuario.objects.filter(
+            fichausuario__idficha_id=ficha_id,
+            usuariorol__idrol__tipo='aprendiz'
+        ).order_by('apellidos', 'nombres').distinct()
+
+        aprendices_calificaciones = []
+
+        for aprendiz in aprendices:
+            calificaciones_aprendiz = []
+
+            for guia in guias_ficha:
+                # ✔ Buscar entrega del aprendiz
+                entrega = EvidenciasAprendiz.objects.filter(
+                    idusuario=aprendiz,
+                    idevidencias_instructor=guia
+                ).first()
+
+                if entrega and entrega.calificacion:
+                    calificaciones_aprendiz.append({
+                        "texto": entrega.calificacion,
+                        "clase_css": "text-success",
+                        "url": "#"  # Cambia luego si necesitas enlace
+                    })
+                else:
+                    calificaciones_aprendiz.append({
+                        "texto": "Sin calificar",
+                        "clase_css": "text-warning",
+                        "url": "#"
+                    })
+
+            aprendices_calificaciones.append({
+                "aprendiz": aprendiz,
+                "calificaciones": calificaciones_aprendiz
+            })
+
+        # ✔ Render
+        return render(request, "paginas/coordinador/calificaciones_coordinador.html", {
+            "ficha": ficha,
+            "guias_ficha": guias_ficha,
+            "aprendices_calificaciones": aprendices_calificaciones
+        })
+
+    except Ficha.DoesNotExist:
+        messages.error(request, "La ficha seleccionada no existe.")
+        return redirect('fichas_coordinador')
+
 
 def evidencia_calificar_coordinador(request):
     return render(request, "paginas/coordinador/evidencia_calificar_coordinador.html")
+
+
 
 def sesion(request):
     usuario_ingresado = ""
@@ -1525,6 +1618,7 @@ def sesion(request):
         contrasena_input = request.POST.get('contrasena')
         usuario_ingresado = usuario_input
 
+        # Resto de la lógica existente (sin cambios)
         conexion = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
             user=os.getenv("DB_USER"),
@@ -1805,7 +1899,41 @@ def ficha_aprendiz(request):
     return render(request, "paginas/aprendiz/ficha_aprendiz.html", contexto)
 
 def ficha_aprendiz_2(request):
-    return render(request, "paginas/aprendiz/ficha_aprendiz_2.html")
+    usuario_id = request.session.get("id_usuario")
+
+    contexto = {
+        "ficha": None,
+        "aprendices_count": 0,
+        "instructor_responsable": "No asignado"
+    }
+
+    if usuario_id:
+        try:
+            # 1. Buscar la relación entre el aprendiz y la ficha
+            relacion = FichaUsuario.objects.select_related('idficha').get(idusuario_id=usuario_id)
+            ficha = relacion.idficha
+
+            # 2. Contar aprendices en la ficha
+            aprendices_count = Usuario.objects.filter(
+                fichausuario__idficha=ficha,
+                usuariorol__idrol__tipo='aprendiz'
+            ).count()
+
+            # 3. Encontrar un instructor para la ficha
+            instructor = Usuario.objects.filter(
+                fichausuario__idficha=ficha,
+                usuariorol__idrol__tipo='instructor'
+            ).first()
+
+            contexto['ficha'] = ficha
+            contexto['aprendices_count'] = aprendices_count
+            if instructor:
+                contexto['instructor_responsable'] = f"{instructor.nombres} {instructor.apellidos}"
+
+        except FichaUsuario.DoesNotExist:
+            messages.error(request, "No estás asignado a ninguna ficha.")
+
+    return render(request, "paginas/aprendiz/ficha_aprendiz_2.html", contexto)
 
 def ficha_instructor(request):
     ficha_id = request.session.get('ficha_actual')
@@ -2079,15 +2207,6 @@ def material_editar_coordinador(request, id):
         "material": material
     })
 
-def material_eliminar_coordinador(request, id):
-    material = get_object_or_404(Material, id=id)
-    if request.method == "POST":
-        material.delete()
-        messages.success(request, "Material eliminado correctamente.")
-        return redirect("material_principal_coordinador")
-    return render(request, "paginas/coordinador/material_confirmar_eliminar.html", {
-        "material": material
-    })
 
 def material_eliminar_observador(request, id):
     material = get_object_or_404(Material, id=id)
@@ -2348,23 +2467,28 @@ def coordinador_editar(request, id):
         "nombres_programa": nombres_programa
     })
 
-
 def coordinador_agregar(request):
     jornadas = Jornada.objects.all()
     programas = Programa.objects.all()
     nombres_programa = NombrePrograma.objects.all()
 
     if request.method == "POST":
-        numero = request.POST.get("numero_ficha")
-        aprendices = request.POST.get("numero_aprendices")
-        estado = request.POST.get("estado")
+        numero = request.POST.get("numero_ficha", "").strip()
+        aprendices = request.POST.get("numero_aprendices", "").strip()
+        estado = request.POST.get("estado", "").strip()
 
         jornada = request.POST.get("idjornada")
         programa = request.POST.get("idprograma")
         nombre_programa = request.POST.get("nombre_programa")
 
+        # VALIDACIÓN PRINCIPAL
+        if not numero or not numero.isdigit():
+            messages.error(request, "❗ Debes ingresar un número de ficha válido.")
+            return redirect("coordinador_agregar")
+
+        # Si todo bien, guardar
         Ficha.objects.create(
-            numero_ficha=numero,
+            numero_ficha=int(numero),
             estado=estado,
             idjornada_id=jornada,
             idprograma_id=programa,
@@ -2643,10 +2767,17 @@ def administrar_usuario_editar(request, id):
             formulario.save()
             return redirect("administrar_usuario")
     else:
+        # Buscar el tipo_documento correspondiente (el Documento con el mismo tipo y sigla, sin numero)
+        tipo_doc = Documento.objects.filter(
+            tipo=usuario.iddocumento.tipo,
+            sigla=usuario.iddocumento.sigla,
+            numero__isnull=True
+        ).first() if usuario.iddocumento else None
+
         initial = {
-            "tipo_documento": usuario.iddocumento.id if usuario.iddocumento else None,
+            "tipo_documento": tipo_doc,
             "numero_documento": usuario.iddocumento.numero if usuario.iddocumento else "",
-            "rol": usuario.usuariorol_set.first().idrol.id if usuario.usuariorol_set.exists() else None,
+            "rol": usuario.usuariorol_set.first().idrol if usuario.usuariorol_set.exists() else None,
         }
 
         formulario = UsuarioForm(instance=usuario, initial=initial)
@@ -2654,6 +2785,9 @@ def administrar_usuario_editar(request, id):
     return render(request, "paginas/coordinador/administrar_usuario_editar.html", {
         "formulario": formulario
     })
+
+
+
 
 def eliminar_usuario(request, usuario_id):
     Usuario.objects.filter(id=usuario_id).delete()
@@ -2799,49 +2933,141 @@ def eliminar_asignatura(request, ficha_id, asig_id):
 
     return redirect("configuracion_coordinador")
 
+
 def eliminar_evidencia(request, evidencia_id):
 
-    # 1. Buscar la evidencia de instructor
-    evidencia = EvidenciasInstructor.objects.get(id=evidencia_id)
+    # 1. Buscar evidencia
+    evidencia = get_object_or_404(EvidenciasInstructor, id=evidencia_id)
 
-    # 2. Buscar relación en EvidenciasFicha
-    evidencia_ficha = EvidenciasFicha.objects.filter(
-        idevidencias_instructor=evidencia
-    ).first()
+    # Nombre del archivo (string correcto)
+    nombre_archivo = evidencia.archivo.name if evidencia.archivo else None
 
-    # 4. Primero eliminar la relación (evita el IntegrityError)
-    if evidencia_ficha:
-        evidencia_ficha.delete()
+    # 2. Borrar archivo del instructor en media/evidencias/
+    if nombre_archivo:
+        ruta_archivo = os.path.join(settings.MEDIA_ROOT, "evidencias", os.path.basename(nombre_archivo))
 
-    # 5. Ahora sí eliminar la evidencia sin violar la FK
+        if os.path.exists(ruta_archivo):
+            os.remove(ruta_archivo)
+
+    # 3. Buscar relaciones en evidencias_ficha
+    relaciones = EvidenciasFicha.objects.filter(idevidencias_instructor=evidencia)
+
+    for rel in relaciones:
+        id_ficha = rel.idficha_id
+
+        # Obtener aprendices
+        from pantallas.models import FichaUsuario
+        aprendices = FichaUsuario.objects.filter(idficha=id_ficha)
+
+        for apr in aprendices:
+            carpeta_aprendiz = os.path.join(settings.MEDIA_ROOT, "evidencias_aprendiz", str(apr.idusuario_id))
+            ruta_copia = os.path.join(carpeta_aprendiz, os.path.basename(nombre_archivo))
+
+            if os.path.exists(ruta_copia):
+                os.remove(ruta_copia)
+
+    # 4. Borrar relaciones
+    relaciones.delete()
+
+    # 5. Borrar evidencia
     evidencia.delete()
 
-    messages.success(request, "La evidencia fue eliminada correctamente.")
-
-    # 6. Redirigir SIEMPRE a la lista de evidencias
+    messages.success(request, "La evidencia y sus archivos fueron eliminados correctamente.")
     return redirect("evidencias")
+
 
 def eliminar_evidencia_coordinador(request, evidencia_id):
 
-    # 1. Buscar la evidencia de instructor
-    evidencia = EvidenciasInstructor.objects.get(id=evidencia_id)
+    evidencia = get_object_or_404(EvidenciasInstructor, id=evidencia_id)
 
-    # 2. Buscar relación en EvidenciasFicha
-    evidencia_ficha = EvidenciasFicha.objects.filter(
-        idevidencias_instructor=evidencia
-    ).first()
+    # Nombre del archivo
+    nombre_archivo = evidencia.archivo.name if evidencia.archivo else None
 
-    # 4. Primero eliminar la relación (evita el IntegrityError)
-    if evidencia_ficha:
-        evidencia_ficha.delete()
+    # 1. Eliminar archivo principal
+    if nombre_archivo:
+        ruta_archivo = os.path.join(settings.MEDIA_ROOT, "evidencias", os.path.basename(nombre_archivo))
 
-    # 5. Ahora sí eliminar la evidencia sin violar la FK
+        if os.path.exists(ruta_archivo):
+            os.remove(ruta_archivo)
+
+    # 2. Buscar relaciones con fichas
+    relaciones = EvidenciasFicha.objects.filter(idevidencias_instructor=evidencia)
+
+    for rel in relaciones:
+        id_ficha = rel.idficha_id
+
+        # Copias en aprendices del coordinador
+        from pantallas.models import FichaUsuario
+        aprendices = FichaUsuario.objects.filter(idficha=id_ficha)
+
+        for apr in aprendices:
+            carpeta_aprendiz = os.path.join(settings.MEDIA_ROOT, "evidencias_aprendiz", str(apr.idusuario_id))
+            ruta_copia = os.path.join(carpeta_aprendiz, os.path.basename(nombre_archivo))
+
+            if os.path.exists(ruta_copia):
+                os.remove(ruta_copia)
+
+    # 3. eliminar relaciones
+    relaciones.delete()
+
+    # 4. eliminar evidencia
     evidencia.delete()
 
-    messages.success(request, "La evidencia fue eliminada correctamente.")
+    messages.success(request, "La evidencia del coordinador fue eliminada correctamente.")
 
-    # 6. Redirigir SIEMPRE a la lista de evidencias
-    return redirect("evidencias_coordinador")
+    # ⚠️ ESTA REDIRECCIÓN ES IMPORTANTE
+    return redirect("evidencias_coordinador", ficha_id=id_ficha)
+
+
+def eliminar_material(request, material_id):
+
+    # 1. Buscar el material
+    material = get_object_or_404(Material, id=material_id)
+
+    # Nombre del archivo (string correcto)
+    nombre_archivo = material.archivo.name if material.archivo else None
+
+    # 2. Borrar archivo dentro de media/material/
+    if nombre_archivo:
+        ruta_archivo = os.path.join(
+            settings.MEDIA_ROOT,
+            "material",
+            os.path.basename(nombre_archivo)
+        )
+
+        if os.path.exists(ruta_archivo):
+            os.remove(ruta_archivo)
+
+    # 3. Borrar el registro del material
+    material.delete()
+
+    messages.success(request, "El material y su archivo fueron eliminados correctamente.")
+    return redirect("material_principal")
+
+def eliminar_material_coordinador(request, material_id):
+
+    # 1. Buscar el material
+    material = get_object_or_404(Material, id=material_id)
+
+    # Nombre del archivo (string correcto)
+    nombre_archivo = material.archivo.name if material.archivo else None
+
+    # 2. Borrar archivo dentro de media/material/
+    if nombre_archivo:
+        ruta_archivo = os.path.join(
+            settings.MEDIA_ROOT,
+            "material",
+            os.path.basename(nombre_archivo)
+        )
+
+        if os.path.exists(ruta_archivo):
+            os.remove(ruta_archivo)
+
+    # 3. Borrar el registro del material
+    material.delete()
+
+    messages.success(request, "El material y su archivo fueron eliminados correctamente.")
+    return redirect("material_principal_coordinador")
 
 
 def datos_coor(request, id):
@@ -2980,7 +3206,7 @@ def crear_material(request):
         nuevo = Material(
             titulo=titulo,
             descripcion=descripcion,
-            archivo=archivo 
+            archivo=archivo  # Django lo guarda en media/material automáticamente
         )
         nuevo.save()
 
