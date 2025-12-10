@@ -1,0 +1,70 @@
+{% extends "plantillacoor_inicio.html" %}
+
+{% block contenido %}
+
+<div class="container mt-5" style="max-width: 650px;">
+
+    <div class="card shadow-lg border-0 rounded-4">
+        
+        <!-- Encabezado -->
+        <div class="card-header bg-success text-white text-center py-4 rounded-top-4">
+            <h4 class="mb-0">
+                <i class="bi bi-people"></i> Carga Masiva de Usuarios
+            </h4>
+            <p class="mt-2 mb-0 text-white-50" style="font-size: 0.9rem;">
+                Carga cientos de usuarios fácilmente mediante un archivo Excel o CSV.
+            </p>
+        </div>
+
+        <!-- Contenido -->
+        <div class="card-body px-4 py-4">
+
+            <p class="text-muted text-center">
+                Asegúrate de usar la plantilla correcta para garantizar que los datos se carguen sin errores.
+            </p>
+
+            <!-- BOTÓN DESCARGAR PLANTILLA -->
+            <div class="text-center mb-4">
+                <a href="{% url 'descargar_plantilla_usuarios' %}" class="btn btn-outline-success btn-lg rounded-3">
+                    <i class="bi bi-file-earmark-arrow-down"></i> Descargar plantilla de ejemplo
+                </a>
+
+                <p class="text-muted mt-2" style="font-size: 0.85rem;">
+                    📄 Contiene las columnas requeridas: tipo_doc, documento, nombre, apellido, correo y rol.
+                </p>
+            </div>
+
+            <!-- FORMULARIO DE SUBIDA -->
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Seleccionar archivo a subir</label>
+                    <input type="file" name="archivo" accept=".xlsx,.csv" class="form-control rounded-3" required>
+                    <small class="text-muted">
+                        Formatos permitidos: <strong>.xlsx</strong> (Excel) o <strong>.csv</strong>
+                    </small>
+                </div>
+
+                <!-- BOTONES -->
+                <div class="d-flex justify-content-between mt-4">
+                    
+                    <!-- Volver -->
+                    <a href="{% url 'administrar_usuario' %}" class="btn btn-secondary btn-lg rounded-3">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+
+                    <!-- Procesar -->
+                <button type="submit" class="btn btn-success btn-lg rounded-3">
+                    <i class="bi bi-cloud-upload"></i> Procesar archivo
+                </button>
+
+
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

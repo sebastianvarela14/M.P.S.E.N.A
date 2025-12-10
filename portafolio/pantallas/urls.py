@@ -188,5 +188,12 @@ urlpatterns = [
     path("portafolio_coordinador/", views.portafolio_coordinador, name="portafolio_coordinador"),
     path("crear_material/", views.crear_material, name="crear_material"),
     path("eliminar_archivo_evidencia/<int:evidencia_id>/", views.eliminar_archivo_evidencia, name="eliminar_archivo_evidencia"),
+    path("usuarios/masivo/", views.administrar_usuario_masivo, name="administrar_usuario_masivo"),
+    path("usuarios/descargar-plantilla/", views.descargar_plantilla_usuarios, name="descargar_plantilla_usuarios"),
+    path("usuarios/tipos-documento/", views.gestionar_tipos_documento, name="gestionar_tipos_documento"),
+    path("usuarios/tipos-documento/editar/<int:id>/", views.editar_tipo_documento, name="editar_tipo_documento"),
+
+
+
 
     ]

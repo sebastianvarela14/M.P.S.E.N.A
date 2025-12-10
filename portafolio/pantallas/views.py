@@ -11,6 +11,14 @@ from .models import *
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 import re
+from django.http import FileResponse, Http404
+import os
+from django.conf import settings
+from django.contrib import messages
+from pantallas.models import Usuario, Documento, Rol, UsuarioRol
+import pandas as pd
+from django.db import IntegrityError
+
 
 load_dotenv() 
 
@@ -2484,6 +2492,133 @@ def administrar_usuario(request):
     return render(request, "paginas/coordinador/administrar_usuario.html", {
         "usuarios": usuarios
     })
+
+def administrar_usuario_masivo(request):
+    if request.method == "POST":
+        archivo = request.FILES.get("archivo")
+        import pandas as pd
+        
+        # Leer Excel o CSV
+        df = pd.read_excel(archivo) if archivo.name.endswith(".xlsx") else pd.read_csv(archivo)
+
+        # Normalizar columnas → elimina espacios y pone todo en minúscula
+        df.columns = df.columns.str.strip().str.lower()
+
+        print("COLUMNAS NORMALIZADAS:", df.columns)  # debug
+
+        # Validar columnas necesarias
+        columnas_obligatorias = [
+            "nombres", "apellidos", "correo", "telefono",
+            "tipo doc", "documento", "usuario", "contraseña", "rol"
+        ]
+
+        for col in columnas_obligatorias:
+            if col not in df.columns:
+                raise ValueError(f"La columna requerida '{col}' NO existe en el archivo Excel.")
+
+        # Procesar fila por fila
+        for _, row in df.iterrows():
+
+            # --- Crear o buscar documento ---
+            documento_obj, _ = Documento.objects.get_or_create(
+                tipo=row["tipo doc"].strip(),
+                numero=str(row["documento"]).strip()
+            )
+
+            # --- Crear usuario ---
+            usuario = Usuario.objects.create(
+                nombres=row["nombres"].strip(),
+                apellidos=row["apellidos"].strip(),
+                correo=row["correo"].strip(),
+                telefono=str(row["telefono"]).strip(),
+                usuario=row["usuario"].strip(),
+                contrasena=row["contraseña"],   # sin .strip por si usa números o caracteres especiales
+                iddocumento=documento_obj
+            )
+
+            # --- Validación de rol ---
+            rol_texto = row["rol"].strip().lower()
+
+            if rol_texto not in ["aprendiz", "instructor", "coordinador", "observador"]:
+                raise ValueError(f"El rol '{rol_texto}' no es válido.")
+
+            rol_obj = Rol.objects.get(tipo=rol_texto)
+
+            # Asignar rol
+            UsuarioRol.objects.create(
+                idusuario=usuario,
+                idrol=rol_obj
+            )
+
+        messages.success(request, "Usuarios cargados exitosamente.")
+        return redirect("administrar_usuario")
+
+    return render(request, "paginas/coordinador/administrar_usuario_masivo.html")
+
+
+
+
+
+def descargar_plantilla_usuarios(request):
+    # Ruta única, siempre válida en desarrollo
+    ruta_archivo = os.path.join(
+        settings.BASE_DIR,
+        "static",
+        "plantillas",
+        "plantilla_usuarios.xlsx"
+    )
+
+    # Verifica que exista
+    if not os.path.exists(ruta_archivo):
+        raise Http404("La plantilla no existe en: " + ruta_archivo)
+
+    # Devolver archivo
+    return FileResponse(
+        open(ruta_archivo, "rb"),
+        as_attachment=True,
+        filename="plantilla_usuarios.xlsx"
+    )
+
+def gestionar_tipos_documento(request):
+    tipos = Documento.objects.all()
+
+    if request.method == "POST":
+        sigla = request.POST.get("sigla")
+        nombre = request.POST.get("tipo")
+
+        if sigla.strip() and nombre.strip():
+            Documento.objects.create(
+                sigla=sigla.strip(), 
+                tipo=nombre.strip()
+            )
+            messages.success(request, "Tipo de documento agregado.")
+            return redirect("gestionar_tipos_documento")
+
+    return render(request, "paginas/coordinador/gestionar_tipos_documento.html", {
+        "tipos": tipos
+    })
+
+
+
+
+def editar_tipo_documento(request, id):
+    tipo = get_object_or_404(Documento, id=id)
+
+    if request.method == "POST":
+        nueva_sigla = request.POST.get("sigla")
+        nuevo_nombre = request.POST.get("tipo")
+
+        if nueva_sigla.strip() and nuevo_nombre.strip():
+            tipo.sigla = nueva_sigla.strip()      # SE ACTUALIZA LA SIGLA ✔
+            tipo.tipo = nuevo_nombre.strip()      # SE ACTUALIZA EL NOMBRE ✔
+            tipo.save()
+            messages.success(request, "Tipo de documento actualizado.")
+            return redirect("gestionar_tipos_documento")
+
+    return render(request, "paginas/coordinador/tipos_documento_editar.html", {
+        "tipo": tipo
+    })
+
 
 
 
