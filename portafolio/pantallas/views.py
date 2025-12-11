@@ -19,12 +19,19 @@ from pantallas.models import Usuario, Documento, Rol, UsuarioRol
 import pandas as pd
 from django.db import IntegrityError
 import requests 
-
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.core.files.storage import FileSystemStorage
+import mysql.connector
+import os
+from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario, NombreAsignatura, TipoAsignatura, EvidenciasAprendiz, EvidenciasFicha, EvidenciasInstructor
 
 load_dotenv() 
 
 def plantillains(request):
     return render(request, "paginas/instructor/plantilla.html", )
+
 
 def agregar_evidencia(request):
     if request.method == 'POST':
@@ -33,8 +40,17 @@ def agregar_evidencia(request):
         calificacion = request.POST.get('calificacion')
         fecha_entrega = request.POST.get('fecha_de_entrega')
         archivo = request.FILES.get('archivo')
+        id_asignatura = request.POST.get('idasignatura')
 
-        nombre_archivo = archivo.name if archivo else None
+        nombre_archivo = archivo.name if archivo else "No subido"
+
+        # 🔹 Agregar guardado del archivo en media/evidencias/
+        ruta_archivo_guardado = None
+        if archivo:
+            fs = FileSystemStorage(location='media/evidencias/')
+            filename = fs.save(archivo.name, archivo)  # Guarda el archivo y obtiene el nombre
+            ruta_archivo_guardado = fs.path(filename)  # Ruta física completa (opcional, si necesitas usarla después)
+            nombre_archivo = filename  # Usar el nombre guardado para la DB (incluye subcarpetas si las hay)
 
         try:
             conexion = mysql.connector.connect(
@@ -45,53 +61,28 @@ def agregar_evidencia(request):
             )
             cursor = conexion.cursor()
 
-            # 🔹 1. Guardar archivo en media/evidencias/
-            ruta_origen = None
-            if archivo:
-                fs = FileSystemStorage(location='media/evidencias/')
-                filename = fs.save(archivo.name, archivo)
-                ruta_origen = fs.path(filename)   # ruta física
-
-            # 🔹 2. Insertar en evidencias_instructor
+            # 1️⃣ INSERT en evidencias_instructor
             cursor.execute("""
                 INSERT INTO evidencias_instructor 
-                (titulo, instrucciones, calificacion, fecha_de_entrega, archivo)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (titulo, instrucciones, calificacion, fecha_entrega, nombre_archivo))
-            conexion.commit()
+                (titulo, instrucciones, calificacion, fecha_de_entrega, archivo, idinstructor, idnombre_asignatura)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (titulo, instrucciones, calificacion, fecha_entrega, nombre_archivo, request.user.id, id_asignatura))
 
             id_evidencia = cursor.lastrowid
 
-            # 🔹 3. Obtener ficha actual
-            id_ficha = request.session.get("ficha_id")
-
-            # 🔹 4. Registrar vínculo en evidencias_ficha
+            # 2️⃣ INSERT en evidencias_ficha (super importante)
+            ficha_id = request.session.get("ficha_id")
             cursor.execute("""
                 INSERT INTO evidencias_ficha (idficha, idevidencias_instructor)
                 VALUES (%s, %s)
-            """, (id_ficha, id_evidencia))
+            """, (ficha_id, id_evidencia))
+
             conexion.commit()
 
-            # 🔹 5. Copiar archivo a cada aprendiz
-            if archivo and ruta_origen:
-                cursor.execute("SELECT idusuario FROM ficha_usuario WHERE idficha = %s", (id_ficha,))
-                aprendices = cursor.fetchall()
-
-                for apr in aprendices:
-                    idusuario = apr[0]
-
-                    carpeta_destino = f"media/evidencias_aprendiz/{idusuario}/"
-                    os.makedirs(carpeta_destino, exist_ok=True)
-
-                    shutil.copy(ruta_origen, carpeta_destino)
-
-            messages.success(request, "Evidencia agregada, vinculada y copiada a los aprendices.")
+            messages.success(request, f"Evidencia creada con éxito, ID: {id_evidencia}")
 
         except mysql.connector.Error as err:
-            messages.error(request, f"Error al agregar la evidencia: {err}")
-
-        except Exception as e:
-            messages.error(request, f"Error inesperado: {e}")
+            messages.error(request, f"No se pudo crear la evidencia: {err}")
 
         finally:
             if 'conexion' in locals() and conexion.is_connected():
@@ -111,7 +102,15 @@ def agregar_evidencia_coor(request):
         fecha_entrega = request.POST.get('fecha_de_entrega')
         archivo = request.FILES.get('archivo')
 
-        nombre_archivo = archivo.name if archivo else None
+        nombre_archivo = archivo.name if archivo else "No subido"
+
+        # 🔹 Agregar guardado del archivo en media/evidencias/
+        ruta_archivo_guardado = None
+        if archivo:
+            fs = FileSystemStorage(location='media/evidencias/')
+            filename = fs.save(archivo.name, archivo)  # Guarda el archivo y obtiene el nombre
+            ruta_archivo_guardado = fs.path(filename)  # Ruta física completa (opcional, si necesitas usarla después)
+            nombre_archivo = filename  # Usar el nombre guardado para la DB (incluye subcarpetas si las hay)
 
         try:
             conexion = mysql.connector.connect(
@@ -122,14 +121,7 @@ def agregar_evidencia_coor(request):
             )
             cursor = conexion.cursor()
 
-            # 🔹 1. Guardar archivo en media/evidencias/
-            ruta_origen = None
-            if archivo:
-                fs = FileSystemStorage(location='media/evidencias/')
-                filename = fs.save(archivo.name, archivo)
-                ruta_origen = fs.path(filename)  # ruta física real
-
-            # 🔹 2. Insertar en evidencias_instructor
+            # 1️⃣ INSERT en evidencias_instructor
             cursor.execute("""
                 INSERT INTO evidencias_instructor 
                 (titulo, instrucciones, calificacion, fecha_de_entrega, archivo)
@@ -137,34 +129,41 @@ def agregar_evidencia_coor(request):
             """, (titulo, instrucciones, calificacion, fecha_entrega, nombre_archivo))
             conexion.commit()
 
+            # 2️⃣ Obtener el id de la evidencia recién creada
             id_evidencia = cursor.lastrowid
 
-            # 🔹 3. Obtener ficha seleccionada por coordinador
+            # 3️⃣ Obtener la ficha actual desde la sesión
             id_ficha = request.session.get("ficha_id")
 
-            # 🔹 4. Crear vínculo en evidencias_ficha
+            # Obtener todas las fichas que tienen la asignatura del formulario
+            idasignatura = request.POST.get('idasignatura')
             cursor.execute("""
-                INSERT INTO evidencias_ficha (idficha, idevidencias_instructor)
-                VALUES (%s, %s)
-            """, (id_ficha, id_evidencia))
+                SELECT fa.idficha 
+                FROM ficha_asignatura fa
+                WHERE fa.idasignatura = %s
+            """, (idasignatura,))
+            fichas = cursor.fetchall()
+
+            # Registrar la evidencia en cada ficha
+            for f in fichas:
+                cursor.execute("""
+                    INSERT INTO evidencias_ficha (idficha, idevidencias_instructor)
+                    VALUES (%s, %s)
+                """, (f[0], id_evidencia))
             conexion.commit()
 
-            messages.success(request, "Evidencia agregada y vinculada correctamente.")
+            messages.success(request, "Evidencia agregada y vinculada a la ficha.")
 
         except mysql.connector.Error as err:
             messages.error(request, f"Error al agregar la evidencia: {err}")
-
-        except Exception as e:
-            messages.error(request, f"Error inesperado: {e}")
 
         finally:
             if 'conexion' in locals() and conexion.is_connected():
                 cursor.close()
                 conexion.close()
-
-        return redirect('evidencias_coordinador', ficha_id=id_ficha)
-
+        return redirect('evidencias_coordinador')
     return render(request, "paginas/coordinador/agregar_evidencia_coor.html")
+
 
 
 def calificaciones(request):
@@ -367,12 +366,15 @@ def datos_ins(request):
         'usuario': usuario
     })
 
+
 def evidencias(request):
+    # 1️⃣ Recuperar la ficha seleccionada en la sesión
     ficha_id = request.session.get('ficha_id')
 
     if not ficha_id:
         return HttpResponse("No hay ficha seleccionada")
 
+    # 2️⃣ Conexión a MySQL
     conexion = mysql.connector.connect(
         host=os.getenv("DB_HOST"),
         user=os.getenv("DB_USER"),
@@ -381,20 +383,26 @@ def evidencias(request):
     )
     cursor = conexion.cursor(dictionary=True)
 
-    # Traer evidencias SOLO de la ficha seleccionada
+    # 3️⃣ Traer las evidencias que pertenecen a ESTA ficha, ordenadas por fecha de entrega
     query = """
         SELECT ei.*
         FROM evidencias_instructor ei
-        INNER JOIN evidencias_ficha ef ON ei.id = ef.idevidencias_instructor
+        INNER JOIN evidencias_ficha ef 
+            ON ei.id = ef.idevidencias_instructor
         WHERE ef.idficha = %s
+        ORDER BY ei.fecha_de_entrega ASC
     """
     cursor.execute(query, (ficha_id,))
     evidencias = cursor.fetchall()
 
+    # 4️⃣ Cerrar conexión
     cursor.close()
     conexion.close()
 
-    return render(request, "paginas/instructor/evidencias.html", {"evidencias": evidencias})
+    # 5️⃣ Renderizar HTML
+    return render(request, "paginas/instructor/evidencias.html", {
+        "evidencias": evidencias
+    })
 
 def material2(request):
     return render(request, "paginas/instructor/material2.html")
@@ -902,17 +910,26 @@ def inicio(request):
     asignaturas = []
 
     if id_aprendiz:
-
-        # 1️⃣ Obtener la ficha a la que pertenece el aprendiz
         ficha_usuario = FichaUsuario.objects.filter(idusuario_id=id_aprendiz).first()
-
         if ficha_usuario:
             ficha_id = ficha_usuario.idficha_id
 
-            # 2️⃣ Obtener las asignaturas asignadas a esa ficha
-            asignaturas = NombreAsignatura.objects.filter(
+            # Obtener asignaturas de la ficha
+            asignaturas_qs = NombreAsignatura.objects.filter(
                 fichaasignatura__idficha_id=ficha_id
             ).distinct()
+
+            # Crear lista con instructor resuelto
+            asignaturas = []
+            for asig in asignaturas_qs:
+                # Tomar la relación con esa ficha
+                fa_rel = asig.fichaasignatura_set.filter(idficha_id=ficha_id).first()
+                instructor = fa_rel.instructor if fa_rel and fa_rel.instructor else None
+                asignaturas.append({
+                    'id': asig.id,
+                    'nombre': asig.nombre,
+                    'instructor': instructor
+                })
 
     return render(request, "paginas/aprendiz/inicio.html", {
         'asignaturas': asignaturas,
@@ -996,11 +1013,86 @@ def trimestre_laura(request):
 def carpetas_laura(request):
     return render(request, "paginas/aprendiz/carpetas_laura.html")
 
-def evidencia_laura(request):
-    return render(request, "paginas/aprendiz/evidencia_laura.html")
+def evidencia_laura(request, id):
+    # 1️⃣ Recuperar la ficha seleccionada en la sesión
+    ficha_id = request.session.get('ficha_id')
 
-def evidencia_guialaura(request):
-    return render(request, "paginas/aprendiz/evidencia_guialaura.html")
+    if not ficha_id:
+        return HttpResponse("No hay ficha seleccionada")
+
+    # 2️⃣ Conexión a MySQL
+    conexion = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conexion.cursor(dictionary=True)
+
+    # 3️⃣ Traer las evidencias que pertenecen a ESTA ficha
+    query = """
+        SELECT ei.*
+        FROM evidencias_instructor ei
+        INNER JOIN evidencias_ficha ef 
+            ON ei.id = ef.idevidencias_instructor
+        WHERE ef.idficha = %s
+        ORDER BY ei.fecha_de_entrega ASC
+    """
+    cursor.execute(query, (ficha_id,))
+    evidencias = cursor.fetchall()
+
+    # 4️⃣ Cerrar conexión
+    cursor.close()
+    conexion.close()
+
+    return render(request, "paginas/aprendiz/evidencia_laura.html", {
+        "evidencias": evidencias
+    })
+
+def evidencia_guialaura(request, id):
+    usuario_id = request.session.get("id_usuario")
+    if not usuario_id:
+        messages.error(request, "Debes iniciar sesión.")
+        return redirect("sesion")
+    aprendiz = get_object_or_404(Usuario, id=usuario_id)
+
+    # 2. Obtener evidencia creada por el instructor
+    evidencia_inst = get_object_or_404(EvidenciasInstructor, id=id)
+
+    # 3. Ver si este aprendiz ya hizo entrega
+    entrega = EvidenciasAprendiz.objects.filter(
+        idusuario=aprendiz,
+        idevidencias_instructor=evidencia_inst
+    ).first()
+
+    # 4. Si están enviando entrega
+    if request.method == "POST":
+        archivo = request.FILES.get("archivo")
+        observaciones = request.POST.get("observaciones")
+
+        if entrega:
+            # Actualiza la entrega existente
+            if archivo:
+                entrega.archivo = archivo
+            entrega.observaciones = observaciones
+            entrega.save()
+        else:
+            # Crea entrega nueva
+            EvidenciasAprendiz.objects.create(
+                archivo=archivo,
+                observaciones=observaciones,
+                idusuario=aprendiz,
+                idevidencias_instructor=evidencia_inst
+            )
+
+        return redirect("evidencia_guialaura", id=id)
+
+    # 5. Renderizar plantilla
+    return render(request, "paginas/aprendiz/evidencia_guialaura.html", {
+            "evidencia": evidencia_inst,
+            "entrega": entrega,
+            "aprendiz": aprendiz,
+        })
 
 def material_laura(request):
     return render(request, "paginas/aprendiz/material_laura.html")
@@ -1705,8 +1797,8 @@ def configuracion_observador(request):
 def configuracion_observador_2(request):
     return render(request, "paginas/observador/configuracion_observador_2.html")
 
-
 def configuracion_coordinador(request):
+
     # 1. Recuperar ficha desde sesión
     ficha_id = request.session.get("ficha_actual")
     if not ficha_id:
@@ -1717,39 +1809,38 @@ def configuracion_coordinador(request):
     ficha = Ficha.objects.get(id=ficha_id)
 
     # ========= INSTRUCTORES =========
-    # IDs de usuarios con rol instructor
-    ids_instructores = UsuarioRol.objects.filter(idrol__tipo="instructor").values_list("idusuario_id", flat=True)
+    instructores = Usuario.objects.filter(
+        usuariorol__idrol__tipo="instructor"
+    ).distinct()
 
-    # Todos los instructores
-    instructores = Usuario.objects.filter(id__in=ids_instructores).distinct()
+    instructores_asignados = Usuario.objects.filter(
+        fichausuario__idficha_id=ficha_id,
+        usuariorol__idrol__tipo="instructor"
+    ).distinct()
 
-    # Instructores asignados a la ficha
-    ids_instructores_asignados = FichaUsuario.objects.filter(
-        idficha_id=ficha_id,
-        idusuario_id__in=ids_instructores
-    ).values_list("idusuario_id", flat=True)
-
-    instructores_asignados = Usuario.objects.filter(id__in=ids_instructores_asignados)
+    ids_instructores_asignados = [i.id for i in instructores_asignados]
 
     # ========= APRENDICES =========
-    ids_aprendices = UsuarioRol.objects.filter(idrol__tipo="aprendiz").values_list("idusuario_id", flat=True)
+    aprendices = Usuario.objects.filter(
+        usuariorol__idrol__tipo="aprendiz"
+    ).distinct()
 
-    aprendices = Usuario.objects.filter(id__in=ids_aprendices).distinct()
+    aprendices_asignados = Usuario.objects.filter(
+        fichausuario__idficha_id=ficha_id,
+        usuariorol__idrol__tipo="aprendiz"
+    ).distinct()
 
-    ids_aprendices_asignados = FichaUsuario.objects.filter(
-        idficha_id=ficha_id,
-        idusuario_id__in=ids_aprendices
-    ).values_list("idusuario_id", flat=True)
-
-    aprendices_asignados = Usuario.objects.filter(id__in=ids_aprendices_asignados)
+    ids_aprendices_asignados = [a.id for a in aprendices_asignados]
 
     # ========= ASIGNATURAS =========
     todas_asignaturas = NombreAsignatura.objects.all()
 
+    # Asignaturas reales en la ficha
     asignaturas_ficha = FichaAsignatura.objects.filter(
         idficha_id=ficha_id
     ).select_related("idasignatura")
 
+    # IDs asignados (para marcar checkboxes)
     asignadas_ids = list(
         asignaturas_ficha.values_list("idasignatura_id", flat=True)
     )
@@ -1761,13 +1852,11 @@ def configuracion_coordinador(request):
         if "instructores" in request.POST:
             seleccionados = request.POST.getlist("instructores")
 
-            # Borrar asignaciones anteriores
             FichaUsuario.objects.filter(
                 idficha_id=ficha_id,
-                idusuario_id__in=ids_instructores
+                idusuario__usuariorol__idrol__tipo="instructor"
             ).delete()
 
-            # Crear nuevas asignaciones
             for ins_id in seleccionados:
                 FichaUsuario.objects.create(
                     idficha_id=ficha_id,
@@ -1780,13 +1869,11 @@ def configuracion_coordinador(request):
         if "aprendices" in request.POST:
             seleccionados = request.POST.getlist("aprendices")
 
-            # Borrar asignaciones anteriores
             FichaUsuario.objects.filter(
                 idficha_id=ficha_id,
-                idusuario_id__in=ids_aprendices
+                idusuario__usuariorol__idrol__tipo="aprendiz"
             ).delete()
 
-            # Crear nuevas asignaciones
             for apr_id in seleccionados:
                 FichaUsuario.objects.create(
                     idficha_id=ficha_id,
@@ -1811,6 +1898,7 @@ def configuracion_coordinador(request):
                 )
 
             messages.success(request, "Asignaturas guardadas correctamente!")
+
 
         return redirect("configuracion_coordinador")
 
@@ -2887,29 +2975,48 @@ def configuracion_asignaturas(request):
 
     ficha = Ficha.objects.get(id=ficha_id)
 
+    # Todas las asignaturas
     todas_asignaturas = NombreAsignatura.objects.all()
 
-    asignaturas_ficha = FichaAsignatura.objects.filter(idficha=ficha).select_related('idasignatura')
+    # Asignaciones actuales
+    asignaturas_ficha = FichaAsignatura.objects.filter(
+        idficha=ficha
+    ).select_related('idasignatura')
 
-    asignadas_ids = list(asignaturas_ficha.values_list("idasignatura_id", flat=True))
-    print("DEBUG asignadas_ids:", asignadas_ids)
-    print("DEBUG asignaturas_ficha count:", asignaturas_ficha.count())
-    for fa in asignaturas_ficha[:5]:
-        print("DEBUG fa:", fa.id, "idasignatura_id=", getattr(fa, "idasignatura_id", None),
-            "nombre_rel=", getattr(fa.idasignatura, "nombre", None))
+    asignadas_ids = list(
+        asignaturas_ficha.values_list("idasignatura_id", flat=True)
+    )
+
+    instructores = Usuario.objects.filter(rol__iexact="instructor")
 
     if request.method == "POST":
-        seleccionadas = request.POST.getlist("asignaturas")  
-        print("DEBUG seleccionadas raw:", seleccionadas)
-        seleccionadas = [int(x) for x in seleccionadas]  
-        print("DEBUG seleccionadas ints:", seleccionadas)
+        seleccionadas = request.POST.getlist("asignaturas")
+        seleccionadas = [int(x) for x in seleccionadas]
 
-        FichaAsignatura.objects.filter(idficha=ficha).exclude(idasignatura_id__in=seleccionadas).delete()
+        # Eliminar asignaturas que se quitaron
+        FichaAsignatura.objects.filter(idficha=ficha)\
+            .exclude(idasignatura_id__in=seleccionadas)\
+            .delete()
 
+        # Procesar asignaturas marcadas
         for asig_id in seleccionadas:
-            FichaAsignatura.objects.get_or_create(idficha=ficha, idasignatura_id=asig_id)
 
-        messages.success(request, "Asignaturas actualizadas correctamente.")
+            # Crear la relación ficha-asignatura si no existe
+            FichaAsignatura.objects.get_or_create(
+                idficha=ficha,
+                idasignatura_id=asig_id
+            )
+
+            # Obtener el instructor asignado a esta asignatura
+            instructor_id = request.POST.get(f"instructor_{asig_id}")
+
+            if instructor_id:
+                # Guardar instructor en la tabla NombreAsignatura
+                NombreAsignatura.objects.filter(id=asig_id).update(
+                    instructor_id=int(instructor_id)
+                )
+
+        messages.success(request, "Asignaturas e instructores actualizados correctamente.")
         return redirect("configuracion_asignaturas")
 
     return render(request, "paginas/coordinador/configuracion_asignaturas.html", {
@@ -2918,6 +3025,7 @@ def configuracion_asignaturas(request):
         "asignadas_ids": asignadas_ids,
         "asignaturas_ficha": asignaturas_ficha,
         "ficha_id": ficha_id,
+        "instructores": instructores,
     })
 
 def eliminar_asignatura(request, ficha_id, asig_id):
@@ -2933,6 +3041,18 @@ def eliminar_asignatura(request, ficha_id, asig_id):
 
     return redirect("configuracion_coordinador")
 
+def asignar_instructor_asignatura(request):
+    if request.method == "POST":
+        ficha_id = request.POST.get('ficha_id')
+        asignatura_id = request.POST.get('asignatura_id')
+        instructor_id = request.POST.get('instructor_id')
+
+        # Obtener la relación FichaAsignatura
+        fa = get_object_or_404(FichaAsignatura, idficha_id=ficha_id, idasignatura_id=asignatura_id)
+        fa.instructor_id = instructor_id
+        fa.save()
+
+    return redirect('configuracion_coordinador')
 
 def eliminar_evidencia(request, evidencia_id):
 
