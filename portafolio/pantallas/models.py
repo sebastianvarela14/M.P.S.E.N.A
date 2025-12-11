@@ -83,8 +83,9 @@ class EvidenciasInstructor(models.Model):
     instrucciones = models.CharField(max_length=200, blank=True, null=True, db_comment='instrucciones detalladas de la evidencia a entregar')
     calificacion = models.CharField(max_length=20, db_comment='nota maxima o calificacion asignada a la evidencia')
     fecha_de_entrega = models.DateField(blank=True, null=True, db_comment='fecha limite en la que el aprendiz debe entregar la evidencia')
-    
-    
+    idinstructor = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='idinstructor', null=True)
+    idasignatura = models.ForeignKey('NombreAsignatura', models.DO_NOTHING, db_column='idnombre_asignatura', null=True)
+
     archivo = models.FileField(
         upload_to="evidencias/",
         blank=True,
@@ -175,9 +176,10 @@ class MaterialUsuario(models.Model):
 
 
 class NombreAsignatura(models.Model):
-    idtipo_asignatura = models.ForeignKey('TipoAsignatura', models.DO_NOTHING, db_column='idtipo_asignatura', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla nombre_asignatura con tipo_asignatura')
-    idficha = models.ForeignKey(Ficha, models.DO_NOTHING, db_column='idficha', blank=True, null=True, db_comment='esta es la llave foranea que une la tabla nombre_asignatura con ficha')
-    nombre = models.CharField(max_length=200, db_comment='aqui va el nombre que se le asigne a la competencia')
+    idtipo_asignatura = models.ForeignKey('TipoAsignatura', models.DO_NOTHING, db_column='idtipo_asignatura', blank=True, null=True)
+    idficha = models.ForeignKey(Ficha, models.DO_NOTHING, db_column='idficha', blank=True, null=True)
+    nombre = models.CharField(max_length=200)
+    instructor = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='idinstructor', blank=True, null=True)
 
     class Meta:
         managed = False
@@ -235,11 +237,8 @@ class UsuarioRol(models.Model):
 
 class FichaAsignatura(models.Model):
     idficha = models.ForeignKey(Ficha, models.DO_NOTHING, db_column='idficha')
-    idasignatura = models.ForeignKey(
-        'NombreAsignatura',
-        models.DO_NOTHING,
-        db_column='idnombre_asignatura'
-    )
+    idasignatura = models.ForeignKey('NombreAsignatura', models.DO_NOTHING, db_column='idnombre_asignatura')
+    instructor = models.ForeignKey('Usuario', models.DO_NOTHING, null=True, blank=True)
 
     class Meta:
         managed = False
