@@ -1,4 +1,4 @@
-{% extends "plantillains.html" %}
+{% extends "plantillacoor.html" %}
 {% load static %}
 
 {% block titulo %}Portafolio de Aprendices{% endblock %}
@@ -10,7 +10,7 @@
 
 <div id="trimestres" class="d-grid gap-3">
     {% for t in trimestres %}
-        <a href="{% url 'opc_equipoejecutor_coordinador' %}" 
+        <a href="{% url 'opc_equipoejecutor_coordinador' ficha_id=ficha.id trimestre=t %}" 
             class="btn btn-portfolio d-flex justify-content-between align-items-center">
             <span>{{ t }} Trimestre</span>
             <i class="bi bi-clipboard"></i>
