@@ -371,13 +371,26 @@
                 <div class="opcion" style="justify-content: space-between; margin: 6px 0;">
                     
                     <!-- nombre de la asignatura dentro de fichaasignatura -->
-                    <span>{{ fa.idasignatura.nombre }}</span>
+                    <span>
+                        {{ fa.idasignatura.nombre }} 
+                        {% if fa.instructor %}
+                            - Instructor: {{ fa.instructor.nombres }} {{ fa.instructor.apellidos }}
+                        {% else %}
+                            - Sin instructor asignado
+                        {% endif %}
+                    </span>
 
-                    <!-- eliminar fichaasignatura -->
-                    <form method="POST" action="{% url 'eliminar_asignatura' ficha_id=fa.idficha.id asig_id=fa.idasignatura.id %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button class="btn-eliminar">Eliminar</button>
-                    </form>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
+                        <button type="button" class="btn-anadir"
+                            onclick="abrirModalInstructor('{{ fa.idasignatura.id }}', '{{ fa.idasignatura.nombre }}')">
+                            Administrar Instructor
+                        </button>
+
+                        <form method="POST" action="{% url 'eliminar_asignatura' ficha_id=fa.idficha.id asig_id=fa.idasignatura.id %}" style="display: inline-flex; margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-eliminar">Eliminar</button>
+                        </form>
+                    </div>
                 </div>
             {% endfor %}
         {% else %}
@@ -423,6 +436,62 @@
   </div>
 </div>
 
+<div id="modalInstructorAsignatura" class="modal">
+    <div class="modal-contenido">
+        <div class="modal-header">
+            Asignar Instructor a:<span id="nombreAsignaturaModal"></span>
+        </div>
+
+        <form method="POST" id="formInstructorAsignatura" action="{% url 'asignar_instructor_asignatura' %}">
+            {% csrf_token %}
+            <input type="hidden" name="ficha_id" value="{{ ficha.id }}">
+            <input type="hidden" name="asignatura_id" id="asignaturaIdInput">
+
+            <select name="instructor_id" class="form-control" required>
+                {% if instructores_asignados %}
+                    <option value="" selected disabled>Seleccione un instructor</option>
+                    {% for ins in instructores_asignados %}
+                        <option value="{{ ins.id }}"
+                            {% if fa.instructor and fa.instructor.id == ins.id %}selected{% endif %}>
+                            {{ ins.nombres }} {{ ins.apellidos }}
+                        </option>
+                    {% endfor %}
+                {% else %}
+                    <option value="" disabled selected>No hay instructores asignados</option>
+                {% endif %}
+            </select>
+
+            <div class="modal-footer">
+                <button type="button" class="cerrar" onclick="cerrarModal('modalInstructorAsignatura')">Cancelar</button>
+                <button type="submit" class="btn-anadir">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById("formInstructor").addEventListener("submit", function (e) {
+    e.preventDefault(); // Evita recarga instantánea
+    
+    const form = this;
+    const modal = bootstrap.Modal.getInstance(document.getElementById("modalInstructor"));
+
+    // Enviar el formulario por AJAX
+    fetch("", {
+        method: "POST",
+        body: new FormData(form)
+    })
+    .then(response => {
+        // cerrar modal
+        modal.hide();
+
+        // Opcional: recargar para ver cambios
+        setTimeout(() => {
+            location.reload();
+        }, 400);
+    });
+});
+</script>
 <script>
 function filtrar(inputId, listaId) {
     let input = document.getElementById(inputId).value.toLowerCase();
@@ -434,6 +503,11 @@ function filtrar(inputId, listaId) {
 }
 function abrirModal(id) { document.getElementById(id).style.display = "block"; }
 function cerrarModal(id) { document.getElementById(id).style.display = "none"; }
+function abrirModalInstructor(asigId, nombre) {
+    document.getElementById('asignaturaIdInput').value = asigId;
+    document.getElementById('nombreAsignaturaModal').innerText = nombre;
+    abrirModal('modalInstructorAsignatura');
+}
 </script>
 </body>
 </html>

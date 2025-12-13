@@ -25,8 +25,8 @@
     .btn-custom {
         background-color: #9ed79e;
         color: black;
-        width: 180px;
-        height: 70px;
+        width: 190px;
+        height: 80px;
         border-radius: 10px;
         font-weight: 600;
         display: flex;
@@ -72,8 +72,18 @@
     {% if asignaturas %}
         {% for asig in asignaturas %}
             <a href="{% url 'entrada' asig.id %}" class="btn-custom">
-                <i class="bi bi-book-half"></i> 
-                {{ asig.nombre }}
+                <i class="bi bi-book-half"></i>
+                <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.1;">
+                    <span style="font-weight: 600;">{{ asig.nombre }}</span>
+                    <small style="font-size: 0.75rem; opacity: 0.85;">
+                        Instructor:
+                        {% if asig.instructor %}
+                            {{ asig.instructor.nombres }} {{ asig.instructor.apellidos }}
+                        {% else %}
+                            Sin instructor asignado
+                        {% endif %}
+                    </small>
+                </div>
             </a>
         {% endfor %}
     {% else %}
