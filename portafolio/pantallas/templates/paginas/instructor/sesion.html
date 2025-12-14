@@ -172,11 +172,11 @@
 
             <!-- Mostrar errores -->
             {% if messages %}
-                <div style="color: red; margin-top: 10px; font-weight: 500;">
-                    {% for message in messages %}
-                        <small>{{ message }}</small><br>
-                    {% endfor %}
-                </div>
+                {% for message in messages %}
+                    {% if "login" in message.tags %}
+                        <small style="color:red">{{ message }}</small><br>
+                    {% endif %}
+                {% endfor %}
             {% endif %}
 
             <!-- Mantener sesión -->

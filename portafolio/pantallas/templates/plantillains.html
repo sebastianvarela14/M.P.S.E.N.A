@@ -136,6 +136,14 @@
     <main class="main-content">
         <!-- Topbar -->
         <div class="topbar">
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == "login" %}
+                        <div class="alert alert-danger">{{ message }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            
             Instructor {{ usuario_nombre }}
             <a href="{% url 'datos_ins' %}" class="icono-usuario">
                 <i class="bi bi-person-circle"></i>

@@ -151,7 +151,9 @@
             <!-- Números con íconos -->
             {% if fichas %}
                 {% for ficha in fichas %}
-                    <a href="{% url 'carpetas2' %}?ficha={{ ficha.id }}"><i class="bi bi-hash"></i> {{ ficha.numero_ficha }}</a>
+                    <a href="{% url 'seleccionar_ficha' ficha.id %}">
+                        <i class="bi bi-hash"></i> {{ ficha.numero_ficha }}
+                    </a>
                 {% endfor %}
             {% else %}
                 <p class="text-white small">Sin fichas asignadas</p>
