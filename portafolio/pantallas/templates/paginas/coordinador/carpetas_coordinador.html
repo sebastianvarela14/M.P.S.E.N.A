@@ -1,4 +1,4 @@
-{% extends "plantillacoor.html" %}
+// {% extends "plantillacoor.html" %}
 {% load static %}
 
 {% block titulo %}Portafolio General{% endblock %}
@@ -117,6 +117,107 @@
         .floating-buttons .btn:hover {
             transform: scale(1.1);
         }
+
+        /* Estilos adicionales del primer template fusionado */
+        body { background: #ffffff; }
+
+        .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .title-line {
+            width: 60px;
+            height: 3px;
+            background: #198754;
+            border-radius: 5px;
+        }
+
+        .accordion-button {
+            background: #ffffff;
+            font-weight: 600;
+            border-left: 5px solid #198754;
+            border-radius: 6px !important;
+            margin-bottom: 8px;
+            padding: 14px 18px;
+            box-shadow: 0 3px 7px rgba(0,0,0,0.10);
+        }
+
+        .accordion-button:not(.collapsed) {
+            background: #eaf9f0 !important;
+            color: #145c32;
+        }
+
+        .accordion-body {
+            background: #ffffff;
+            border: 1px solid #d8eedd;
+            border-left: 5px solid #198754;
+            border-radius: 0 0 8px 8px;
+            padding: 24px;
+        }
+
+        .descripcion-box {
+            background: #f8fdf9;
+            border-left: 4px solid #198754;
+            padding: 14px 18px;
+            border-radius: 6px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        /* Botones mínimos de 36x36 */
+        .btn-minimal {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-download {
+            border: 1px solid #198754;
+            color: #198754;
+            background: transparent;
+        }
+        .btn-download:hover {
+            background: #198754;
+            color: #fff;
+        }
+
+        .btn-delete {
+            border: 1px solid #dc3545;
+            color: #dc3545;
+            background: transparent;
+        }
+        .btn-delete:hover {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-upload {
+            background: #198754;
+            color: #fff;
+            border-radius: 8px;
+            padding: 6px 16px;
+            transition: 0.2s;
+        }
+        .btn-upload:hover {
+            background: #146c43;
+        }
+
+        .floating-buttons {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
@@ -136,187 +237,141 @@
             <div id="collapseInstructor" class="accordion-collapse collapse show" aria-labelledby="headingInstructor" data-bs-parent="#accordionInstructor">
                 <div class="accordion-body">
 
-                    <!-- ===== ACORDEÓN DE CARPETAS ===== -->
-                    <div class="accordion" id="accordionExample">
+                        <div class="accordion" id="accordionExample">
 
-                        <!-- 1. Plan concertado -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading1">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
-                                    <i class="bi bi-folder-fill"></i> 1. Plan concertado de trabajo
-                                </button>
-                            </h2>
-                            <div id="collapse1" class="accordion-collapse collapse" aria-labelledby="heading1" data-bs-parent="#accordionExample">
-                                <div class="accordion-body">
-                                    <div class="descripcion">
-                                        Documento que define el plan de trabajo acordado entre el instructor y los aprendices.
-                                    </div>
-                                    <div class="archivo">
-                                        <div class="archivo-info">
-                                            <i class="bi bi-file-earmark-excel text-success"></i>
-                                            <strong>plan_concertado.xlsx</strong>
-                                        </div>
-                                        <div class="archivo-actions">
-                                            <button class="btn btn-outline-warning btn-sm me-1" title="Editar">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger btn-sm me-1" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                            <a href="archivos/plan_concertado.xlsx" download class="btn btn-success btn-sm btn-download">
-                                                <i class="bi bi-download"></i> Descargar
+                            {% for cf in carpetas_ficha %}
+                            {% with carpeta=cf.idcarpetas %}
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#collapse{{ forloop.counter }}">
+                                        <i class="bi bi-folder-fill me-2"></i> {{ carpeta.nombre }}
+                                    </button>
+                                </h2>
+
+                                <div id="collapse{{ forloop.counter }}"
+                                     class="accordion-collapse collapse">
+
+                                    <div class="accordion-body">
+
+                                        <div class="d-flex justify-content-end mb-3">
+                                            <a href="{% url 'editar_carpeta' carpeta.id ficha.id trimestre %}"
+                                               class="btn btn-outline-success btn-sm me-2">
+                                                <i class="bi bi-pencil"></i> Editar
+                                            </a>
+                                            <a href="{% url 'eliminar_carpeta' carpeta.id ficha.id trimestre %}"
+                                               class="btn btn-outline-danger btn-sm">
+                                                <i class="bi bi-trash"></i> Eliminar
                                             </a>
                                         </div>
-                                    </div>
 
-                                    <label class="btn btn-outline-success btn-sm btn-add">
-                                        <i class="bi bi-plus-circle"></i> Agregar archivo
-                                        <input type="file" hidden>
-                                    </label>
+                                        <div class="descripcion-box">
+                                            {{ carpeta.descripcion }}
+                                        </div>
+
+                                        {% if cf.archivos_generales %}
+                                        <h5 class="mt-3">Archivos de Carpeta</h5>
+                                        <ul class="list-group mb-3">
+                                            {% for a in cf.archivos_generales %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <i class="bi bi-file-earmark-text-fill text-info me-2"></i>
+                                                    <strong>{{ a.titulo }}</strong>
+                                                </span>
+                                                <div class="d-flex gap-2">
+                                                    <a href="{{ a.archivo.url }}" download class="btn-minimal btn-download">
+                                                        <i class="bi bi-download"></i>
+                                                    </a>
+                                                    </div>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        <hr>
+                                        {% endif %}
+
+                                        {% if cf.evidencias %}
+                                        <h5 class="mt-3">Evidencias del Instructor</h5>
+                                        <ul class="list-group mt-3">
+
+                                            {% for e in cf.evidencias %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                                                <span>
+                                                    <i class="bi bi-file-earmark-check-fill text-success me-2"></i>
+                                                    <strong>{{ e.titulo }}</strong>
+                                                    
+                                                </span>
+
+                                                <div class="d-flex gap-2">
+
+                                                    <a href="{{ e.archivo.url }}"
+                                                       download
+                                                       class="btn-minimal btn-download">
+                                                        <i class="bi bi-download"></i>
+                                                    </a>
+
+                                                    <form method="post"
+                                                          action="{% url 'eliminar_evidencia' e.id %}">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn-minimal btn-delete">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+
+                                                </div>
+
+                                            </li>
+                                            {% endfor %}
+
+                                        </ul>
+                                        {% else %}
+                                            <p class="text-muted small">No hay evidencias subidas en esta carpeta.</p>
+                                        {% endif %}
+
+                                        <hr>
+
+                                        <h5 class="mt-3">Subir Archivo a Portafolio</h5>
+                                        <form method="post"
+                                              action="{% url 'subir_archivo_portafolio' %}"
+                                              enctype="multipart/form-data">
+                                            {% csrf_token %}
+
+                                            <input type="hidden" name="ficha" value="{{ ficha.id }}">
+                                            <input type="hidden" name="carpeta" value="{{ carpeta.id }}">
+                                            <input type="hidden" name="trimestre" value="{{ trimestre }}">
+
+                                            <div class="mb-2">
+                                                <label class="form-label small">Título del archivo</label>
+                                                <input class="form-control form-control-sm" name="titulo_archivo" required>
+                                            </div>
+
+                                            <input type="file" name="archivo" required class="form-control form-control-sm mb-2">
+
+                                            <button type="submit" class="btn-upload">
+                                                <i class="bi bi-upload"></i> Subir archivo
+                                            </button>
+                                        </form>
+
+                                    </div>
                                 </div>
                             </div>
+
+                            {% endwith %}
+                            {% endfor %}
                         </div>
-
-                        <!-- 2. Guías -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading2">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
-                                    <i class="bi bi-folder-fill"></i> 2. Guías de aprendizaje
-                                </button>
-                            </h2>
-                            <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="heading2" data-bs-parent="#accordionExample">
-                                <div class="accordion-body">
-                                    <div class="descripcion">
-                                        Material pedagógico con actividades e instrucciones para el aprendiz.
-                                    </div>
-
-                                    <div class="archivo">
-                                        <div class="archivo-info">
-                                            <i class="bi bi-file-earmark-pdf text-danger"></i>
-                                            <strong>guia_aprendizaje.pdf</strong>
-                                        </div>
-                                        <div class="archivo-actions">
-                                            <button class="btn btn-outline-warning btn-sm me-1" title="Editar">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger btn-sm me-1" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                            <a href="archivos/guia_aprendizaje.pdf" download class="btn btn-success btn-sm btn-download">
-                                                <i class="bi bi-download"></i> Descargar
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                    <label class="btn btn-outline-success btn-sm btn-add">
-                                        <i class="bi bi-plus-circle"></i> Agregar archivo
-                                        <input type="file" hidden>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. Evidencias -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading3">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
-                                    <i class="bi bi-folder-fill"></i> 3. Evidencias de aprendizaje
-                                </button>
-                            </h2>
-                            <div id="collapse3" class="accordion-collapse collapse" aria-labelledby="heading3" data-bs-parent="#accordionExample">
-                                <div class="accordion-body">
-                                    <div class="descripcion">
-                                        Carpeta destinada a almacenar los productos elaborados por los aprendices.
-                                    </div>
-
-                                    <label class="btn btn-outline-success btn-sm btn-add">
-                                        <i class="bi bi-plus-circle"></i> Agregar archivo
-                                        <input type="file" hidden>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 4. Planes de acción -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading4">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
-                                    <i class="bi bi-folder-fill"></i> 4. Planes de acción de mejora
-                                </button>
-                            </h2>
-                            <div id="collapse4" class="accordion-collapse collapse" aria-labelledby="heading4" data-bs-parent="#accordionExample">
-                                <div class="accordion-body">
-                                    <div class="descripcion">
-                                        Documentación para mejorar dificultades en la formación.
-                                    </div>
-
-                                    <div class="archivo">
-                                        <div class="archivo-info">
-                                            <i class="bi bi-file-earmark-word text-primary"></i>
-                                            <strong>plan_mejora.docx</strong>
-                                        </div>
-                                        <div class="archivo-actions">
-                                            <button class="btn btn-outline-warning btn-sm me-1" title="Editar">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger btn-sm me-1" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                            <a href="archivos/plan_mejora.docx" download class="btn btn-success btn-sm btn-download">
-                                                <i class="bi bi-download"></i> Descargar
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                    <label class="btn btn-outline-success btn-sm btn-add">
-                                        <i class="bi bi-plus-circle"></i> Agregar archivo
-                                        <input type="file" hidden>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 5. Formato diligenciado -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading5">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5" aria-expanded="false" aria-controls="collapse5">
-                                    <i class="bi bi-folder-fill"></i> 5. Formato diligenciado de planeación, seguimiento y evaluación
-                                </button>
-                            </h2>
-                            <div id="collapse5" class="accordion-collapse collapse" aria-labelledby="heading5" data-bs-parent="#accordionExample">
-                                <div class="accordion-body">
-                                    <div class="descripcion">
-                                        Formato oficial para registrar planeación, seguimiento y evaluación.
-                                    </div>
-
-                                    <div class="archivo">
-                                        <div class="archivo-info">
-                                            <i class="bi bi-file-earmark-excel text-success"></i>
-                                            <strong>formato_seguimiento.xlsx</strong>
-                                        </div>
-                                        <div class="archivo-actions">
-                                            <button class="btn btn-outline-warning btn-sm me-1" title="Editar">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger btn-sm me-1" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                            <a href="archivos/formato_seguimiento.xlsx" download class="btn btn-success btn-sm btn-download">
-                                                <i class="bi bi-download"></i> Descargar
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                    <label class="btn btn-outline-success btn-sm btn-add">
-                                        <i class="bi bi-plus-circle"></i> Agregar archivo
-                                        <input type="file" hidden>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
-                    <!-- FIN ACORDEÓN CARPETAS -->
+
+                    <div class="floating-buttons">
+                        <a class="btn btn-success"
+                           href="{% url 'crear_carpeta' 0 ficha.id trimestre %}">
+                            <i class="bi bi-plus-lg"></i>
+                        </a>
+                    </div>
+
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                    <!-- ===== FIN CONTENIDO EXACTO DEL PRIMER TEMPLATE ===== -->
 
                 </div>
             </div>
@@ -330,10 +385,6 @@
 <div class="floating-buttons">
     <button class="btn btn-success rounded-circle me-2" title="Agregar" data-bs-toggle="modal" data-bs-target="#modalAgregar">
         <i class="bi bi-plus-lg fs-4"></i>
-    </button>
-
-    <button class="btn btn-success rounded-circle" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditar">
-        <i class="bi bi-pencil-square fs-5"></i>
     </button>
 </div>
 

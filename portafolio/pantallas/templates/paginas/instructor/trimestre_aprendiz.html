@@ -5,7 +5,7 @@
 
 {% block contenido %}
 <div class="container mt-4 mb-5">
-    <h3 class="fw-bold text-center mb-4">PORTAFOLIO DE {{ aprendiz.nombres }} {{ aprendiz.apellidos }}</h3>
+    <h3 class="fw-bold text-center mb-4">PORTAFOLIO DE {{ aprendiz.nombres|upper }} {{ aprendiz.apellidos|upper }}</h3>
     <br>
 
 <div id="trimestres" class="d-grid gap-3">

@@ -930,8 +930,37 @@ def trimestre_aprendiz(request, aprendiz_id):
         "aprendiz": aprendiz  # Pasar el aprendiz al template
     })
 
-def trimestre_general(request):
-    return render(request, "paginas/instructor/trimestre_general.html")
+def trimestre_general(request,):
+    ficha_id = request.session.get("ficha_actual")
+    ficha_actual = None
+    trimestres = []
+
+    if ficha_id:
+        ficha_actual = Ficha.objects.get(id=ficha_id)
+
+        tipo_programa = ficha_actual.idprograma.programa.lower()
+
+        if "tecnico" in tipo_programa:
+            trimestres = [1, 2, 3]
+        elif "tecnologo" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+                    # Nuevas reglas
+        elif "articulacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5]
+
+        elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6]
+
+        elif "adso" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+        elif "mixta" in tipo_programa:
+            trimestres = [1, 2, 3, 4, 5, 6, 7]
+
+    return render(request, "paginas/instructor/trimestre_general.html", {
+        "ficha": ficha_actual,
+        "trimestres": trimestres
+    })
 
 def carpetas(request):
     return render(request, "paginas/instructor/carpetas.html")
@@ -1447,8 +1476,103 @@ def adentro_material_coordinador(request, id):
         {"material": material}
     )
 
-def carpetas_coordinador(request):
-    return render(request, "paginas/coordinador/carpetas_coordinador.html")
+def carpetas_coordinador(request, ficha_id, trimestre):
+    # 🔒 Verificar sesión
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return redirect('sesion')
+
+    # 🔒 Verificar rol coordinador
+    if not UsuarioRol.objects.filter(
+        idusuario_id=usuario_id,
+        idrol__tipo='coordinacion'  
+    ).exists():
+        return redirect('inicio_coordinador')
+
+    # Usar ficha_id y trimestre de los parámetros de la URL (como en la base)
+    ficha = get_object_or_404(Ficha, id=ficha_id)
+
+    # 📁 Obtener carpetas asignadas a la ficha
+    carpetas_ficha = FichaCarpetas.objects.filter(
+        idficha=ficha
+    ).select_related("idcarpetas")
+
+    # Crear carpetas base si no existen
+    if not carpetas_ficha.exists():
+        nombres_base = [
+            "1. Plan concertado de trabajo",
+            "2. Guias de aprendizaje",
+            "3. Evidencias de aprendizaje",
+            "4. Planes de acción de mejora",
+            "5. Formato diligenciado de planeación, seguimiento y evaluación"
+        ]
+        for nombre in nombres_base:
+            try:
+                # Modificación para usar números si tu DB tiene prefijos numericos
+                carpeta_nombre_exacto = Carpetas.objects.get(nombre__iexact=nombre)
+            except Carpetas.DoesNotExist:
+                # Si no existe con el número, busca sin él para compatibilidad
+                try:
+                    carpeta_nombre_exacto = Carpetas.objects.get(nombre__iexact=nombre.split('. ')[-1])
+                except Carpetas.DoesNotExist:
+                    continue  # Salta si la carpeta base no existe
+
+            FichaCarpetas.objects.get_or_create(
+                idficha=ficha,
+                idcarpetas=carpeta_nombre_exacto
+            )
+
+        carpetas_ficha = FichaCarpetas.objects.filter(
+            idficha=ficha
+        ).select_related("idcarpetas")
+
+    # 🔢 Ordenar carpetas por número
+    def extraer_numero(texto):
+        # Intenta extraer un número al inicio del texto
+        match = re.search(r'^(\d+)\.', texto) 
+        return int(match.group(1)) if match else 9999
+
+    carpetas_ficha = sorted(
+        carpetas_ficha,
+        key=lambda c: extraer_numero(c.idcarpetas.nombre)
+    )
+
+    # 📎 Asignar archivos y evidencias
+    for cf in carpetas_ficha:
+        carpeta_obj = cf.idcarpetas
+
+        # 📁 Archivos generales (de la tabla Archivos) - Agregado para consistencia si es necesario
+        cf.archivos_generales = Archivos.objects.filter(
+            idcarpetas=carpeta_obj,
+            archivo__isnull=False
+        ).exclude(
+            archivo=''
+        ).order_by('-id')
+
+        # 📂 Archivos del instructor (GUÍAS DE APRENDIZAJE) - Filtrar por ficha y trimestre
+        cf.archivos_instructor = PortafolioInstructor.objects.filter(
+            ficha=ficha,
+            trimestre=trimestre,  # Usar trimestre de la URL
+            carpeta=carpeta_obj,
+            archivo__isnull=False
+        ).exclude(
+            archivo=''
+        ).order_by('-fecha_subida')
+
+        # 🧠 EVIDENCIAS (agregado para que funcione igual que carpetasins, pero sin filtrar por instructor específico, ya que el coordinador ve todas de la ficha)
+        cf.evidencias = EvidenciasInstructor.objects.filter(
+            evidenciasficha__idficha=ficha,
+            archivo__isnull=False
+        ).exclude(
+            archivo=''
+        ).order_by('-fecha_de_entrega')
+
+    return render(request, "paginas/coordinador/carpetas_coordinador.html", {
+        "ficha": ficha,
+        "trimestre": trimestre,
+        "carpetas_ficha": carpetas_ficha
+    })
+
 
 
 def evidencia_guia_coordinador(request, evidencia_id):
@@ -1614,16 +1738,12 @@ def trimestre_coordinador(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
-                    # Nuevas reglas
         elif "articulacion" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5]
-
         elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
-
         elif "adso" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6, 7]
-
         elif "mixta" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6, 7]
 
@@ -1766,6 +1886,9 @@ def datos_observador(request):
 def carpetas_general(request):
     return render(request, "paginas/coordinador/carpetas_general.html")
 
+def carpetas_general_ins(request):
+    return render(request, "paginas/instructor/carpetas_general_ins.html")
+
 def trimestre_general_coordinador(request,):
     ficha_id = request.session.get("ficha_actual")
     ficha_actual = None
@@ -1798,10 +1921,11 @@ def trimestre_general_coordinador(request,):
         "trimestres": trimestres
     })
 
-def trimestre_aprendiz_coordinador(request, ):
+def trimestre_aprendiz_coordinador(request, aprendiz_id):
     ficha_id = request.session.get("ficha_actual")
     ficha_actual = None
     trimestres = []
+    aprendiz = get_object_or_404(Usuario, id=aprendiz_id)  
 
     if ficha_id:
         ficha_actual = Ficha.objects.get(id=ficha_id)
@@ -1812,26 +1936,107 @@ def trimestre_aprendiz_coordinador(request, ):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
-                    # Nuevas reglas
         elif "articulacion" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5]
-
         elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
-
         elif "adso" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6, 7]
-
         elif "mixta" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/coordinador/trimestre_aprendiz_coordinador.html", {
         "ficha": ficha_actual,
-        "trimestres": trimestres
+        "trimestres": trimestres,
+        "aprendiz": aprendiz  # Pasar el aprendiz al template
     })
 
-def carpetas_aprendiz_coordinador(request):
-    return render(request, "paginas/coordinador/carpetas_aprendiz_coordinador.html")
+def carpetas_aprendiz_coordinador(request, aprendiz_id, trimestre):
+    # 🔒 Verificar sesión
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return redirect('sesion')
+
+    # 🔒 Verificar rol coordinador
+    if not UsuarioRol.objects.filter(
+        idusuario_id=usuario_id,
+        idrol__tipo='coordinacion'
+    ).exists():
+        return redirect('inicio_coordinador')
+
+    ficha_id = request.session.get("ficha_actual")
+    if not ficha_id:
+        return render(request, "error.html", {"mensaje": "No tienes ficha asignada."})
+    
+    ficha = get_object_or_404(Ficha, id=ficha_id)
+    aprendiz = get_object_or_404(Usuario, id=aprendiz_id)
+    
+    # Obtener carpetas asignadas a la ficha
+    carpetas_ficha = FichaCarpetas.objects.filter(idficha=ficha).select_related("idcarpetas").distinct()
+    
+    # Si no hay asignadas, asignar automáticamente las 5 carpetas base
+    if not carpetas_ficha.exists():
+        nombres_base = [
+            "Plan concertado de trabajo",
+            "Guias de aprendizaje",
+            "Evidencias de aprendizaje",
+            "Planes de acción de mejora",
+            "Formato diligenciado de planeación, seguimiento y evaluación"
+        ]
+        for nombre in nombres_base:
+            try:
+                carpeta = Carpetas.objects.get(nombre=nombre)
+                FichaCarpetas.objects.get_or_create(idficha=ficha, idcarpetas=carpeta)
+            except Carpetas.DoesNotExist:
+                pass  # No crear si no existe
+        # Refetch
+        carpetas_ficha = FichaCarpetas.objects.filter(idficha=ficha).select_related("idcarpetas")
+    
+    # Ordenar carpetas por número
+    def extraer_numero(texto):
+        match = re.search(r'(\d+)', texto)
+        return int(match.group(1)) if match else 9999
+    
+    carpetas_ficha = sorted(carpetas_ficha, key=lambda c: extraer_numero(c.idcarpetas.nombre))
+    
+    # Asignar archivos del portafolio del aprendiz específico (usando PortafolioInstructor)
+    for cf in carpetas_ficha:
+        carpeta_obj = cf.idcarpetas
+
+        # 📁 Archivos generales
+        cf.archivos_generales = Archivos.objects.filter(
+            idcarpetas=carpeta_obj
+        ).order_by('-id')
+
+        # 📂 Archivos del instructor (guías, planes, etc.)
+        cf.archivos_instructor = PortafolioInstructor.objects.filter(
+            ficha=ficha,
+            trimestre=trimestre,
+            carpeta=carpeta_obj,
+            archivo__isnull=False
+        ).exclude(
+            archivo=''
+        ).order_by('-fecha_subida')
+
+        # 🔥 EVIDENCIAS REALES DEL APRENDIZ
+        if carpeta_obj.nombre == "Evidencias de aprendizaje":
+            cf.archivos_aprendiz = PortafolioAprendiz.objects.filter(
+                idusuario=aprendiz,          # 👈 aprendiz que el coordinador está viendo
+                idevidencias_instructor__trimestre=trimestre,
+                archivo__isnull=False
+            ).exclude(
+                archivo=''
+            ).order_by('-fecha_entrega')
+        else:
+            cf.archivos_aprendiz = []
+
+    
+    return render(request, "paginas/coordinador/carpetas_aprendiz_coordinador.html", {
+        "ficha": ficha,
+        "trimestre": trimestre,
+        "carpetas_ficha": carpetas_ficha,
+        "aprendiz": aprendiz
+    })
 
 def calificaciones_coordinador(request):
     ficha_id = request.session.get("ficha_actual")
@@ -3199,11 +3404,15 @@ def actualizar_contrasena(request):
     return redirect("configuracion_instructor")
 
 
-def seleccionar_ficha(request, id_ficha):
+def seleccionar_ficha_coordinador(request, id_ficha):
     # Guardamos la ficha seleccionada en la sesión
     request.session['ficha_actual'] = id_ficha
     # Redirigimos a la pantalla principal del coordinador
     return redirect('inicio_coordinador')
+
+def seleccionar_ficha(request, id_ficha):
+    request.session['ficha_id'] = id_ficha
+    return redirect('carpetas2')
 
 def eliminar_instructor(request, usuario_id, ficha_id):
     FichaUsuario.objects.filter(
@@ -3537,42 +3746,34 @@ def equipo_ejecutor_coordinador(request):
         "trimestres": trimestres
     })
 
+def opc_equipoejecutor_coordinador(request, trimestre):
+    # 🔒 Verificar sesión
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return redirect('sesion')
 
-def opc_equipoejecutor_coordinador(request):
-    usuario = request.session.get("id_usuario")
+    # 🔒 Verificar rol coordinador
+    if not UsuarioRol.objects.filter(
+        idusuario_id=usuario_id,
+        idrol__tipo='coordinacion'
+    ).exists():
+        return redirect('inicio_coordinador')
 
-    # 1. Verificar rol
-    es_coordinador = UsuarioRol.objects.filter(
-        idusuario=usuario,
-        idrol__tipo="coordinacion"
-    ).exists()
-
-    if not es_coordinador:
-        return HttpResponse("<h3 style='color:red;'>No eres coordinador</h3>")
-
-    # 2. Ficha seleccionada
     ficha_id = request.session.get("ficha_actual")
-    if not ficha_id:
-        return HttpResponse("<h3>No hay ficha seleccionada</h3>")
+    ficha = get_object_or_404(Ficha, id=ficha_id)
 
-    ficha = Ficha.objects.get(id=ficha_id)
-
-    # 3. Carpetas
-    carpetas = FichaCarpetas.objects.filter(idficha=ficha_id)
-
-    # 4. Archivos
-    data = []
-    for fc in carpetas:
-        archivos = Archivos.objects.filter(idcarpetas=fc.idcarpetas)
-        data.append({
-            "carpeta": fc.idcarpetas,
-            "archivos": archivos
-        })
+    carpetas = CarpetaEquipo.objects.filter(
+        ficha=ficha,
+        trimestre=trimestre,
+        parent__isnull=True   # SOLO CARPETAS PRINCIPALES
+    ).order_by("nombre")
 
     return render(request, "paginas/coordinador/opc_equipoejecutor_coordinador.html", {
-        "data": data,
-        "ficha": ficha
+        "ficha": ficha,
+        "trimestre": trimestre,
+        "carpetas": carpetas
     })
+
 
 def crear_material(request):
     if request.method == "POST":

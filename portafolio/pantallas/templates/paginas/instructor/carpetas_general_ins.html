@@ -1,4 +1,4 @@
-{% extends "plantillacoor.html" %}
+{% extends "plantillains.html" %}
 {% load static %}
 
 {% block titulo %}Portafolio General{% endblock %}
@@ -63,20 +63,10 @@
             background: transparent;
         }
 
-        .btn-download:hover {
-            background: #198754;
-            color: #fff;
-        }
-
         .btn-delete {
             border: 1px solid #dc3545;
             color: #dc3545;
             background: transparent;
-        }
-
-        .btn-delete:hover {
-            background: #dc3545;
-            color: #fff;
         }
 
         .btn-upload {
@@ -127,7 +117,6 @@
                                    class="btn-minimal btn-download">
                                     <i class="bi bi-download"></i>
                                 </a>
-
                                 <button class="btn-minimal btn-delete">
                                     <i class="bi bi-trash"></i>
                                 </button>
@@ -140,14 +129,11 @@
                     <!-- SUBIR ARCHIVO -->
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-
                         <div class="mb-2">
                             <label class="form-label">Título del archivo</label>
-                            <input class="form-control" required>
+                            <input class="form-control" name="titulo_archivo" required>
                         </div>
-
-                        <input type="file" class="form-control mb-2" required>
-
+                        <input type="file" name="archivo" class="form-control mb-2" required>
                         <button type="submit" class="btn-upload">
                             <i class="bi bi-upload"></i> Subir archivo
                         </button>
@@ -157,7 +143,7 @@
             </div>
         </div>
 
-        <!-- 2 A 5 → SOLO DESCRIPCIÓN -->
+        <!-- 2 A 5 -->
         {% for i in "2345" %}
         <div class="accordion-item">
             <h2 class="accordion-header">
@@ -174,6 +160,7 @@
 
             <div id="collapse{{ i }}" class="accordion-collapse collapse">
                 <div class="accordion-body">
+
                     <div class="descripcion">
                         {% if i == "2" %}
                         Material pedagógico con actividades, instrucciones y recursos que orientan al aprendiz.
@@ -186,7 +173,23 @@
                         {% endif %}
                     </div>
 
-                    <p class="text-muted small">No hay archivos en esta carpeta.</p>
+                    <p class="text-muted small">No hay archivos aún.</p>
+
+                    <hr>
+
+                    <!-- SUBIR ARCHIVO -->
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <label class="form-label">Título del archivo</label>
+                            <input class="form-control" name="titulo_archivo" required>
+                        </div>
+                        <input type="file" name="archivo" class="form-control mb-2" required>
+                        <button type="submit" class="btn-upload">
+                            <i class="bi bi-upload"></i> Subir archivo
+                        </button>
+                    </form>
+
                 </div>
             </div>
         </div>
