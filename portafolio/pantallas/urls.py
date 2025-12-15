@@ -71,8 +71,9 @@ urlpatterns = [
 
     path("trimestre_laura/", views.trimestre_laura, name="trimestre_laura"),
     path("carpetas_laura/", views.carpetas_laura, name="carpetas_laura"),
-    path("evidencia_laura/", views.evidencia_laura, name="evidencia_laura"),
-    path("evidencia_guialaura/", views.evidencia_guialaura, name="evidencia_guialaura"),
+    path("evidencia_laura/<int:id>/", views.evidencia_laura, name="evidencia_laura"),
+    path("evidencia_guialaura/<int:id>", views.evidencia_guialaura, name="evidencia_guialaura"),
+    path('asignar-instructor/', views.asignar_instructor_asignatura, name='asignar_instructor_asignatura'),
     path("material_laura/", views.material_laura, name="material_laura"),
     path("adentro_material_aprendiz/", views.adentro_material_aprendiz, name="adentro_material_aprendiz"),
     path("carpetas_aprendiz_observador/", views.carpetas_aprendiz_observador, name="carpetas_aprendiz_observador"),
