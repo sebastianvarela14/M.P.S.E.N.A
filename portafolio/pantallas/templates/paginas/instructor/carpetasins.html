@@ -203,8 +203,7 @@
                                 </a>
 
                                 <form method="post"
-                                      action="{% url 'eliminar_evidencia' e.id %}" 
-                                      onsubmit="return confirm('¿Estás seguro de eliminar esta evidencia?');">
+                                      action="{% url 'eliminar_evidencia' e.id %}">
                                     {% csrf_token %}
                                     <button type="submit" class="btn-minimal btn-delete">
                                         <i class="bi bi-trash"></i>

@@ -284,7 +284,7 @@ class PortafolioInstructor(models.Model):
     trimestre = models.IntegerField(db_comment='trimestre asignado (1-7)')
     
     titulo_archivo = models.CharField(max_length=150, db_comment='nombre visible del archivo')
-    archivo = models.FileField(upload_to="portafolio_instructor/", null=True, blank=True)
+    archivo = models.FileField(upload_to="evidencias/", null=True, blank=True) 
     
     fecha_subida = models.DateTimeField(auto_now_add=True)
     idinstructor = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='idinstructor')

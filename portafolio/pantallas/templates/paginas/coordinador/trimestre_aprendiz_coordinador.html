@@ -1,23 +1,22 @@
-{% extends "plantillacoor.html" %}
+// {% extends "plantillacoor.html" %}
 {% load static %}
 
 {% block titulo %}Portafolio de Aprendices{% endblock %}
 
 {% block contenido %}
 <div class="container mt-4 mb-5">
-    <h3 class="fw-bold text-center mb-4">PORTAFOLIO DE JULIA ANDREA ROMERO QUIROGA</h3>
+    <h3 class="fw-bold text-center mb-4">PORTAFOLIO DE {{ aprendiz.nombres|upper }} {{ aprendiz.apellidos|upper }}</h3>
     <br>
 
 <div id="trimestres" class="d-grid gap-3">
     {% for t in trimestres %}
-        <a href="{% url 'carpetas_aprendiz_coordinador' %}" 
+        <a href="{% url 'carpetas_aprendiz_coordinador' aprendiz.id t %}" 
             class="btn btn-portfolio d-flex justify-content-between align-items-center">
             <span>{{ t }} Trimestre</span>
             <i class="bi bi-clipboard"></i>
         </a>
     {% endfor %}
 </div>
-
 
 <style>
 .btn-portfolio {
@@ -45,153 +44,5 @@
     color: #0b3d20; /* ícono más oscuro en hover */
 }
 </style>
-
-    <!-- Botones flotantes: "+" y Editar -->
-    <div class="floating-buttons">
-        <!-- Botón "+" -->
-        <a href="#" class="btn btn-success rounded-circle me-2" title="Agregar" data-bs-toggle="modal" data-bs-target="#addModal">
-            <i class="bi bi-plus-lg fs-4"></i>
-        </a>
-
-        <!-- Botón Editar -->
-        <a href="#" class="btn btn-success rounded-circle" title="Editar" data-bs-toggle="modal" data-bs-target="#editModal">
-            <i class="bi bi-pencil-square fs-5"></i>
-        </a>
-    </div>
-
-    <!-- Modal Agregar Trimestre -->
-    <div class="modal fade" id="addModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header bg-success text-white">
-            <h5 class="modal-title">Agregar Trimestre</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-            <p>¿Quieres agregar <strong>4° Trimestre</strong>?</p>
-            <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="addCarpetas">
-            <label class="form-check-label" for="addCarpetas">
-                También agregar 5 carpetas base
-            </label>
-            </div>
-            <button id="confirmAdd" class="btn btn-success w-100">Agregar</button>
-        </div>
-        </div>
-    </div>
-    </div>
-
-    <!-- Modal Editar Trimestre -->
-    <div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header bg-success text-white">
-            <h5 class="modal-title">Editar Trimestre</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-            <form id="editForm">
-            <div class="mb-3">
-                <label class="form-label">Selecciona Trimestre</label>
-                <select id="selectTrimestre" class="form-select">
-                <option>1 Trimestre</option>
-                <option>2 Trimestre</option>
-                <option>3 Trimestre</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Nuevo nombre</label>
-                <input type="text" id="newName" class="form-control" placeholder="Ej: Primer Trimestre">
-            </div>
-            <button type="submit" class="btn btn-success w-100">Guardar Cambios</button>
-            </form>
-        </div>
-        </div>
-    </div>
-    </div>
-
-    <style>
-    .btn-portfolio {
-        background: #d1f5d3;
-        color: #155724;
-        font-weight: 600;
-        border-radius: 12px;
-        padding: 12px 16px;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        border: 1px solid #b6e2b8;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    .btn-portfolio i {
-        font-size: 1.3rem;
-        color: #155724;
-        transition: color 0.3s ease;
-    }
-    .btn-portfolio:hover {
-        background: #b6e2b8;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(0,0,0,0.15);
-    }
-    .btn-portfolio:hover i {
-        color: #0b3d20;
-    }
-    /* Botones flotantes */
-    .floating-buttons {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 999;
-        display: flex;
-        gap: 10px;
-    }
-    .floating-buttons .btn {
-        width: 55px;
-        height: 55px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        transition: all 0.3s ease;
-    }
-    .floating-buttons .btn:hover {
-        transform: scale(1.1);
-    }
-    </style>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-    // Agregar trimestre
-    document.getElementById("confirmAdd").addEventListener("click", function() {
-        const trimestreContainer = document.getElementById("trimestres");
-        const newTrimestre = document.createElement("a");
-        newTrimestre.href = "#";
-        newTrimestre.className = "btn btn-portfolio d-flex justify-content-between align-items-center";
-        newTrimestre.innerHTML = `<span>4 Trimestre</span><i class="bi bi-clipboard"></i>`;
-        trimestreContainer.appendChild(newTrimestre);
-        alert("Se agregó el 4° Trimestre" + (document.getElementById("addCarpetas").checked ? " con 5 carpetas base." : "."));
-        var modal = bootstrap.Modal.getInstance(document.getElementById("addModal"));
-        modal.hide();
-    });
-
-    // Editar trimestre
-    document.getElementById("editForm").addEventListener("submit", function(e) {
-        e.preventDefault();
-        const selected = document.getElementById("selectTrimestre").value;
-        const newName = document.getElementById("newName").value;
-        if(newName.trim() !== "") {
-        const trimestres = document.querySelectorAll("#trimestres a span");
-        trimestres.forEach(span => {
-            if(span.textContent === selected) {
-            span.textContent = newName;
-            }
-        });
-        alert("Nombre actualizado correctamente.");
-        var modal = bootstrap.Modal.getInstance(document.getElementById("editModal"));
-        modal.hide();
-        }
-    });
-    </script>
 
 {% endblock %}
