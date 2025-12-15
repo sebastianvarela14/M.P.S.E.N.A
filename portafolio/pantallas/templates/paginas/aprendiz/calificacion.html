@@ -47,26 +47,11 @@
             font-size: 1.1rem;
         }
 
-        .table {
-            margin-bottom: 0;
-        }
-
         .table thead th {
             background: var(--sena-green-light);
             color: var(--sena-green-dark);
             font-weight: 600;
             padding: 14px;
-            border-bottom: none;
-            font-size: 0.95rem;
-        }
-
-        .table tbody tr {
-            background: #ffffff;
-            transition: background 0.2s ease;
-        }
-
-        .table tbody tr:hover {
-            background: #f4fbf4;
         }
 
         .table td {
@@ -75,13 +60,15 @@
             font-size: 0.93rem;
         }
 
-        /* Estados */
+        .table tbody tr:hover {
+            background: #f4fbf4;
+        }
+
         .status-entregada {
             background: #d4edda;
             color: #2e7d32;
             padding: 6px 14px;
             border-radius: 20px;
-            font-weight: 500;
             font-size: 0.85rem;
         }
 
@@ -90,20 +77,9 @@
             color: #ef6c00;
             padding: 6px 14px;
             border-radius: 20px;
-            font-weight: 500;
             font-size: 0.85rem;
         }
 
-        .status-sin-entregar {
-            background: #f8d7da;
-            color: #c62828;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 500;
-            font-size: 0.85rem;
-        }
-
-        /* Botón Ver */
         .btn-ver {
             background: var(--sena-green-dark);
             color: white;
@@ -121,50 +97,70 @@
             background: #1b5e20;
             transform: scale(1.05);
         }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
+
 <body>
 
-    <div class="container">
-        <div class="card">
-            <div class="card-header d-flex align-items-center">
-                <h5><i class="bi bi-journal-check me-2"></i> Calificaciones - Técnico</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th>Tarea</th>
-                                <th>Calificación</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Taller For</td>
-                                <td><strong>100/100</strong></td>
-                                <td><span class="status-entregada">Entregada</span></td>
-                                <td><a href="#" class="btn-ver"><i class="bi bi-eye"></i> Ver</a></td>
-                            </tr>
-                            <tr>
-                                <td>Guía Algoritmos</td>
-                                <td><strong>_/100</strong></td>
-                                <td><span class="status-pendiente">Pendiente</span></td>
-                                <td><a href="#" class="btn-ver"><i class="bi bi-eye"></i> Ver</a></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="bi bi-journal-check me-2"></i> Calificaciones</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Evidencia</th>
+                            <th>Calificación</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for evidencia in evidencias %}
+                        <tr>
+                            <td>{{ evidencia.titulo }}</td>
+
+                            <td>
+                                {% if evidencia.calificacion %}
+                                    <strong>{{ evidencia.calificacion }}/100</strong>
+                                {% else %}
+                                    <strong>_/100</strong>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if evidencia.calificacion %}
+                                    <span class="status-entregada">Entregada</span>
+                                {% else %}
+                                    <span class="status-pendiente">Pendiente</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <a href="{% url 'evidencia_guia' evidencia.id %}" class="btn-ver">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">
+                                No hay evidencias registradas.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+
+                </table>
             </div>
         </div>
     </div>
+</div>
 
 </body>
 </html>
