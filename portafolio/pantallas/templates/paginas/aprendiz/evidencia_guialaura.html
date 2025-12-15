@@ -1,80 +1,139 @@
-{% extends "plantilla.html" %}
+// {% extends "plantilla.html" %}
+{% load static %}
 
-{% block contenido %} 
-
+{% block contenido %}
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Apoyo Guía Uno</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Evidencia</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </head>
+
 <body class="bg-light">
 
 <div class="container my-5">
 
-    <!-- Encabezado grande -->
+    <!-- ENCABEZADO -->
     <div class="bg-success text-white p-4 rounded shadow mb-4">
-        <h2 class="mb-0"><i class="bi bi-journal-text"></i> {{ evidencia.titulo }}</h2>
+        <h2 class="mb-0">
+            <i class="bi bi-journal-text"></i> {{ evidencia.titulo }}
+        </h2>
     </div>
 
     <div class="row g-4">
-        <!-- Columna izquierda: instrucciones y adjuntos -->
+
+        <!-- COLUMNA IZQUIERDA -->
         <div class="col-lg-8">
-        <div class="card shadow border-0 mb-4">
-            <div class="card-body">
-            <!-- Descripción -->
-            <h5 class="fw-bold mb-3">Instrucciones</h5>
-            <p class="text-muted">{{ evidencia.descripcion }}</p>
-            </div>
-        </div>
 
-        <div class="card shadow border-0">
-            <div class="card-body">
-            <!-- Archivos adjuntos -->
-            <h5 class="fw-bold mb-3"><i class="bi bi-paperclip"></i> Archivos adjuntos</h5>
-            <ul class="list-group">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div><i class="bi bi-file-earmark-pdf text-danger"></i> Guía de estructuras con HTML</div>
-                <a href="#" class="btn btn-sm btn-outline-success"><i class="bi bi-download"></i> Descargar</a>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div><i class="bi bi-file-earmark-word text-primary"></i> Formato de Entrega</div>
-                <a href="#" class="btn btn-sm btn-outline-success"><i class="bi bi-download"></i> Descargar</a>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div><i class="bi bi-file-earmark-image text-warning"></i> Ejemplos prácticos</div>
-                <a href="#" class="btn btn-sm btn-outline-success"><i class="bi bi-download"></i> Descargar</a>
-                </li>
-            </ul>
-            </div>
-        </div>
-        </div>
-
-        <!-- Columna derecha: entregar y comentarios -->
-        <div class="col-lg-4">
-        <div class="card shadow border-0 mb-4">
-            <div class="card-body">
-            <h5 class="fw-bold mb-3"><i class="bi bi-upload"></i> Entregar Evidencia</h5>
-            <form>
-                <div class="mb-3">
-                <input type="file" class="form-control">
+            <!-- INSTRUCCIONES -->
+            <div class="card shadow border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-info-circle"></i> Instrucciones
+                    </h5>
+                    <p class="text-muted">
+                        {{ evidencia.instrucciones }}
+                    </p>
                 </div>
-                <button type="submit" class="btn btn-success w-100"><i class="bi bi-send-check"></i> Entregar</button>
-            </form>
             </div>
+
+            <!-- ARCHIVO DEL INSTRUCTOR -->
+            <div class="card shadow border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-paperclip"></i> Archivo del instructor
+                    </h5>
+
+                    {% if evidencia.archivo %}
+                        <a href="{{ evidencia.archivo.url }}"
+                           class="btn btn-outline-success"
+                           download>
+                            <i class="bi bi-download"></i>
+                            Descargar archivo
+                        </a>
+                    {% else %}
+                        <p class="text-muted mb-0">
+                            El instructor no adjuntó archivo.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
         </div>
 
-        <div class="card shadow border-0">
-            <div class="card-body">
-            <h5 class="fw-bold mb-3"><i class="bi bi-chat-dots"></i> Comentarios para el instructor</h5>
-            <textarea class="form-control mb-3" rows="3" placeholder="Escribe tu comentario..."></textarea>
-            <button class="btn btn-outline-success w-100"><i class="bi bi-send"></i> Enviar comentario</button>
+        <!-- COLUMNA DERECHA -->
+        <div class="col-lg-4">
+
+            <!-- SI NO HA ENTREGADO -->
+            {% if not entrega %}
+            <div class="card shadow border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-upload"></i> Entregar Evidencia
+                    </h5>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Archivo</label>
+                            <input type="file"
+                                   name="archivo"
+                                   class="form-control"
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea name="observaciones"
+                                      class="form-control"
+                                      rows="3"
+                                      placeholder="Escribe un comentario para el instructor..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-send-check"></i>
+                            Enviar evidencia
+                        </button>
+                    </form>
+                </div>
             </div>
+            {% endif %}
+
+            <!-- SI YA ENTREGÓ -->
+            {% if entrega and entrega.archivo %}
+            <div class="card shadow border-0">
+                <div class="card-body text-center">
+
+                    <h6 class="fw-bold text-success mb-3">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Archivo enviado
+                    </h6>
+
+                    <a href="{{ entrega.archivo.url }}"  <!-- 🔥 CAMBIO: Usa .url para FileField -->
+                       class="btn btn-outline-success btn-sm mb-2"
+                       download>
+                        <i class="bi bi-download"></i> Descargar mi entrega
+                    </a>
+
+                    <button type="button"
+                            class="btn btn-outline-danger btn-sm w-100"
+                            disabled>
+                        <i class="bi bi-x-circle"></i>
+                        Cancelar entrega
+                    </button>
+
+                </div>
+            </div>
+            {% endif %}
+
         </div>
-        </div>
+
     </div>
 
 </div>
@@ -82,6 +141,5 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
 
 {% endblock %}

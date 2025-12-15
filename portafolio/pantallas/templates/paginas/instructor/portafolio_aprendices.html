@@ -1,4 +1,4 @@
-{% extends "plantillains.html" %}
+// {% extends "plantillains.html" %}
 
 {% block contenido %}
 <!DOCTYPE html>
@@ -130,12 +130,14 @@
         <div class="list">
             <a href="{% url 'trimestre_general' %}" class="item active">Portafolio general</a>
             {% for aprendiz in aprendices %}
-                <a href="{% url 'trimestre_aprendiz' %}" class="item">
+                <a href="{% url 'trimestre_aprendiz' aprendiz.id %}" class="item">
                     {{ aprendiz.nombres }} {{ aprendiz.apellidos }}
                 </a>
             {% empty %}
                 <p class="text-center text-muted mt-3">No hay aprendices en esta ficha.</p>
             {% endfor %}
+        </div>
+    </div>
 </body>
 
 {% endblock %}

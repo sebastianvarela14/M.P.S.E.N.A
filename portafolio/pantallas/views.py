@@ -1,37 +1,29 @@
 import mysql.connector
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
 import os
 import shutil
-from dotenv import load_dotenv
-from .forms import UsuarioForm
-from django.http import HttpResponse
-from django.core.files.storage import FileSystemStorage
-from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario, NombreAsignatura, TipoAsignatura
-from .models import *
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 import re
-from django.http import FileResponse, Http404
+import pandas as pd
+import requests 
+
+from dotenv import load_dotenv
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, Http404, FileResponse
 from django.conf import settings
 from django.contrib import messages
-from pantallas.models import Usuario, Documento, Rol, UsuarioRol
-import pandas as pd
-from django.db import IntegrityError
-import requests 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
-import mysql.connector
-import os
-from .models import Usuario, UsuarioRol, Rol, Ficha, FichaUsuario, NombreAsignatura, TipoAsignatura, EvidenciasAprendiz, EvidenciasFicha, EvidenciasInstructor
+from django.db import IntegrityError
+from django.db.models import Q 
+from django.utils import timezone
 
-load_dotenv() 
+from .forms import UsuarioForm
+from .models import *
+from pantallas.models import Usuario, Documento, Rol, UsuarioRol 
+load_dotenv()
 
 def plantillains(request):
     return render(request, "paginas/instructor/plantilla.html", )
-
 
 def agregar_evidencia(request):
     if request.method == 'POST':
@@ -42,56 +34,93 @@ def agregar_evidencia(request):
         archivo = request.FILES.get('archivo')
         id_asignatura = request.POST.get('idasignatura')
 
-        nombre_archivo = archivo.name if archivo else "No subido"
-
-        # 🔹 Agregar guardado del archivo en media/evidencias/
-        ruta_archivo_guardado = None
-        if archivo:
-            fs = FileSystemStorage(location='media/evidencias/')
-            filename = fs.save(archivo.name, archivo)  # Guarda el archivo y obtiene el nombre
-            ruta_archivo_guardado = fs.path(filename)  # Ruta física completa (opcional, si necesitas usarla después)
-            nombre_archivo = filename  # Usar el nombre guardado para la DB (incluye subcarpetas si las hay)
+        # 🔑 Obtener ficha desde sesión
+        ficha_id = request.session.get("ficha_id")
+        if not ficha_id:
+            messages.error(request, "No se encontró la ficha seleccionada.")
+            return redirect('evidencias')
 
         try:
-            conexion = mysql.connector.connect(
-                host=os.getenv("DB_HOST"),
-                user=os.getenv("DB_USER"),
-                password=os.getenv("DB_PASSWORD"),
-                database=os.getenv("DB_NAME")
+            ficha = Ficha.objects.get(id=ficha_id)
+        except Ficha.DoesNotExist:
+            messages.error(request, "Ficha no encontrada.")
+            return redirect('evidencias')
+
+        # 🔑 Obtener instructor
+        instructor_id = (
+            request.user.id
+            if request.user.is_authenticated
+            else request.session.get("usuario_id")
+        )
+
+        if not instructor_id:
+            messages.error(request, "Instructor no identificado.")
+            return redirect('evidencias')
+
+        # 📂 Guardar archivo físico
+        nombre_archivo = "No subido"
+        if archivo:
+            fs = FileSystemStorage(location='media/evidencias/')
+            nombre_archivo = fs.save(archivo.name, archivo)
+
+        # 1️⃣ Crear Evidencia Instructor (El registro primario del archivo)
+        evidencia = EvidenciasInstructor.objects.create(
+            titulo=titulo,
+            instrucciones=instrucciones,
+            calificacion=calificacion,
+            fecha_de_entrega=fecha_entrega,
+            archivo=nombre_archivo, # <-- Aquí se guarda la ruta del archivo
+            idinstructor_id=instructor_id,
+            idasignatura_id=id_asignatura
+        )
+
+        # 2️⃣ Relacionar evidencia con ficha
+        EvidenciasFicha.objects.create(
+            idficha=ficha,
+            idevidencias_instructor=evidencia
+        )
+
+        # 3️⃣ Obtener carpeta "Guias de aprendizaje"
+        try:
+            carpeta_guias = Carpetas.objects.get(
+                nombre__icontains="guias de aprendizaje"
             )
-            cursor = conexion.cursor()
+        except Carpetas.DoesNotExist:
+            messages.warning(
+                request,
+                "La carpeta 'Guias de aprendizaje' no existe. Créala primero."
+            )
+            return redirect('evidencias')
 
-            # 1️⃣ INSERT en evidencias_instructor
-            cursor.execute("""
-                INSERT INTO evidencias_instructor 
-                (titulo, instrucciones, calificacion, fecha_de_entrega, archivo, idinstructor, idnombre_asignatura)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (titulo, instrucciones, calificacion, fecha_entrega, nombre_archivo, request.user.id, id_asignatura))
+        # 4️⃣ Asegurar relación ficha ↔ carpeta
+        FichaCarpetas.objects.get_or_create(
+            idficha=ficha,
+            idcarpetas=carpeta_guias
+        )
 
-            id_evidencia = cursor.lastrowid
+        # 5️⃣ Crear registro en PortafolioInstructor (CORRECCIÓN CLAVE: ASIGNAR EL ARCHIVO)
+        # Este es el registro que usa el aprendiz en 'carpetas_laura'
+        PortafolioInstructor.objects.create(
+            titulo_archivo=titulo,
+            ficha=ficha,
+            carpeta=carpeta_guias,
+            trimestre=ficha.trimestre_actual,
+            idinstructor_id=instructor_id,
+            idevidencias_instructor=evidencia,
+            archivo=nombre_archivo # 🔑 ¡CLAVE! Se sincroniza la ruta del archivo aquí
+        )
 
-            # 2️⃣ INSERT en evidencias_ficha (super importante)
-            ficha_id = request.session.get("ficha_id")
-            cursor.execute("""
-                INSERT INTO evidencias_ficha (idficha, idevidencias_instructor)
-                VALUES (%s, %s)
-            """, (ficha_id, id_evidencia))
-
-            conexion.commit()
-
-            messages.success(request, f"Evidencia creada con éxito, ID: {id_evidencia}")
-
-        except mysql.connector.Error as err:
-            messages.error(request, f"No se pudo crear la evidencia: {err}")
-
-        finally:
-            if 'conexion' in locals() and conexion.is_connected():
-                cursor.close()
-                conexion.close()
-
+        messages.success(
+            request,
+            f"Evidencia creada y agregada al portafolio "
+            f"(Trimestre {ficha.trimestre_actual})."
+        )
         return redirect('evidencias')
 
-    return render(request, "paginas/instructor/agregar_evidencia.html")
+    return render(
+        request,
+        "paginas/instructor/agregar_evidencia.html"
+    )
 
 
 def agregar_evidencia_coor(request):
@@ -167,48 +196,60 @@ def agregar_evidencia_coor(request):
 
 
 def calificaciones(request):
-    ficha_id = request.session.get("ficha_actual")
+    ficha_id = request.session.get("ficha_id")
     if not ficha_id:
         messages.error(request, "Por favor, selecciona una ficha primero.")
         return redirect('fichas_ins')
 
     try:
+        # ================= FICHA =================
         ficha = Ficha.objects.select_related('idprograma').get(id=ficha_id)
-        guias_ficha = EvidenciasInstructor.objects.filter(
-            evidenciasficha__idficha=ficha_id
-        ).order_by('id').distinct()
 
+        # ================= GUIAS (MISMAS QUE EN OTRAS PANTALLAS) =================
+        guias_ficha = EvidenciasInstructor.objects.all().order_by('id')
+
+        # ================= APRENDICES =================
         aprendices = Usuario.objects.filter(
             fichausuario__idficha_id=ficha_id,
             usuariorol__idrol__tipo='aprendiz'
         ).order_by('apellidos', 'nombres').distinct()
-        
+
+        # ================= CALIFICACIONES =================
         aprendices_calificaciones = []
+
         for aprendiz in aprendices:
             calificaciones_aprendiz = []
+
             for guia in guias_ficha:
-                entrega = EvidenciasAprendiz.objects.filter(idusuario=aprendiz, idevidencias_instructor=guia).first()
+                entrega = EvidenciasAprendiz.objects.filter(
+                    idusuario=aprendiz,
+                    idevidencias_instructor=guia
+                ).first()
 
                 if entrega and entrega.calificacion:
                     calificaciones_aprendiz.append({
                         "texto": entrega.calificacion,
                         "clase_css": "text-success",
-                        "url": "#" 
+                        "url": "#"
                     })
                 else:
                     calificaciones_aprendiz.append({
                         "texto": "Sin calificar",
                         "clase_css": "text-warning",
-                        "url": "#" 
+                        "url": "#"
                     })
-            
-            aprendices_calificaciones.append({"aprendiz": aprendiz, "calificaciones": calificaciones_aprendiz})
+
+            aprendices_calificaciones.append({
+                "aprendiz": aprendiz,
+                "calificaciones": calificaciones_aprendiz
+            })
 
         return render(request, "paginas/instructor/calificaciones.html", {
             "ficha": ficha,
             "guias_ficha": guias_ficha,
             "aprendices_calificaciones": aprendices_calificaciones
         })
+
     except Ficha.DoesNotExist:
         messages.error(request, "La ficha seleccionada no existe.")
         return redirect('fichas_ins')
@@ -327,7 +368,27 @@ def tarea(request):
     return render(request, "paginas/aprendiz/tarea.html")
 
 def calificacion(request):
-    return render(request, "paginas/aprendiz/calificacion.html")
+    usuario_id = request.session.get("id_usuario")
+
+    evidencias = EvidenciasInstructor.objects.all().order_by("id")
+
+    evidencias_con_nota = []
+
+    for evidencia in evidencias:
+        entrega = EvidenciasAprendiz.objects.filter(
+            idusuario_id=usuario_id,
+            idevidencias_instructor=evidencia
+        ).first()
+
+        evidencias_con_nota.append({
+            "id": evidencia.id,
+            "titulo": evidencia.titulo,
+            "calificacion": entrega.calificacion if entrega else None
+        })
+
+    return render(request, "paginas/aprendiz/calificacion.html", {
+        "evidencias": evidencias_con_nota
+    })
 
 def datos(request):
     return render(request, "paginas/instructor/datos.html")
@@ -368,38 +429,8 @@ def datos_ins(request):
 
 
 def evidencias(request):
-    # 1️⃣ Recuperar la ficha seleccionada en la sesión
-    ficha_id = request.session.get('ficha_id')
+    evidencias = EvidenciasInstructor.objects.all()
 
-    if not ficha_id:
-        return HttpResponse("No hay ficha seleccionada")
-
-    # 2️⃣ Conexión a MySQL
-    conexion = mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME")
-    )
-    cursor = conexion.cursor(dictionary=True)
-
-    # 3️⃣ Traer las evidencias que pertenecen a ESTA ficha, ordenadas por fecha de entrega
-    query = """
-        SELECT ei.*
-        FROM evidencias_instructor ei
-        INNER JOIN evidencias_ficha ef 
-            ON ei.id = ef.idevidencias_instructor
-        WHERE ef.idficha = %s
-        ORDER BY ei.fecha_de_entrega ASC
-    """
-    cursor.execute(query, (ficha_id,))
-    evidencias = cursor.fetchall()
-
-    # 4️⃣ Cerrar conexión
-    cursor.close()
-    conexion.close()
-
-    # 5️⃣ Renderizar HTML
     return render(request, "paginas/instructor/evidencias.html", {
         "evidencias": evidencias
     })
@@ -414,6 +445,9 @@ def tareas_2(request):
     return render(request, "paginas/aprendiz/tareas_2.html")
 
 def lista_aprendices(request):
+    # Si usas autenticación de Django y tu usuario coincide con el id de instructor:
+    instructor_id = request.user.id if request.user.is_authenticated else 1
+
     conexion = mysql.connector.connect(
         host=os.getenv("DB_HOST"),
         user=os.getenv("DB_USER"),
@@ -422,22 +456,22 @@ def lista_aprendices(request):
     )
     cursor = conexion.cursor(dictionary=True)
 
-    instructor_id = 1  # Cambia esto por el id del instructor logueado dinámicamente si quieres
-
     try:
-        # Obtener la ficha del instructor
+        # Obtener la(s) ficha(s) del instructor
         cursor.execute("""
-            SELECT idficha 
-            FROM ficha_usuario 
+            SELECT idficha
+            FROM ficha_usuario
             WHERE idusuario = %s
         """, (instructor_id,))
-        fila = cursor.fetchone()
+        filas = cursor.fetchall()  # leer todo para no dejar resultados sin procesar
 
-        if fila is None:
+        if not filas:
             aprendices = []
         else:
-            ficha_del_instructor = fila["idficha"]
+            # Si hay varias fichas, tomamos la primera; ajusta si necesitas otro comportamiento
+            ficha_del_instructor = filas[0]["idficha"]
 
+            # Consulta corregida: INNER JOIN y WHERE (no INNER_JOIN ni DONDE)
             cursor.execute("""
                 SELECT u.id, u.nombres, u.apellidos
                 FROM usuario u
@@ -446,6 +480,7 @@ def lista_aprendices(request):
                 WHERE fu.idficha = %s AND ur.idrol = 1
             """, (ficha_del_instructor,))
             aprendices = cursor.fetchall()
+
     finally:
         cursor.close()
         conexion.close()
@@ -523,52 +558,82 @@ def normalizar(texto):
     return texto.strip()
 
 
+
 def carpetasins(request, ficha_id, trimestre):
+    # 🔒 Verificar sesión
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return redirect('sesion')
+
+    # 🔒 Verificar rol instructor
+    if not UsuarioRol.objects.filter(
+        idusuario_id=usuario_id,
+        idrol__tipo='instructor'
+    ).exists():
+        return redirect('inicio')
+
     ficha = get_object_or_404(Ficha, id=ficha_id)
 
+    # 📁 Obtener carpetas asignadas a la ficha
     carpetas_ficha = FichaCarpetas.objects.filter(
-        idficha=ficha_id
+        idficha=ficha
     ).select_related("idcarpetas")
 
-    # ⚠️ Si no existen carpetas asignadas, se crean objetos temporales
+    # Crear carpetas base si no existen
     if not carpetas_ficha.exists():
-        carpetas_list = Carpetas.objects.all()
-        carpetas_ficha = []
-        for c in carpetas_list:
-            class _CF: pass
-            cf = _CF()
-            cf.idcarpetas = c
-            carpetas_ficha.append(cf)
+        nombres_base = [
+            "1. Plan concertado de trabajo",
+            "2. Guias de aprendizaje",
+            "3. Evidencias de aprendizaje",
+            "4. Planes de acción de mejora",
+            "5. Formato diligenciado de planeación, seguimiento y evaluación"
+        ]
+        for nombre in nombres_base:
+            try:
+                # Modificación para usar números si tu DB tiene prefijos numericos
+                carpeta_nombre_exacto = Carpetas.objects.get(nombre__iexact=nombre)
+            except Carpetas.DoesNotExist:
+                # Si no existe con el número, busca sin él para compatibilidad
+                try:
+                    carpeta_nombre_exacto = Carpetas.objects.get(nombre__iexact=nombre.split('. ')[-1])
+                except Carpetas.DoesNotExist:
+                    continue # Salta si la carpeta base no existe
 
-    # ⬇️⬇️⬇️ **AQUÍ VA EL ORDENAMIENTO** ⬇️⬇️⬇️
+            FichaCarpetas.objects.get_or_create(
+                idficha=ficha,
+                idcarpetas=carpeta_nombre_exacto
+            )
+
+        carpetas_ficha = FichaCarpetas.objects.filter(
+            idficha=ficha
+        ).select_related("idcarpetas")
+
+    # 🔢 Ordenar carpetas por número
     def extraer_numero(texto):
-        match = re.search(r'(\d+)', texto)
+        # Intenta extraer un número al inicio del texto
+        match = re.search(r'^(\d+)\.', texto) 
         return int(match.group(1)) if match else 9999
 
     carpetas_ficha = sorted(
         carpetas_ficha,
         key=lambda c: extraer_numero(c.idcarpetas.nombre)
     )
-    # ⬆️⬆️⬆️ **AQUÍ, JUSTO DESPUÉS DE TENER CARPETAS_FICHA DEFINIDO** ⬆️⬆️⬆️
 
-    # 🔑 CORRECCIÓN: Leer 'usuario_id'
-    instructor_id = request.session.get("usuario_id")  # id del instructor logueado
-
-    # Asignar archivos
+    # 📎 Asignar archivos y evidencias
     for cf in carpetas_ficha:
         carpeta_obj = cf.idcarpetas
 
-        cf.archivos_generales = Archivos.objects.filter(
-            idcarpetas=carpeta_obj.id
-        )
 
-        # Filtrar archivos por FICHA, CARPETA, TRIMESTRE e INSTRUCTOR
-        cf.archivos_instructor = PortafolioInstructor.objects.filter(
-            ficha=ficha,
-            carpeta=carpeta_obj,
-            trimestre=trimestre,
-            idinstructor_id=instructor_id # Se usa el ID de sesión para filtrar
-        ).order_by('-fecha_subida')
+        # 🧠 EVIDENCIAS (viejas y nuevas)
+        # Filtra las evidencias para que solo se muestren las que tienen el archivo subido
+        cf.evidencias = EvidenciasInstructor.objects.filter(
+            evidenciasficha__idficha=ficha,
+            idinstructor_id=usuario_id,
+        ).filter(
+            archivo__isnull=False
+        ).exclude(
+            archivo=''
+        ).order_by('-fecha_de_entrega')
 
     return render(request, "paginas/instructor/carpetasins.html", {
         "ficha": ficha,
@@ -576,7 +641,8 @@ def carpetasins(request, ficha_id, trimestre):
         "carpetas_ficha": carpetas_ficha
     })
 
-# --- Vista para subir archivos (subir_archivo_portafolio) (CORREGIDA) ---
+
+# --- Vista para subir archivos (subir_archivo_portafolio) (SIN CAMBIOS) ---
 def subir_archivo_portafolio(request):
     if request.method == "POST":
         
@@ -585,7 +651,6 @@ def subir_archivo_portafolio(request):
         
         if instructor_id is None:
             # Si no hay ID de instructor, no puede guardar (IntegrityError)
-            messages.error(request, "Error de sesión: No se pudo identificar al instructor. Por favor, inicie sesión de nuevo.")
             return redirect(request.META.get("HTTP_REFERER", "/"))
 
         # Obtener datos del formulario
@@ -611,11 +676,9 @@ def subir_archivo_portafolio(request):
         )
         nuevo.save()
 
-        messages.success(request, "Archivo subido con éxito.")
         # Redirigir a la misma página
         return redirect(request.META.get("HTTP_REFERER", "/"))
 
-    messages.error(request, "Método no permitido.")
     return redirect("/")
 
 # --- Vista para eliminar archivos (eliminar_archivo_portafolio) ---
@@ -629,8 +692,8 @@ def eliminar_archivo_portafolio(request, id):
     # 🔥 2. Eliminar registro de la base de datos
     archivo.delete()
 
-    messages.success(request, "Archivo eliminado correctamente.")
     return redirect(request.META.get("HTTP_REFERER", "/"))
+
 
 # --- Vista para editar carpeta (editar_carpeta) (SIN CAMBIOS) ---
 def editar_carpeta(request, id, ficha_id, trimestre):
@@ -762,13 +825,86 @@ def trimestre(request):
         "trimestres": trimestres
     })
 
-def carpetas_aprendiz(request):
-    return render(request, "paginas/instructor/carpetas_aprendiz.html")
+def carpetas_aprendiz(request, aprendiz_id, trimestre):
+    ficha_id = request.session.get("ficha_actual")
+    if not ficha_id:
+        return render(request, "error.html", {"mensaje": "No tienes ficha asignada."})
+    
+    ficha = get_object_or_404(Ficha, id=ficha_id)
+    aprendiz = get_object_or_404(Usuario, id=aprendiz_id)
+    
+    # Obtener carpetas asignadas a la ficha
+    carpetas_ficha = FichaCarpetas.objects.filter(idficha=ficha).select_related("idcarpetas").distinct()
+    
+    # Si no hay asignadas, asignar automáticamente las 5 carpetas base
+    if not carpetas_ficha.exists():
+        nombres_base = [
+            "Plan concertado de trabajo",
+            "Guias de aprendizaje",
+            "Evidencias de aprendizaje",
+            "Planes de acción de mejora",
+            "Formato diligenciado de planeación, seguimiento y evaluación"
+        ]
+        for nombre in nombres_base:
+            try:
+                carpeta = Carpetas.objects.get(nombre=nombre)
+                FichaCarpetas.objects.get_or_create(idficha=ficha, idcarpetas=carpeta)
+            except Carpetas.DoesNotExist:
+                pass  # No crear si no existe
+        # Refetch
+        carpetas_ficha = FichaCarpetas.objects.filter(idficha=ficha).select_related("idcarpetas")
+    
+    # Ordenar carpetas por número
+    def extraer_numero(texto):
+        match = re.search(r'(\d+)', texto)
+        return int(match.group(1)) if match else 9999
+    
+    carpetas_ficha = sorted(carpetas_ficha, key=lambda c: extraer_numero(c.idcarpetas.nombre))
+    
+    # Asignar archivos del portafolio del aprendiz específico (usando PortafolioInstructor)
+    for cf in carpetas_ficha:
+        carpeta_obj = cf.idcarpetas
 
-def trimestre_aprendiz(request):
+        # 📁 Archivos generales
+        cf.archivos_generales = Archivos.objects.filter(
+            idcarpetas=carpeta_obj
+        ).order_by('-id')
+
+        # 📂 Archivos del instructor (guías, planes, etc.)
+        cf.archivos_instructor = PortafolioInstructor.objects.filter(
+            ficha=ficha,
+            trimestre=trimestre,
+            carpeta=carpeta_obj,
+            archivo__isnull=False
+        ).exclude(
+            archivo=''
+        ).order_by('-fecha_subida')
+
+        # 🔥 EVIDENCIAS REALES DEL APRENDIZ
+        if carpeta_obj.nombre == "Evidencias de aprendizaje":
+            cf.archivos_aprendiz = PortafolioAprendiz.objects.filter(
+                idusuario=aprendiz,          # 👈 aprendiz que el instructor está viendo
+                idevidencias_instructor__trimestre=trimestre,
+                archivo__isnull=False
+            ).exclude(
+                archivo=''
+            ).order_by('-fecha_entrega')
+        else:
+            cf.archivos_aprendiz = []
+
+    
+    return render(request, "paginas/instructor/carpetas_aprendiz.html", {
+        "ficha": ficha,
+        "trimestre": trimestre,
+        "carpetas_ficha": carpetas_ficha,
+        "aprendiz": aprendiz
+    })
+
+def trimestre_aprendiz(request, aprendiz_id):
     ficha_id = request.session.get("ficha_actual")
     ficha_actual = None
     trimestres = []
+    aprendiz = get_object_or_404(Usuario, id=aprendiz_id)  # Obtener el aprendiz específico
 
     if ficha_id:
         ficha_actual = Ficha.objects.get(id=ficha_id)
@@ -779,24 +915,20 @@ def trimestre_aprendiz(request):
             trimestres = [1, 2, 3]
         elif "tecnologo" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
-
         elif "articulacion" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5]
-
         elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6]
-
         elif "adso" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6, 7]
-
         elif "mixta" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6, 7]
 
     return render(request, "paginas/instructor/trimestre_aprendiz.html", {
         "ficha": ficha_actual,
-        "trimestres": trimestres
+        "trimestres": trimestres,
+        "aprendiz": aprendiz  # Pasar el aprendiz al template
     })
-
 
 def trimestre_general(request):
     return render(request, "paginas/instructor/trimestre_general.html")
@@ -1005,94 +1137,165 @@ def trimestre_laura(request):
         elif "mixta" in tipo_programa:
             trimestres = [1, 2, 3, 4, 5, 6, 7]
 
-    return render(request, "paginas/aprendiz/trimestre_laura.html", {
-        "ficha": ficha_actual,
-        "trimestres": trimestres
+        return render(request, "paginas/aprendiz/trimestre_laura.html", {
+            "ficha": ficha_actual,
+            "trimestres": trimestres
+            })
+
+import re  # ⬅️ IMPORTANTE para extraer_numero
+
+def carpetas_laura(request, trimestre):
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return redirect('sesion')
+
+    if not UsuarioRol.objects.filter(
+        idusuario_id=usuario_id,
+        idrol__tipo='aprendiz'
+    ).exists():
+        return redirect('inicio')
+
+    ficha_id = request.session.get("ficha_actual")
+    asignatura_id = request.session.get("asignatura_actual")
+
+    if not ficha_id or not asignatura_id:
+        return render(request, "error.html", {
+            "mensaje": "No hay ficha o asignatura activa."
+        })
+
+    ficha = get_object_or_404(Ficha, id=ficha_id)
+
+    carpetas_ficha = FichaCarpetas.objects.filter(
+        idficha=ficha
+    ).select_related("idcarpetas")
+
+    def extraer_numero(texto):
+        match = re.search(r'(\d+)', texto)
+        return int(match.group(1)) if match else 9999
+
+    carpetas_ficha = sorted(
+        carpetas_ficha,
+        key=lambda c: extraer_numero(c.idcarpetas.nombre)
+    )
+
+    for cf in carpetas_ficha:
+        carpeta_obj = cf.idcarpetas
+
+        # 📁 Archivos generales
+        cf.archivos_generales = Archivos.objects.filter(
+            idcarpetas=carpeta_obj
+        ).order_by('-id')
+
+        # 📂 Archivos del instructor (GUÍAS DE APRENDIZAJE) - AJUSTADO PARA USAR TRIMESTRE DE LA FICHA
+        cf.archivos_instructor = PortafolioInstructor.objects.filter(
+            ficha=ficha,
+            trimestre=ficha.trimestre_actual,  # 🔑 CAMBIO: Usa el trimestre actual de la ficha, no el de la URL
+            carpeta=carpeta_obj,
+            archivo__isnull=False
+        ).exclude(
+            archivo=''
+        ).order_by('-fecha_subida')
+
+        # 🔥 EVIDENCIAS DEL APRENDIZ (AQUÍ ESTABA EL ERROR)
+        if carpeta_obj.nombre == "Evidencias de aprendizaje":
+            cf.archivos_aprendiz = PortafolioAprendiz.objects.filter(
+                idusuario_id=usuario_id,
+                idasignatura_id=asignatura_id,
+                idevidencias_instructor__trimestre=trimestre,  # Mantén el trimestre de la URL aquí, ya que es para evidencias
+                archivo__isnull=False
+            ).exclude(
+                archivo=''
+            ).order_by('-fecha_entrega')
+        else:
+            cf.archivos_aprendiz = []
+
+    return render(request, "paginas/aprendiz/carpetas_laura.html", {
+        "ficha": ficha,
+        "trimestre": trimestre,
+        "carpetas_ficha": carpetas_ficha
     })
 
-def carpetas_laura(request):
-    return render(request, "paginas/aprendiz/carpetas_laura.html")
+
+def eliminar_archivo_portafolio(request, id):
+    archivo = get_object_or_404(PortafolioInstructor, id=id)
+
+    # 🔥 1. Eliminar archivo físico si existe
+    if archivo.archivo and archivo.archivo.storage.exists(archivo.archivo.name):
+        archivo.archivo.delete(save=False)
+
+    # 🔥 2. Eliminar registro de la base de datos
+    archivo.delete()
+
+    return redirect(request.META.get("HTTP_REFERER", "/"))
+
+
 
 def evidencia_laura(request, id):
-    # 1️⃣ Recuperar la ficha seleccionada en la sesión
-    ficha_id = request.session.get('ficha_id')
-
-    if not ficha_id:
-        return HttpResponse("No hay ficha seleccionada")
-
-    # 2️⃣ Conexión a MySQL
-    conexion = mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME")
-    )
-    cursor = conexion.cursor(dictionary=True)
-
-    # 3️⃣ Traer las evidencias que pertenecen a ESTA ficha
-    query = """
-        SELECT ei.*
-        FROM evidencias_instructor ei
-        INNER JOIN evidencias_ficha ef 
-            ON ei.id = ef.idevidencias_instructor
-        WHERE ef.idficha = %s
-        ORDER BY ei.fecha_de_entrega ASC
-    """
-    cursor.execute(query, (ficha_id,))
-    evidencias = cursor.fetchall()
-
-    # 4️⃣ Cerrar conexión
-    cursor.close()
-    conexion.close()
+    evidencias = EvidenciasInstructor.objects.all()
 
     return render(request, "paginas/aprendiz/evidencia_laura.html", {
         "evidencias": evidencias
     })
 
 def evidencia_guialaura(request, id):
-    usuario_id = request.session.get("id_usuario")
+    # 🔒 Verificar sesión
+    usuario_id = request.session.get("usuario_id")
     if not usuario_id:
         messages.error(request, "Debes iniciar sesión.")
         return redirect("sesion")
+
     aprendiz = get_object_or_404(Usuario, id=usuario_id)
 
-    # 2. Obtener evidencia creada por el instructor
+    # 🔥 ASIGNATURA ACTUAL (OBLIGATORIA)
+    asignatura_id = request.session.get("asignatura_actual")
+    if not asignatura_id:
+        messages.error(request, "No hay asignatura seleccionada.")
+        return redirect("inicio")
+
+    asignatura = get_object_or_404(NombreAsignatura, id=asignatura_id)
+
+    # Evidencia del instructor
     evidencia_inst = get_object_or_404(EvidenciasInstructor, id=id)
 
-    # 3. Ver si este aprendiz ya hizo entrega
-    entrega = EvidenciasAprendiz.objects.filter(
+    # Ver si ya existe entrega
+    entrega = PortafolioAprendiz.objects.filter(
         idusuario=aprendiz,
-        idevidencias_instructor=evidencia_inst
+        idevidencias_instructor=evidencia_inst,
+        idasignatura=asignatura
     ).first()
 
-    # 4. Si están enviando entrega
     if request.method == "POST":
         archivo = request.FILES.get("archivo")
         observaciones = request.POST.get("observaciones")
 
         if entrega:
-            # Actualiza la entrega existente
+            # 🔁 Actualizar
             if archivo:
                 entrega.archivo = archivo
             entrega.observaciones = observaciones
+            entrega.fecha_entrega = timezone.now()
             entrega.save()
         else:
-            # Crea entrega nueva
-            EvidenciasAprendiz.objects.create(
+            # 🆕 Crear
+            PortafolioAprendiz.objects.create(
+                idusuario=aprendiz,
+                idevidencias_instructor=evidencia_inst,
+                idasignatura=asignatura,
                 archivo=archivo,
                 observaciones=observaciones,
-                idusuario=aprendiz,
-                idevidencias_instructor=evidencia_inst
+                fecha_entrega=timezone.now()
             )
 
+        messages.success(request, "Evidencia enviada correctamente.")
         return redirect("evidencia_guialaura", id=id)
 
-    # 5. Renderizar plantilla
     return render(request, "paginas/aprendiz/evidencia_guialaura.html", {
-            "evidencia": evidencia_inst,
-            "entrega": entrega,
-            "aprendiz": aprendiz,
-        })
+        "evidencia": evidencia_inst,
+        "entrega": entrega,
+        "aprendiz": aprendiz,
+    })
+
+
 
 def material_laura(request):
     return render(request, "paginas/aprendiz/material_laura.html")
@@ -1699,18 +1902,18 @@ def evidencia_calificar_coordinador(request):
 
 
 def sesion(request):
-    usuario_ingresado = ""
-
+    # Limpiar SOLO mensajes viejos ANTES de mostrar el login
     if request.method == "GET":
         storage = messages.get_messages(request)
-        storage.used = True
+        storage.used = True  # Esto sí borra los mensajes que quedaron por error
+
+    usuario_ingresado = ""
 
     if request.method == 'POST':
         usuario_input = request.POST.get('usuario')
         contrasena_input = request.POST.get('contrasena')
         usuario_ingresado = usuario_input
 
-        # Resto de la lógica existente (sin cambios)
         conexion = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
             user=os.getenv("DB_USER"),
@@ -1723,13 +1926,14 @@ def sesion(request):
         usuario = cursor.fetchone()
 
         if not usuario:
-            messages.error(request, "El usuario no existe.")
+            messages.error(request, "El usuario no existe", extra_tags="login")
             return redirect('sesion')
 
         if contrasena_input != usuario['contrasena']:
-            messages.error(request, "Contraseña incorrecta.")
+            messages.error(request, "Contraseña incorrecta", extra_tags="login")
             return redirect('sesion')
 
+        # Guardar en sesión
         request.session['usuario_id'] = usuario['id']
         request.session['usuario'] = usuario['usuario']
         request.session['nombre_usuario'] = f"{usuario['nombres']} {usuario['apellidos']}".upper()
@@ -1753,7 +1957,6 @@ def sesion(request):
 
         if rol:
             tipo_rol = rol['tipo'].lower()
-
             if tipo_rol == 'instructor':
                 return redirect('fichas_ins')
             elif tipo_rol == 'aprendiz':
@@ -1763,14 +1966,11 @@ def sesion(request):
             elif tipo_rol == 'observador':
                 return redirect('observador')
             else:
-                messages.error(request, f"Rol desconocido: {tipo_rol}")
+                messages.error(request, f"Rol desconocido: {tipo_rol}", extra_tags="login")
                 return redirect('sesion')
-        else:
-            messages.error(request, "No se encontró un rol asignado para este usuario.")
-            return redirect('sesion')
 
-        cursor.close()
-        conexion.close()
+        messages.error(request, "No se encontró un rol asignado para este usuario.", extra_tags="login")
+        return redirect('sesion')
 
     return render(request, "paginas/instructor/sesion.html", {
         'usuario_ingresado': usuario_ingresado
@@ -1797,8 +1997,44 @@ def configuracion_observador(request):
 def configuracion_observador_2(request):
     return render(request, "paginas/observador/configuracion_observador_2.html")
 
-def configuracion_coordinador(request):
+from datetime import date
 
+def obtener_max_trimestres(ficha):
+    """
+    Devuelve el máximo de trimestres basado en el tipo de programa de la ficha.
+    """
+    if not ficha or not ficha.idprograma:
+        return 3  # Default si no hay programa
+    tipo_programa = ficha.idprograma.programa.lower()
+    
+    if "tecnico" in tipo_programa:
+        return 3
+    elif "tecnologo" in tipo_programa:
+        return 6
+    elif "articulacion" in tipo_programa:
+        return 5
+    elif "cadena" in tipo_programa or "cadena de formacion" in tipo_programa:
+        return 6
+    elif "adso" in tipo_programa:
+        return 7
+    elif "mixta" in tipo_programa:
+        return 7
+    else:
+        return 3  # Default
+
+def calcular_trimestre_sugerido(fecha_inicio, max_trimestres):
+    """
+    Calcula el trimestre sugerido basado en el tiempo transcurrido desde fecha_inicio.
+    Cada 3 meses (aprox. 90 días) avanza un trimestre, máximo según el programa.
+    """
+    if not fecha_inicio:
+        return 1
+    dias_transcurridos = (date.today() - fecha_inicio).days
+    meses_transcurridos = dias_transcurridos // 30  # Aproximación simple de meses
+    trimestre = (meses_transcurridos // 3) + 1
+    return min(trimestre, max_trimestres)  # Máximo según el programa
+
+def configuracion_coordinador(request):
     # 1. Recuperar ficha desde sesión
     ficha_id = request.session.get("ficha_actual")
     if not ficha_id:
@@ -1844,6 +2080,13 @@ def configuracion_coordinador(request):
     asignadas_ids = list(
         asignaturas_ficha.values_list("idasignatura_id", flat=True)
     )
+
+    # NUEVO: Obtener máximo de trimestres y calcular sugerido
+    max_trimestres = obtener_max_trimestres(ficha)
+    trimestre_sugerido = calcular_trimestre_sugerido(ficha.fecha_inicio, max_trimestres)
+    
+    # Generar lista de trimestres disponibles (1 a max_trimestres)
+    trimestres_disponibles = list(range(1, max_trimestres + 1))
 
     # ========= GUARDAR =========
     if request.method == "POST":
@@ -1899,6 +2142,16 @@ def configuracion_coordinador(request):
 
             messages.success(request, "Asignaturas guardadas correctamente!")
 
+        # NUEVO: Manejar cambio de trimestre (con validación de máximo)
+        if request.POST.get("accion") == "cambiar_trimestre":
+            nuevo_trimestre = int(request.POST.get("nuevo_trimestre", 1))
+            if 1 <= nuevo_trimestre <= max_trimestres:
+                ficha.trimestre_actual = nuevo_trimestre
+                ficha.save()
+                messages.success(request, f"Trimestre actualizado a {nuevo_trimestre}.")
+            else:
+                messages.error(request, f"Trimestre inválido. Máximo permitido: {max_trimestres}.")
+            return redirect("configuracion_coordinador")
 
         return redirect("configuracion_coordinador")
 
@@ -1921,8 +2174,12 @@ def configuracion_coordinador(request):
         "todas_asignaturas": todas_asignaturas,
         "asignaturas_ficha": asignaturas_ficha,
         "asignadas_ids": asignadas_ids,
-    })
 
+        # NUEVO: Trimestre sugerido y lista dinámica
+        "trimestre_sugerido": trimestre_sugerido,
+        "trimestres_disponibles": trimestres_disponibles,
+        "max_trimestres": max_trimestres,
+    })
 
 def evidencia_calificada(request):
     return render(request, "paginas/instructor/evidencia_calificada.html")

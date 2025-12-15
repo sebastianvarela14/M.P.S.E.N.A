@@ -59,7 +59,7 @@ class Documento(models.Model):
 
 
 class EvidenciasAprendiz(models.Model):
-    archivo = models.CharField(max_length=50, db_comment='documentos evidencias, material de apoyo')
+    archivo = models.FileField(upload_to='evidencias_aprendizaje/', blank=True, null=True, db_comment='documentos evidencias, material de apoyo')
     observaciones = models.CharField(max_length=300, blank=True, null=True, db_comment=' observaciones del intructor')
     fecha_entrega = models.DateField(blank=True, null=True, db_comment='la fecha de la entrega de las evidencias')
     idusuario = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='idusuario', blank=True, null=True, db_comment=' esta es la llave foranea que conecta la tabla evidencias_aprendiz con usuario')
@@ -85,13 +85,9 @@ class EvidenciasInstructor(models.Model):
     fecha_de_entrega = models.DateField(blank=True, null=True, db_comment='fecha limite en la que el aprendiz debe entregar la evidencia')
     idinstructor = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='idinstructor', null=True)
     idasignatura = models.ForeignKey('NombreAsignatura', models.DO_NOTHING, db_column='idnombre_asignatura', null=True)
-
-    archivo = models.FileField(
-        upload_to="evidencias/",
-        blank=True,
-        null=True,
-        db_comment='archivo adjunto correspondiente a la evidencia'
-    )
+    archivo = models.FileField(upload_to="evidencias/", blank=True, null=True, db_comment='archivo adjunto correspondiente a la evidencia')
+    
+    trimestre = models.IntegerField(blank=True, null=True, db_comment='trimestre asignado (1-7)')
 
     class Meta:
         managed = False
@@ -110,14 +106,16 @@ class Ficha(models.Model):
         null=True,
         blank=True
     )
-
     ESTADOS = (
         ('Activa', 'Activa'),
         ('Inactiva', 'Inactiva'),
         ('Finalizada', 'Finalizada'),
     )
     estado = models.CharField(max_length=20, choices=ESTADOS, default='Activa')
-
+    
+    # NUEVOS CAMPOS PARA TRIMESTRES
+    fecha_inicio = models.DateField(null=True, blank=True, help_text="Fecha de inicio de la ficha para calcular trimestres.")
+    trimestre_actual = models.IntegerField(default=1, help_text="Trimestre actual (1-3). Controlado por el coordinador.")
     class Meta:
         managed = False
         db_table = 'ficha'
@@ -133,6 +131,7 @@ class FichaCarpetas(models.Model):
     class Meta:
         managed = False
         db_table = 'ficha_carpetas'
+        unique_together = ('idficha', 'idcarpetas')
 
 
 class FichaUsuario(models.Model):
@@ -289,10 +288,20 @@ class PortafolioInstructor(models.Model):
     
     fecha_subida = models.DateTimeField(auto_now_add=True)
     idinstructor = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='idinstructor')
-
+    
+    idevidencias_instructor = models.ForeignKey(
+        'EvidenciasInstructor', 
+        models.DO_NOTHING, 
+        db_column='idevidencias_instructor', 
+        blank=True, 
+        null=True, 
+        db_comment='Enlace a la evidencia asociada del instructor'
+        )
+    
     class Meta:
         managed = False
         db_table = 'portafolio_instructor'
+
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -332,3 +341,14 @@ class ArchivoEquipo(models.Model):
         managed = False
         db_table = 'archivo_equipo'
 
+class PortafolioAprendiz(models.Model):
+    idusuario = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='idusuario')  # El aprendiz
+    idevidencias_instructor = models.ForeignKey('EvidenciasInstructor', models.DO_NOTHING, db_column='idevidencias_instructor')
+    idasignatura = models.ForeignKey('NombreAsignatura', models.DO_NOTHING, db_column='idasignatura')  # Para ligar a materia
+    archivo = models.FileField(upload_to='evidencias_aprendizaje/', blank=True, null=True, db_comment='documentos evidencias, material de apoyo')
+    observaciones = models.CharField(max_length=300, blank=True, null=True)
+    fecha_entrega = models.DateField(blank=True, null=True)
+    
+    class Meta:
+        managed = False
+        db_table = 'portafolio_aprendiz'  # Crea esta tabla en la DB si no existe
