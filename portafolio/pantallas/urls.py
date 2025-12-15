@@ -42,8 +42,9 @@ urlpatterns = [
 
 
     path("trimestre/", views.trimestre, name="trimestre"),
-    path("carpetas_aprendiz/", views.carpetas_aprendiz, name="carpetas_aprendiz"),
-    path("trimestre_aprendiz/", views.trimestre_aprendiz, name="trimestre_aprendiz"),
+
+    path('carpetas_aprendiz/<int:aprendiz_id>/<int:trimestre>/', views.carpetas_aprendiz, name='carpetas_aprendiz'),
+    path('trimestre_aprendiz/<int:aprendiz_id>/', views.trimestre_aprendiz, name='trimestre_aprendiz'),
     path("trimestre_general/", views.trimestre_general, name="trimestre_general"),
     path("carpetas/", views.carpetas, name="carpetas"),
     path("material_principal/", views.material_principal, name="material_principal"),
@@ -70,7 +71,7 @@ urlpatterns = [
 
 
     path("trimestre_laura/", views.trimestre_laura, name="trimestre_laura"),
-    path("carpetas_laura/", views.carpetas_laura, name="carpetas_laura"),
+    path('carpetas_laura/<int:trimestre>/', views.carpetas_laura, name='carpetas_laura'),
     path("evidencia_laura/<int:id>/", views.evidencia_laura, name="evidencia_laura"),
     path("evidencia_guialaura/<int:id>", views.evidencia_guialaura, name="evidencia_guialaura"),
     path('asignar-instructor/', views.asignar_instructor_asignatura, name='asignar_instructor_asignatura'),
@@ -174,7 +175,9 @@ urlpatterns = [
     path("usuario/eliminar/<int:usuario_id>/", views.eliminar_usuario, name="eliminar_usuario"),
     path("datos/<int:id>/", views.datos_aprendiz, name="datos"),
     path("actualizar_contrasena/", views.actualizar_contrasena, name="actualizar_contrasena"),
-    path("seleccionar_ficha/<int:id_ficha>/", views.seleccionar_ficha, name="seleccionar_ficha"),
+    
+
+    path('seleccionar_ficha/<int:id_ficha>/', views.seleccionar_ficha, name='seleccionar_ficha'),
     path("configuracion_coordinador/eliminar_instructor/<int:usuario_id>/<int:ficha_id>/", views.eliminar_instructor, name="eliminar_instructor"),
     path("datos_coordinador_editar/", views.datos_coordinador_editar, name="datos_coordinador_editar"),
     path("eliminar_aprendiz/<int:aprendiz_id>/<int:ficha_id>/", views.eliminar_aprendiz, name="eliminar_aprendiz"),

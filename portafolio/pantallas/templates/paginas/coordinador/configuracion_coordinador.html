@@ -6,203 +6,285 @@
 <head>
     <meta charset="UTF-8">
     <title>Configuración del Coordinador</title>
+
     <style>
-        /* ======== PALETA ======== */
+        /* ========= PALETA ========= */
         :root {
             --verde: #2e8b57;
-            --verde-oscuro: #246b44;
+            --verde-oscuro: #1f6b43;
+            --verde-claro: #e8f5ee;
             --azul: #1e88e5;
-            --azul-oscuro: #1565c0;
             --rojo: #e53935;
-            --rojo-oscuro: #b71c1c;
-            --gris-claro: #f4f9f4;
-            --gris-borde: #d0e0d0;
+            --gris-fondo: #f5f7f8;
+            --gris-borde: #e0e0e0;
+            --texto: #2f2f2f;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background-color: var(--gris-claro);
-            margin: 0;
-            padding: 0;
+            font-family: "Segoe UI", system-ui, sans-serif;
+            background-color: var(--gris-fondo);
         }
 
         header {
             background: linear-gradient(135deg, var(--verde), var(--verde-oscuro));
             color: white;
-            padding: 18px;
+            padding: 22px;
             text-align: center;
-            border-radius: 0 0 12px 12px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            border-radius: 0 0 18px 18px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.18);
         }
 
         main {
-            max-width: 1100px;
-            margin: 25px auto;
+            max-width: 1150px;
+            margin: 30px auto;
             background: white;
-            padding: 30px;
-            border-radius: 14px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0 10px 28px rgba(0,0,0,.12);
         }
 
         h2 {
             color: var(--verde);
-            margin-top: 0;
-            border-bottom: 2px solid #c8e6c9;
-            padding-bottom: 5px;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--verde-claro);
         }
 
         .explicacion {
-            background: #e8fbe8;
+            background: var(--verde-claro);
             border-left: 6px solid var(--verde);
-            padding: 14px;
-            margin-bottom: 25px;
-            border-radius: 6px;
+            padding: 15px 18px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            color: var(--texto);
+        }
+
+        section {
+            margin-bottom: 35px;
         }
 
         .grupo {
-            margin-bottom: 30px;
-            background: #ffffff;
+            background: #fff;
             border: 1px solid var(--gris-borde);
-            padding: 18px;
-            border-radius: 12px;
-            transition: box-shadow 0.2s ease;
+            padding: 22px;
+            border-radius: 14px;
+            transition: box-shadow .2s ease;
         }
+
         .grupo:hover {
-            box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+            box-shadow: 0 6px 18px rgba(0,0,0,.08);
         }
 
         .buscar {
-            margin-bottom: 12px;
             display: flex;
             justify-content: flex-end;
+            margin-bottom: 12px;
         }
+
         .buscar input {
-            padding: 7px;
-            border: 1px solid #bbb;
-            border-radius: 8px;
-            width: 250px;
-            transition: border 0.3s;
-        }
-        .buscar input:focus {
-            border: 1px solid var(--verde);
-            outline: none;
+            padding: 8px 12px;
+            width: 260px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
         }
 
         .opcion {
             display: flex;
             align-items: center;
-            margin: 6px 0;
+            gap: 10px;
             padding: 10px 14px;
             border: 1px solid #eee;
-            border-radius: 8px;
+            border-radius: 10px;
+            margin-bottom: 6px;
             background: #fafafa;
-            transition: background 0.2s;
         }
-        .opcion:hover { background: #f0f9f0; }
-        .opcion input { margin-right: 12px; }
 
         .acciones {
             display: flex;
             justify-content: flex-end;
             gap: 12px;
-            margin-top: 15px;
+            margin-top: 18px;
         }
 
         button {
-            padding: 9px 15px;
-            border-radius: 6px;
-            cursor: pointer;
+            padding: 9px 16px;
+            border-radius: 8px;
             border: none;
-            transition: all 0.25s;
+            cursor: pointer;
             font-weight: 500;
+            transition: .25s;
         }
 
-        .btn-guardar { background-color: var(--verde); color: white; }
-        .btn-guardar:hover { background-color: var(--verde-oscuro); }
+        .btn-guardar {
+            background: var(--verde);
+            color: white;
+        }
+        .btn-guardar:hover { background: var(--verde-oscuro); }
 
-        .btn-anadir { background-color: var(--azul); color: white; }
-        .btn-anadir:hover { background-color: var(--azul-oscuro); }
+        .btn-anadir {
+            background: var(--azul);
+            color: white;
+        }
 
-        .btn-eliminar { background: var(--rojo); color: white; }
-        .btn-eliminar:hover { background: var(--rojo-oscuro); }
+        .btn-eliminar {
+            background: var(--rojo);
+            color: white;
+        }
 
         .lista-guardados {
-            margin-top: 15px;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            border: 1px solid var(--gris-borde);
+            border-radius: 14px;
+            padding: 18px;
             background: #fdfdfd;
         }
+
         .lista-guardados h4 {
             margin-top: 0;
             color: var(--verde);
         }
-        .item-guardado {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 7px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .item-guardado:last-child { border-bottom: none; }
 
-        /* ======== MODAL ======== */
+        /* ========= TRIMESTRE ========= */
+        .trimestre-info {
+            background: #f8fbfa;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px dashed var(--verde);
+            margin-bottom: 18px;
+        }
+
+        .sugerencia {
+            margin-top: 8px;
+            color: var(--verde-oscuro);
+            font-weight: 600;
+        }
+
+        select.form-control {
+            padding: 9px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+
+</head>            margin-top: 6px;
+        }
+
+        /* ========= MODALES ========= */
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 999;
         }
+
         .modal-contenido {
-            background: #fff;
+            background: white;
             margin: 10% auto;
-            padding: 22px;
-            border-radius: 12px;
             width: 420px;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-            animation: aparecer 0.3s ease;
+            padding: 22px;
+            border-radius: 16px;
+            box-shadow: 0 10px 24px rgba(0,0,0,.3);
         }
-        @keyframes aparecer {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
+
         .modal-header {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
             color: var(--verde);
+            margin-bottom: 12px;
         }
+
         .modal-footer {
-            margin-top: 15px;
             display: flex;
             justify-content: flex-end;
             gap: 10px;
+            margin-top: 18px;
         }
+
         .cerrar {
             background: #999;
             color: white;
         }
-        .cerrar:hover { background: #777; }
 
-        .form-control {
-            width: 100%;
-            padding: 8px;
-            margin: 6px 0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+        .trimestre-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+        .trimestre-info p {
+            margin: 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: #f9f9f9;
+            border: 1px solid var(--gris-borde);
+        }
+        .trimestre-info .sugerencia {
+            background: #ffebee;
+            border-left: 4px solid var(--rojo);
+            color: var(--rojo-oscuro);
+            font-weight: 500;
+        }
+        .trimestre-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .trimestre-form label {
+            font-weight: bold;
+            color: var(--verde);
         }
     </style>
-</head>
+
 <body>
 <header>
     <h1>⚙️ Configuración del Coordinador</h1>
 </header>
 
 <main>
+
+<div class="explicacion">
+    <p><strong>Ficha {{ ficha.numero_ficha }}</strong> — Administración general de instructores, aprendices, asignaturas y trimestre académico.</p>
+</div>
+
+<!-- ================= CONFIGURAR TRIMESTRE ================= -->
+<section>
+    <h2>Configurar Trimestre</h2>
     <div class="explicacion">
-        <p><strong>Entraste a la ficha {{ ficha.numero_ficha }}</strong> Aquí puedes asignar instructores, aprendices y asignaturas. Usa las listas, buscadores o añade nuevos registros en caso necesario.</p>
+        <p>El trimestre actual se usa para guardar archivos en portafolios. Se calcula automáticamente cada 3 meses desde la fecha de inicio de la ficha (máximo {{ max_trimestres }} trimestres para este programa). Puedes cambiarlo manualmente si es necesario.</p>
     </div>
+
+    <div class="grupo">
+        <div class="trimestre-info">
+            <p><strong>Trimestre actual:</strong> {{ ficha.trimestre_actual }}</p>
+            <p><strong>Trimestre sugerido:</strong> {{ trimestre_sugerido }}</p>
+
+            {% if trimestre_sugerido > ficha.trimestre_actual %}
+                <p class="sugerencia">
+                    ⏳ Ya puedes avanzar al trimestre {{ trimestre_sugerido }}
+                </p>
+            {% endif %}
+        </div>
+
+        <form method="POST" class="trimestre-form">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="cambiar_trimestre">
+
+            <label>Seleccionar nuevo trimestre</label>
+            <select name="nuevo_trimestre" class="form-control">
+                {% for t in trimestres_disponibles %}
+                    <option value="{{ t }}" {% if ficha.trimestre_actual == t %}selected{% endif %}>
+                        {{ t }}{% if t == 1 %}er{% elif t == 2 %}do{% elif t == 3 %}er{% else %}to{% endif %} Trimestre
+                    </option>
+                {% endfor %}
+            </select>
+
+            <div class="acciones">
+                <button type="submit" class="btn-guardar">Guardar Trimestre</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Estilos adicionales para trimestre (agrega esto al bloque <style> en el <head>) -->
+
+
 
     <!-- Instructores -->
     <section>

@@ -8,9 +8,10 @@
     <h3 class="fw-bold text-center mb-4">PORTAFOLIO DE JULIA ANDREA ROMERO QUIROGA </h3>
     <br>
 
+<!-- En trimestre_laura.html -->
 <div id="trimestres" class="d-grid gap-3">
     {% for t in trimestres %}
-        <a href="{% url 'carpetas_laura' %}" 
+        <a href="{% url 'carpetas_laura' t %}"  
             class="btn btn-portfolio d-flex justify-content-between align-items-center">
             <span>{{ t }} Trimestre</span>
             <i class="bi bi-clipboard"></i>
