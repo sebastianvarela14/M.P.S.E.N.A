@@ -93,33 +93,37 @@
 </head>
 <body>
     <div class="container">
-        <h2>DATOS PERSONALES DE LAURA CAMILA CASTAÑEDA ROJAS</h2>
+        {% if usuario %}
+        <h2>DATOS PERSONALES DE {{ usuario.nombres|upper }} {{ usuario.apellidos|upper }}</h2>
 
         <div class="row">
             <div class="label">Nombre Completo:</div>
-            <div class="value">Laura Camila Castañeda Rojas</div>
+            <div class="value">{{ usuario.nombres|title }} {{ usuario.apellidos|title }}</div>
         </div>
 
         <div class="row">
             <div class="label">Correo electrónico:</div>
-            <div class="value">LauraCastaneda@gmail.com</div>
+            <div class="value">{{ usuario.correo }}</div>
         </div>
 
         <div class="row">
             <div class="label">Teléfono:</div>
-            <div class="value">300 788 9000</div>
+            <div class="value">{{ usuario.telefono }}</div>
         </div>
 
         <div class="row-double">
             <div class="field">
                 <div class="label">Tipo de documento:</div>
-                <div class="value">T.I</div>
+                <div class="value">{{ usuario.tipo_documento|capfirst }}</div>
             </div>
             <div class="field">
                 <div class="label">Número de documento:</div>
-                <div class="value">1141320578</div>
+                <div class="value">{{ usuario.num_documento }}</div>
             </div>
         </div>
+        {% else %}
+        <h2>No se encontraron los datos del usuario.</h2>
+        {% endif %}
     </div>
 </body>
 </html>

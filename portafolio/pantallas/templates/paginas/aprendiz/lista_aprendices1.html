@@ -36,7 +36,7 @@
         <!-- Instructor -->
         <div class="mb-4">
             <h4 class="fw-bold text-success">INSTRUCTOR</h4>
-            <input type="text" class="form-control" value="{{ usuario_nombre }}" readonly>
+            <input type="text" class="form-control text-capitalize" value="{{ instructor_nombre|default:'No asignado' }}" readonly>
         </div>
 
         <!-- Total aprendices -->
@@ -54,7 +54,7 @@
         <!-- Lista de aprendices -->
         <div id="lista" class="list-group shadow-sm">
     {% for a in aprendices %}
-        <a href="#" class="list-group-item list-group-item-action text-capitalize">
+        <a href="{% url 'datos' a.id %}" class="list-group-item list-group-item-action text-capitalize">
             <i class="bi bi-person-circle"></i> {{ a.nombres }} {{ a.apellidos }}
         </a>
     {% empty %}
